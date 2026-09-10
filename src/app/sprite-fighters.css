@@ -38,6 +38,18 @@
 .arena-fighter.fighter-kavaleur { background-image: var(--sprite-kavaleur-idle) !important; }
 .arena-fighter.fighter-korsair { background-image: var(--sprite-korsair-idle) !important; }
 
+.arena-fighter.fighter-hartz.is-defending {
+  background-image: var(--sprite-hartz-defend) !important;
+}
+
+.arena-fighter.fighter-hartz.is-dodging {
+  background-image: var(--sprite-hartz-dodge) !important;
+}
+
+.arena-fighter.fighter-hartz.is-special {
+  background-image: var(--sprite-hartz-special) !important;
+}
+
 .arena-fighter.is-hit {
   animation: sprite-hit-shake 180ms steps(2, end);
   filter: brightness(1.45) drop-shadow(0 0 8px rgba(255,255,255,.8));
