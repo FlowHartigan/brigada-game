@@ -28,6 +28,17 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
   await page.getByRole("button", { name: "COMBATTRE" }).click();
   await expect(page.locator(".fight-screen")).toBeVisible();
 
+  const playerSprite = page.locator(".arena-left.fighter-hartz");
+  await expect(playerSprite).toBeVisible();
+  const idleSprite = await playerSprite.evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(idleSprite).toContain("data:image/png;base64");
+  const rendering = await playerSprite.evaluate((element) => getComputedStyle(element).imageRendering);
+  expect(rendering).toBe("pixelated");
+
+  const opponentSprite = page.locator(".arena-right");
+  const opponentArt = await opponentSprite.evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(opponentArt).toContain("data:image/png;base64");
+
   const attack = page.getByRole("button", { name: /ATTAQUE/ });
   const defend = page.getByRole("button", { name: /DÉFENSE/ });
   const dodge = page.getByRole("button", { name: /ESQUIVE/ });
@@ -55,6 +66,7 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await expect(defend).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(async () => playerSprite.evaluate((element) => getComputedStyle(element).backgroundImage)).not.toBe(idleSprite);
     await page.mouse.up();
     await expect(defend).toHaveAttribute("aria-pressed", "false");
   }

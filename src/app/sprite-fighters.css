@@ -1,0 +1,105 @@
+.arena-fighter {
+  width: clamp(144px, 19vw, 240px) !important;
+  height: clamp(144px, 19vw, 240px) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 16px 10px rgba(0,0,0,.48));
+  transform-origin: 50% 100%;
+}
+
+.arena-fighter::before,
+.arena-fighter::after {
+  display: none !important;
+}
+
+.arena-fighter > span {
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  transform: translateX(-50%);
+  padding: 3px 7px;
+  background: rgba(0,0,0,.78);
+  border: 1px solid rgba(255,255,255,.16);
+  color: #f4f1e8;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .13em;
+  white-space: nowrap;
+}
+
+.arena-fighter.fighter-hartz { background-image: var(--sprite-hartz-idle) !important; }
+.arena-fighter.fighter-petoux { background-image: var(--sprite-petoux-idle) !important; }
+.arena-fighter.fighter-nexmos { background-image: var(--sprite-nexmos-idle) !important; }
+.arena-fighter.fighter-kavaleur { background-image: var(--sprite-kavaleur-idle) !important; }
+.arena-fighter.fighter-korsair { background-image: var(--sprite-korsair-idle) !important; }
+
+.arena-fighter.fighter-hartz.is-defending {
+  background-image: var(--sprite-hartz-defend) !important;
+}
+
+.arena-fighter.fighter-hartz.is-dodging {
+  background-image: var(--sprite-hartz-dodge) !important;
+}
+
+.arena-fighter.fighter-hartz.is-special {
+  background-image: var(--sprite-hartz-special) !important;
+}
+
+.arena-fighter.is-hit {
+  animation: sprite-hit-shake 180ms steps(2, end);
+  filter: brightness(1.45) drop-shadow(0 0 8px rgba(255,255,255,.8));
+}
+
+.arena-fighter.is-stunned {
+  filter: saturate(.35) brightness(.85) drop-shadow(0 14px 9px rgba(0,0,0,.5));
+}
+
+.arena-fighter.is-dodging {
+  animation: sprite-dodge 220ms steps(3, end);
+}
+
+.arena-fighter.is-special {
+  animation: sprite-special-pop 260ms steps(2, end);
+}
+
+.arena-right {
+  transform: scaleX(-1);
+}
+
+.arena-right > span {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+@keyframes sprite-hit-shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -6px 0; }
+  75% { translate: 6px 0; }
+}
+
+@keyframes sprite-dodge {
+  0% { translate: 0 0; opacity: 1; }
+  50% { translate: -16px 0; opacity: .68; }
+  100% { translate: 0 0; opacity: 1; }
+}
+
+@keyframes sprite-special-pop {
+  0% { scale: 1; }
+  45% { scale: 1.08; }
+  100% { scale: 1; }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .arena-fighter {
+    width: clamp(128px, 22vw, 190px) !important;
+    height: clamp(128px, 22vw, 190px) !important;
+    bottom: 7% !important;
+  }
+
+  .arena-left { left: 16% !important; }
+  .arena-right { right: 16% !important; }
+}
