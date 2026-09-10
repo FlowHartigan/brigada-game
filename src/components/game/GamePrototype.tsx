@@ -289,10 +289,19 @@ export function GamePrototype() {
   const defendAvailable = canPerformAction(combatState, "player", "defend") || player.isDefending;
 
   function fighterVisualState(side: CombatSide): string {
+    if (!combatState) return "";
     const runtime = combatState[side];
-    const recent = lastEvent && combatState.now - lastEvent.at < 360;
-    const wasHit = recent && lastEvent.target === side && ["hit", "counter", "guard-break"].includes(lastEvent.type);
-    const usedSpecial = recent && lastEvent.actor === side && ["special", "counter-ready", "counter"].includes(lastEvent.type);
+    const recent = Boolean(lastEvent && combatState.now - lastEvent.at < 360);
+    const wasHit = Boolean(
+      recent &&
+      lastEvent?.target === side &&
+      ["hit", "counter", "guard-break"].includes(lastEvent.type),
+    );
+    const usedSpecial = Boolean(
+      recent &&
+      lastEvent?.actor === side &&
+      ["special", "counter-ready", "counter"].includes(lastEvent.type),
+    );
 
     return [
       runtime.isDefending ? "is-defending" : "",
