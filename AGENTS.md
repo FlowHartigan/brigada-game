@@ -61,6 +61,8 @@ Working direction: **2D Rave Comic**.
 
 Do not invent a real member's physical traits when no reliable visual reference exists. Placeholder silhouettes are preferred until approved source references are available.
 
+The detailed visual system is maintained in `docs/CHARACTER_ART_DIRECTION.md` and is owned by the Character Art Director agent.
+
 ## Fighter roster
 
 The MVP roster is fixed to:
@@ -101,6 +103,33 @@ Owns primarily:
 - utility AI
 
 Gameplay behavior must be covered by tests.
+
+### Character Art Director / Graphic Designer
+
+Owns primarily:
+- visual identity of all five fighters
+- art direction bible
+- character silhouettes and recognizability
+- approved face/appearance reference handling
+- costume language and materials
+- fighter-specific color/effect signatures
+- character sheets and pose sheets
+- VFX language for Attack / Defense / Dodge / Special / KO
+- portrait art for character select / VS / result screens
+- visual consistency between generated concept art and Phaser-ready assets
+
+Rules:
+- Start from approved photo references when likeness matters; never invent facial traits for a real member.
+- Design identity before production assets: silhouette → palette → costume → VFX → poses → animation frames.
+- Each fighter must be identifiable in monochrome silhouette at combat scale.
+- Do not rely on a name label or UI color to distinguish fighters.
+- Preserve one shared Brigade visual DNA across the roster while giving each fighter one unmistakable signature.
+- Avoid generic AI-game aesthetics, plastic 3D, fantasy armor, cyberpunk clichés, and random neon overload.
+- Produce concepts at the intended camera distance before approving details that disappear on mobile.
+- Keep export constraints compatible with transparent WebP/PNG sprite workflows and Phaser.
+- Never change gameplay stats or mechanics to accommodate art; coordinate with Gameplay and Phaser agents instead.
+
+The Character Art Director must approve a fighter's art package before the Phaser agent treats it as final.
 
 ### Phaser / Presentation
 
@@ -145,6 +174,20 @@ A gameplay feature is complete only when:
 5. Production build passes.
 6. The feature is manually/browser verified at a mobile landscape viewport.
 7. No new browser console errors are introduced.
+
+## Definition of done for fighter art
+
+A fighter visual package is complete only when:
+
+1. Reference material is approved and traceable.
+2. Silhouette reads clearly at mobile combat scale.
+3. Front / 3-quarter / side identity is coherent.
+4. Idle, attack, defense, dodge, special, hit and KO poses are defined.
+5. Fighter-specific palette and VFX language are documented.
+6. Portrait and in-fight versions clearly represent the same character.
+7. Assets can be exported on transparent backgrounds without baked arena lighting.
+8. Phaser integration does not require gameplay-rule duplication.
+9. A mobile screenshot review confirms readability.
 
 ## Git workflow
 
