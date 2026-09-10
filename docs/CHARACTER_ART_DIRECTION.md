@@ -1,5 +1,29 @@
 # Character Art Direction — LA BRIGADE: 0+0=FIGHT
 
+## 0. Approved visual reference
+
+The current approved roster look is stored in the repository at:
+
+`docs/art-direction/brigada-pixel-rave-roster-v1.webp`
+
+This image is the **primary visual reference** for future character-art, UI and Phaser presentation work unless the product owner explicitly supersedes it.
+
+What must be reused from this reference:
+- modern arcade pixel-art rendering and level of detail
+- gritty black / charcoal / red underground-rave environment
+- distressed off-white / red Brigade typography language
+- strong five-fighter lineup readability
+- character-select portrait treatment
+- red pixel stat-bar language
+- clear separation between fighters despite shared world styling
+- HARTZ with round black sunglasses, short dark hair, grey ribbed jacket, black shirt and silver chain
+- PETOUX with short dark hair, light facial hair, light neutral top and a highly readable sarouel silhouette
+- NEXMOS with beard, black tank top and exposed arms
+- KAVALEUR with sunglasses and strong pink outfit block
+- KORSAIR with pirate hat, bandana and light-brown hair
+
+The reference is a direction target, not a literal final screen. Future agents may improve layout, animation, proportions, lighting, background density and UI ergonomics while preserving its core visual language.
+
 ## 1. Approved production direction
 
 The production character style is now:
