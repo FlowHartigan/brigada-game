@@ -1,364 +1,288 @@
 # Character Art Direction — LA BRIGADE: 0+0=FIGHT
 
-## 0. Official La Brigade project references
+## 1. Approved production direction
 
-The Character Art Director must treat the existing **La Brigade** project identity as the primary visual source instead of inventing a new unrelated fighting-game brand.
+The production character style is now:
 
-### Existing Brigade visual DNA
+# BRIGADA // PIXEL RAVE FIGHTERS
 
-Approved project material establishes a strong recurring language:
-- black / charcoal dominant backgrounds
-- white typography with strong red editorial accents
-- school / detention-room references
-- blackboard and chalk marks
-- rough graffiti / hand-drawn annotation language
-- red school chair / desk as a recurring object
-- the signature **0 + 0 = TECHNO**
-- outdoor / urban wall textures
-- event-poster composition with large typography and highly controlled hierarchy
-- underground techno/rave atmosphere rather than fantasy or sci-fi world-building
+The goal is **not** faithful facial reproduction. The goal is that every member of La Brigade is immediately recognizable in pixel art through a combination of:
 
-This identity should influence character-select screens, VS frames, VFX typography, portrait framing, arena details, loading transitions and promotional art. It should **not** be pasted literally onto every garment.
+1. silhouette
+2. hair / beard / headwear
+3. clothing block
+4. one or two signature accessories
+5. fighting stance
+6. signature VFX
 
-### Human reference inventory already established in the La Brigade project
+Faces may be simplified aggressively. Recognition must survive at mobile combat scale.
 
-The project context already identifies the group roster and visual references as follows:
+## 2. Pixel-art target
 
-- **Group photo:** left-to-right order established as HARTZ, KAVALEUR, PETOUX, NEXMOS, KORSAIR.
-- **HARTZ:** individual portrait reference established; known cues include grey/black ribbed jacket, black T-shirt and silver chain.
-- **PETOUX:** individual/two-person reference established with PETOUX identified on the left.
-- **NEXMOS:** individual reference established showing beard, black tank top and red-lit DJ/microphone environment.
-- **KAVALEUR:** group-photo identity is known; do not invent close facial/body detail beyond what can be supported by approved project imagery.
-- **KORSAIR:** group-photo identity is known; do not invent close facial/body detail beyond what can be supported by approved project imagery.
+Use modern arcade pixel art rather than ultra-low-resolution retro sprites.
 
-When the image-generation/runtime pipeline cannot directly access an original reference binary, preserve this reference inventory and do not fabricate unsupported facial details. The art direction may still define silhouette, palette, clothing blocks, stance, VFX and composition until the source image is available to the generation step.
-
-## 1. Creative target
-
-The current placeholder look is not a target. The production identity should feel like a **European underground techno fighting comic**, not a generic browser game.
-
-Working art direction name: **BRIGADA // RAVE FIGHTER**.
-
-The visual mix is:
-- believable human likeness and proportions
-- graphic-novel simplification rather than photorealism
-- hard poster-like shadow shapes
-- photocopy / screen-print / ripped-flyer texture
-- restrained club lighting used as an accent, not a rainbow
-- school/chalk/graffiti Brigade motifs used in backgrounds and UI, not pasted over every character
-
-The result should sit between an illustrated festival poster, a modern fighting-game character card, and a rough underground rave flyer.
-
-## 2. Non-goals
+Recommended production target:
+- native fighter height: roughly 96–128 px
+- runtime scale: integer 3x or 4x where possible
+- nearest-neighbor rendering only
+- no smoothing or soft interpolation
+- crisp silhouettes and deliberate pixel clusters
+- 3–5 value groups per material
+- limited palette per character
+- exaggerated readable hands, forearms, hair masses, glasses, hats and clothing shapes
 
 Avoid:
-- plastic 3D avatars
-- chibi/cartoon proportions
-- generic anime treatment
-- superhero costumes
-- tactical/fantasy armor
-- random cyberpunk cables and masks
-- over-detailed clothing that disappears at mobile scale
-- five characters distinguished only by different neon colors
-- generic AI-generated faces or invented physical traits
+- photorealistic faces
+- plastic 3D renders converted to pixels
+- AI-smoothed faux pixel art
+- tiny noisy details
+- generic anime sprites
+- chibi proportions
+- characters distinguishable only by different colors
 
-## 3. Shared Brigade DNA
+## 3. Brigade visual DNA
 
-All five fighters belong to the same visual universe.
+The game must remain visually tied to the existing La Brigade project.
 
-Shared rules:
-- human contemporary silhouettes
-- mostly dark clothing values so skin, face, hands and signature accents remain readable
-- one strong asymmetry per fighter (jacket line, sleeve, accessory, stance, light shape, etc.)
-- rough printed edge treatment on portraits and impact frames
-- selective off-white chalk marks and red correction marks as Brigade graphic language
-- large, readable hands / forearms / shoulders during combat actions
-- faces simplified enough to survive sprite reduction but still recognizable from approved references
+Shared world language:
+- black / charcoal backgrounds
+- white / off-white typography
+- strong red editorial accents
+- blackboard / chalk marks
+- graffiti / handwritten annotations
+- red school chair and detention-room motifs
+- **0 + 0 = TECHNO** signature
+- rough flyers, stickers, concrete and poster textures
+- underground techno / rave atmosphere
 
-At combat scale, the priority order is:
+Character sprites stay cleaner than backgrounds so they remain readable.
+
+## 4. Recognition rule
+
+At combat scale, each fighter should remain identifiable even when facial detail is removed.
+
+Priority order:
 1. silhouette
-2. pose / stance
-3. face and hair mass
-4. signature clothing block
-5. signature VFX
-6. small accessories
+2. head / hair / beard / hat shape
+3. dominant clothing color/block
+4. stance
+5. accessory
+6. signature VFX
+7. face pixels
 
-## 4. Rendering style
+If two characters are confused in black silhouette, redesign before animation production.
 
-### Character render
-
-Use a **2D semi-realistic cel-shaded comic render**:
-- realistic body proportions
-- 3 to 5 main value groups per material
-- hard-edged shadows with occasional dry-brush breakup
-- thin internal detail lines, thicker contour only where separation is needed
-- no uniform black outline around the entire body
-- facial features simplified but likeness-preserving
-- subtle grain / photocopy texture in portraits; cleaner in sprites
-
-### Lighting
-
-Characters are authored neutrally and receive arena-specific lighting in presentation.
-
-Base character art should have:
-- cool neutral key
-- controlled rim accent unique to fighter
-- no baked full-scene colored fog
-- transparent background for production assets
-
-## 5. Fighter identities
+## 5. Fighter signatures
 
 ### HARTZ — HIGH VOLTAGE
 
-Gameplay read: fast all-rounder / rhythm control.
-
-Known approved visual cues:
-- grey/black ribbed jacket
+Known cues:
+- grey / black ribbed jacket
 - black T-shirt
 - silver chain
 
-Visual identity:
-- lean, alert silhouette rather than bulky
-- jacket creates a sharp diagonal/asymmetric torso shape
-- silver hardware catches light in short flashes
-- stance slightly forward, weight ready to switch direction
-- hands loose until impact, then very angular attack poses
+Pixel signature:
+- slim, alert silhouette
+- open ribbed jacket creating a strong diagonal torso break
+- short silver chain rendered as a bright pixel cluster
+- slightly forward stance
+- angular attack poses
 
-Signature palette:
-- charcoal / graphite
-- dirty off-white
+Palette:
+- graphite
+- charcoal
+- dirty white
+- silver
 - cold electric blue-white accent
-- silver metallic detail
 
-Signature VFX:
-- thin waveform / oscilloscope traces
-- short electric line breaks rather than lightning-bolt superhero effects
-- special creates a brief visual 'drop': image compresses / darkens, then a white-blue waveform snaps through the hit
-
-Portrait treatment:
-- 3/4 portrait
-- strong cool edge light
-- fragmented waveform crossing behind shoulders
-- name typography slightly frequency-distorted
+VFX:
+- thin waveform traces
+- short white-blue pixel breaks
+- no superhero lightning bolts
 
 ### PETOUX — LE MUR
 
-Gameplay read: tank / pressure.
+Recognition strategy:
+- use approved Brigade reference for broad visual identity
+- distinguish through planted stance and stable clothing mass
+- do not invent a larger body purely because the gameplay archetype is a tank
 
-Reference policy:
-- use the approved PETOUX photo reference for likeness and real physical traits
-- do not exaggerate body size simply because the gameplay archetype is a tank
+Pixel signature:
+- square planted stance
+- forearms visibly forming defensive blocks
+- widest grounded silhouette through posture
+- very small idle movement
 
-Visual identity:
-- widest visual base in the roster through stance and clothing mass, not invented anatomy
-- square, planted pose
-- elbows and forearms create defensive blocks
-- clothing shapes should feel dense and stable
+Palette:
+- black
+- warm charcoal
+- concrete beige / muted sand
+- amber accent
 
-Signature palette:
-- black / warm charcoal
-- concrete beige / muted sand accent
-- small amber warning-light hits
-
-Signature VFX:
-- compressed concentric speaker-pressure rings
-- dust / chalk burst at block impact
-- defense pose should visually 'lock' into the floor
-- special reads as a wall of pressure, not an energy beam
-
-Portrait treatment:
-- front-biased composition
-- strong vertical framing
-- rough concrete / speaker-grille texture
+VFX:
+- speaker-pressure rings rendered as pixel arcs
+- chalk/dust bursts on blocks
 
 ### NEXMOS — REDLINE
 
-Gameplay read: power brawler.
-
-Known approved visual cues:
+Known cues:
 - beard
 - black tank top
-- red-lit visual reference
+- arms visible
+- strong red association from approved reference
 
-Visual identity:
-- exposed arms become a core attack-read asset
-- compact torso twist before power strikes
-- portrait and combat render keep the black tank top as a clear recognition block unless later changed from reference
-- red light is sharp and directional, not full-body glow
+Pixel signature:
+- highly readable beard block
+- exposed arms
+- black tank top as the dominant clothing shape
+- compact, aggressive stance
+- heavy torso rotation on attacks
 
-Signature palette:
-- deep black
-- desaturated skin neutrals
-- saturated dark red / emergency red accent
-- tiny off-white highlights
+Palette:
+- black
+- skin neutrals
+- dark red
+- bright emergency-red accent
 
-Signature VFX:
-- red clipping / limiter bars
-- three-step hit markers for REDLINE COMBO
-- short frame tearing / overdrive distortion on heavy impact
-- final special hit leaves a horizontal red 'limit' line for a few frames
-
-Portrait treatment:
-- darker face-side shadow
-- red side light
-- graphic meter approaching clipping behind the figure
+VFX:
+- red limiter bars
+- short horizontal clipping lines
+- 3-step red hit markers during special
 
 ### KAVALEUR — CAVALCADE
 
-Gameplay read: rush / dodge / highest speed.
+Approved distinguishing cues from product owner:
+- sunglasses
+- small beard
+- dressed in pink
 
-Reference policy:
-- use the established group-photo identity for broad likeness and silhouette
-- do not fabricate close facial/body characteristics not supported by a usable approved source
-- current design work may always define costume language, stance, palette and effects
+Pixel signature:
+- sunglasses must remain readable even at combat size as a dark horizontal eye band
+- small beard rendered as a compact darker chin/jaw cluster
+- strong pink clothing block; pink is the primary recognition color
+- narrow, forward-moving stance
+- long diagonals and fast lean
 
-Visual identity:
-- narrow, forward-moving silhouette
-- longest diagonals in the roster
-- open stance with one shoulder consistently leading
-- fabric/accessory motion should visually continue movement after the body stops
+Palette:
+- saturated / dusty pink clothing
+- black sunglasses
+- smoke grey shadows
+- deep violet secondary accent
+- cold white highlights
 
-Signature palette:
-- black
-- smoke grey
-- ultraviolet / deep violet accent
-- cold white speed highlights
-
-Signature VFX:
-- duplicated offset silhouettes for 1–2 frames
-- sliced motion trails, never soft blur
-- dash produces broken poster-registration offsets
-- dodge briefly mis-registers the character like a bad two-color print
-
-Portrait treatment:
-- cropped off-center
-- body crossing frame directionally
-- misregistered duplicate contour
+VFX:
+- duplicated 1–2 frame silhouettes
+- hard sliced motion trails
+- print-registration offsets rather than blur
 
 ### KORSAIR — CONTRETEMPS
 
-Gameplay read: defense / counter.
+Approved distinguishing cues from product owner:
+- pirate hat
+- bandana
+- light brown hair
 
-Reference policy:
-- use the established group-photo identity for broad likeness and silhouette
-- do not fabricate close facial/body characteristics not supported by a usable approved source
-- current design work may always define costume language, stance, palette and effects
+Pixel signature:
+- pirate hat is the dominant silhouette feature and must remain recognizable from a distance
+- bandana visible as a strong secondary head/neck color block
+- light-brown hair cluster visible beneath / around the hat
+- calm, closed guard stance
+- much less idle motion than the rest of the roster
 
-Visual identity:
-- calmest idle in the roster
-- slightly closed guard and asymmetric stance
-- less movement than opponents until a counter activates
-- visual tension comes from stillness rather than large idle animation
+Important art rule:
+- the pirate language should stay stylized and contemporary, not become a fantasy pirate costume
+- use the hat/bandana as iconic props over modern dark Brigade clothing
 
-Signature palette:
+Palette:
 - black / petrol charcoal
+- light brown hair
 - muted teal / oxidized green accent
 - off-white
-- minimal brass/metallic note if supported by future reference/costume design
+- restrained red or burgundy bandana if it reads well with the Brigade palette
 
-Signature VFX:
-- delayed echo line following the opponent's motion
-- counter window shown by a thin teal timing arc
-- successful counter snaps the arc shut like a metronome
-- special freezes background accents for a fraction of a second, then releases impact
+VFX:
+- timing arcs
+- metronome-like snap lines
+- brief freeze-frame accent for counters
 
-Portrait treatment:
-- composed, nearly static framing
-- offset timing ticks / metronome marks
-- negative space around the face to contrast with the more aggressive portraits
+## 6. Character select portraits
 
-## 6. Character-sheet deliverable per fighter
+Portraits can use a larger pixel canvas than combat sprites.
 
-Before final production, the Character Art Director must create for each member:
+Target:
+- pixel-art bust / 3-quarter portrait
+- stronger facial recognition than combat sprites
+- same palette and silhouette language as gameplay sprite
+- rough rave-poster framing
+- name typography and stat bars remain crisp UI, not baked into the portrait
 
-1. **Reference board**
-   - approved photos only
-   - clothing / accessory notes
-   - explicit unknowns
+The combat sprite and select portrait must obviously represent the same character.
 
-2. **Silhouette sheet**
-   - 3 variants
-   - black-only thumbnails
-   - combat-scale preview
+## 7. Animation target
 
-3. **Hero character sheet**
-   - front
-   - 3/4
-   - side
-   - neutral expression
-   - fighting stance
-
-4. **Action pose sheet**
-   - idle
-   - attack 1 / 2 / 3
-   - defense
-   - dodge
-   - hit reaction
-   - guard break
-   - special anticipation / impact / recovery
-   - KO
-   - victory pose
-
-5. **Material + palette strip**
-   - skin
-   - top/jacket
-   - trousers
-   - shoes
-   - accessories
-   - signature accent
-
-6. **Portrait package**
-   - character-select portrait
-   - VS portrait
-   - victory/defeat crop
-
-7. **VFX sheet**
-   - attack contact
-   - block
-   - dodge
-   - special
-   - KO
-
-## 7. Sprite production target
-
-Do not build hundreds of frames before the identity is approved.
-
-Prototype animation target per fighter:
-- idle: 6–8 key frames
-- attack combo: 5–7 key frames per strike
-- defense enter/hold/release: 3 + hold + 2
+Prototype per fighter:
+- idle: 6–8 frames
+- attack 1: 5–7 frames
+- attack 2: 5–7 frames
+- attack 3: 6–8 frames
+- defense enter / hold / release: 3 + hold + 2
 - dodge: 6–8 frames
-- hit light/heavy: 3–5 frames
-- special: 10–16 key frames depending on fighter
+- hit light: 3–4 frames
+- hit heavy: 4–5 frames
+- guard break: 5–7 frames
+- special: 10–16 frames
 - KO: 8–12 frames
+- victory: 6–10 frames
 
-Use transparent WebP where supported for runtime assets, retaining lossless source masters separately.
+Frame count is secondary to strong key poses and readable timing.
 
-## 8. Approval gates
+## 8. Production rules for Phaser
 
-### Gate A — Art direction
-Approve the shared BRIGADA // RAVE FIGHTER style on one test fighter before designing all five.
+- source sprites should be transparent PNG or lossless WebP during production
+- runtime textures may be optimized later
+- set rendering to nearest-neighbor / pixelated
+- never scale sprites with smoothing
+- prefer integer scaling where possible
+- animation state comes from the deterministic combat engine
+- Phaser only presents state; it does not own combat rules
 
-Recommended test fighter: **HARTZ**, because existing approved visual cues are concrete and his balanced gameplay makes him a good visual baseline.
+## 9. Approval workflow
 
-### Gate B — Roster readability
-Show all five as black silhouettes at the same combat scale. If names are required to tell them apart, redesign.
+### Gate A — roster silhouettes
+Create all five as simple pixel-art silhouettes / flat-color recognition studies first.
 
-### Gate C — Portrait consistency
-Selection/VS portraits and combat sprite must clearly represent the same person.
+The product owner must be able to identify:
+- HARTZ
+- PETOUX
+- NEXMOS
+- KAVALEUR
+- KORSAIR
 
-### Gate D — Mobile readability
-Review at actual mobile-landscape dimensions, not only full-resolution art.
+without reading the names.
 
-## 9. Production workflow with agents
+### Gate B — one complete test fighter
+Use HARTZ as the first fully rendered fighter:
+- select portrait
+- combat idle
+- attack pose
+- defense pose
+- dodge pose
+- special pose
 
-1. Character Art Director builds the reference board from the official La Brigade project material first.
-2. Character Art Director creates 3 controlled visual routes for the test fighter.
-3. Product owner chooses one route.
-4. Art Director creates the full test-fighter sheet.
-5. Phaser agent integrates a temporary idle + attack set.
-6. QA captures combat screenshots at mobile landscape size.
-7. Art Director adjusts readability based on real in-game scale.
-8. Repeat the approved system across the remaining fighters.
+### Gate C — mobile-scale review
+Integrate HARTZ into Phaser and inspect at actual phone landscape scale.
 
-No final five-character sprite production should begin before Gate A is approved.
+### Gate D — roster production
+Only after the style passes the in-game test, produce the full five-character set.
+
+## 10. Agent workflow
+
+1. Character Art Director proposes 3 pixel-art treatments within this direction.
+2. Product owner selects one.
+3. Art Director creates a 5-character recognition sheet.
+4. Product owner validates that every member reads correctly.
+5. Art Director finishes HARTZ.
+6. Phaser agent integrates HARTZ.
+7. QA captures and tests at mobile landscape size.
+8. Art Director adjusts sprite scale / palette / silhouette if necessary.
+9. Apply the approved system to PETOUX, NEXMOS, KAVALEUR and KORSAIR.
