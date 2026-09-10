@@ -1,0 +1,268 @@
+/* Approved Brigada pixel-rave art integration.
+   Source of truth: /public/art/brigada-pixel-rave-roster-v1.webp */
+
+:root {
+  --brigada-red: #ef2b22;
+  --brigada-ink: #060607;
+  --brigada-paper: #eee7d8;
+}
+
+.home-screen {
+  background:
+    linear-gradient(90deg, rgba(4, 4, 5, 0.92), rgba(4, 4, 5, 0.48) 48%, rgba(4, 4, 5, 0.86)),
+    url("/art/brigada-pixel-rave-roster-v1.webp") center / cover no-repeat;
+  image-rendering: pixelated;
+}
+
+.home-screen .primary-cta {
+  background: var(--brigada-red);
+  color: white;
+  border-radius: 4px;
+  box-shadow: 6px 6px 0 #000;
+}
+
+.home-screen .home-title,
+.home-screen .chalk-mark,
+.home-screen .home-note {
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.9);
+}
+
+/* CHARACTER SELECT
+   The approved roster artwork is the actual selection surface. Existing fighter
+   buttons remain semantic/clickable and are laid over each fighter column. */
+.select-screen {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100dvh - 28px);
+  background: #050506;
+}
+
+.select-screen::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 50%;
+  width: min(100%, calc((100dvh - 28px) * 1.5));
+  max-height: 100%;
+  aspect-ratio: 3 / 2;
+  transform: translate(-50%, -50%);
+  background: url("/art/brigada-pixel-rave-roster-v1.webp") center / contain no-repeat;
+  image-rendering: pixelated;
+}
+
+.select-screen .screen-heading {
+  position: absolute;
+  z-index: 10;
+  inset: 0 0 auto;
+  padding: 12px 14px;
+  pointer-events: none;
+}
+
+.select-screen .screen-heading > div {
+  opacity: 0;
+}
+
+.select-screen .screen-heading .text-button {
+  pointer-events: auto;
+  margin-left: auto;
+  padding: 10px 14px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 2px;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.select-screen .fighter-grid {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 50%;
+  width: min(100%, calc((100dvh - 28px) * 1.5));
+  max-height: 100%;
+  aspect-ratio: 3 / 2;
+  transform: translate(-50%, -50%);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.select-screen .fighter-card {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  color: transparent;
+  cursor: pointer;
+}
+
+.select-screen .fighter-card > * {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.select-screen .fighter-card::after {
+  content: "";
+  position: absolute;
+  inset: 16% 3% 3%;
+  border: 3px solid transparent;
+  outline: 1px solid transparent;
+  transition: border-color 90ms steps(2), background-color 90ms steps(2), transform 90ms steps(2);
+}
+
+.select-screen .fighter-card:hover,
+.select-screen .fighter-card:focus-visible {
+  transform: none;
+  outline: none;
+}
+
+.select-screen .fighter-card:hover::after,
+.select-screen .fighter-card:focus-visible::after,
+.select-screen .fighter-card:active::after {
+  border-color: var(--brigada-red);
+  outline-color: #fff;
+  background: linear-gradient(180deg, transparent 65%, rgba(239, 43, 34, 0.12));
+  transform: translateY(-2px);
+}
+
+/* Use the approved roster as a temporary pixel-art atlas for VS, result and
+   combat presentation until dedicated transparent sprite sheets are produced. */
+.versus-portrait,
+.result-portrait,
+.arena-fighter {
+  background-image: url("/art/brigada-pixel-rave-roster-v1.webp") !important;
+  background-repeat: no-repeat !important;
+  image-rendering: pixelated;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+.versus-portrait,
+.result-portrait {
+  background-size: 615% auto !important;
+  background-position-y: 33% !important;
+  border-radius: 0 !important;
+  border: 3px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 8px 8px 0 #000, 0 0 0 2px var(--brigada-red);
+}
+
+.versus-portrait.fighter-hartz,
+.result-portrait.fighter-hartz { background-position-x: 3% !important; }
+.versus-portrait.fighter-petoux,
+.result-portrait.fighter-petoux { background-position-x: 26% !important; }
+.versus-portrait.fighter-nexmos,
+.result-portrait.fighter-nexmos { background-position-x: 49% !important; }
+.versus-portrait.fighter-kavaleur,
+.result-portrait.fighter-kavaleur { background-position-x: 73% !important; }
+.versus-portrait.fighter-korsair,
+.result-portrait.fighter-korsair { background-position-x: 96% !important; }
+
+.versus-screen,
+.result-screen {
+  background:
+    linear-gradient(rgba(5, 5, 6, 0.78), rgba(5, 5, 6, 0.88)),
+    url("/art/brigada-pixel-rave-roster-v1.webp") center / cover no-repeat;
+}
+
+.versus-center > strong,
+.result-screen h1 {
+  color: #fff;
+  text-shadow: 5px 5px 0 #000, 7px 7px 0 var(--brigada-red);
+}
+
+.arena-shell {
+  background:
+    linear-gradient(rgba(7, 7, 8, 0.24), rgba(7, 7, 8, 0.5)),
+    url("/art/brigada-pixel-rave-roster-v1.webp") center 35% / cover no-repeat !important;
+  image-rendering: pixelated;
+}
+
+.arena-shell .blackboard,
+.arena-shell .speaker {
+  opacity: 0.12;
+}
+
+.arena-fighter {
+  width: clamp(92px, 12vw, 154px) !important;
+  height: clamp(175px, 27vw, 280px) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 0 !important;
+  background-size: 650% auto !important;
+  background-position-y: 31% !important;
+  box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.arena-fighter > span {
+  opacity: 0;
+}
+
+.arena-fighter.fighter-hartz { background-position-x: 3% !important; }
+.arena-fighter.fighter-petoux { background-position-x: 26% !important; }
+.arena-fighter.fighter-nexmos { background-position-x: 49% !important; }
+.arena-fighter.fighter-kavaleur { background-position-x: 73% !important; }
+.arena-fighter.fighter-korsair { background-position-x: 96% !important; }
+
+.arena-fighter.is-hit {
+  filter: contrast(1.35) brightness(1.55) saturate(0.7);
+  outline: 4px solid #fff;
+}
+
+.arena-fighter.is-special {
+  filter: contrast(1.2) saturate(1.35);
+  outline: 4px solid var(--brigada-red);
+}
+
+.fight-hud,
+.fight-controls {
+  background: #080809;
+}
+
+.health-fill,
+.opponent-hud .health-fill,
+.guard-fill {
+  border-radius: 0 !important;
+}
+
+.health-fill {
+  background: var(--brigada-red) !important;
+}
+
+.opponent-hud .health-fill {
+  background: #f5f0e6 !important;
+}
+
+.fight-button,
+.primary-cta,
+.secondary-cta {
+  image-rendering: pixelated;
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .select-screen::before,
+  .select-screen .fighter-grid {
+    width: min(100%, calc((100dvh - 12px) * 1.5));
+  }
+
+  .select-screen .screen-heading {
+    padding: 6px 8px;
+  }
+
+  .select-screen .screen-heading .text-button {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  .arena-fighter {
+    width: clamp(78px, 11vw, 110px) !important;
+    height: clamp(145px, 24vw, 205px) !important;
+  }
+}
