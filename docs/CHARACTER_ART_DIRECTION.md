@@ -1,5 +1,38 @@
 # Character Art Direction — LA BRIGADE: 0+0=FIGHT
 
+## 0. Official La Brigade project references
+
+The Character Art Director must treat the existing **La Brigade** project identity as the primary visual source instead of inventing a new unrelated fighting-game brand.
+
+### Existing Brigade visual DNA
+
+Approved project material establishes a strong recurring language:
+- black / charcoal dominant backgrounds
+- white typography with strong red editorial accents
+- school / detention-room references
+- blackboard and chalk marks
+- rough graffiti / hand-drawn annotation language
+- red school chair / desk as a recurring object
+- the signature **0 + 0 = TECHNO**
+- outdoor / urban wall textures
+- event-poster composition with large typography and highly controlled hierarchy
+- underground techno/rave atmosphere rather than fantasy or sci-fi world-building
+
+This identity should influence character-select screens, VS frames, VFX typography, portrait framing, arena details, loading transitions and promotional art. It should **not** be pasted literally onto every garment.
+
+### Human reference inventory already established in the La Brigade project
+
+The project context already identifies the group roster and visual references as follows:
+
+- **Group photo:** left-to-right order established as HARTZ, KAVALEUR, PETOUX, NEXMOS, KORSAIR.
+- **HARTZ:** individual portrait reference established; known cues include grey/black ribbed jacket, black T-shirt and silver chain.
+- **PETOUX:** individual/two-person reference established with PETOUX identified on the left.
+- **NEXMOS:** individual reference established showing beard, black tank top and red-lit DJ/microphone environment.
+- **KAVALEUR:** group-photo identity is known; do not invent close facial/body detail beyond what can be supported by approved project imagery.
+- **KORSAIR:** group-photo identity is known; do not invent close facial/body detail beyond what can be supported by approved project imagery.
+
+When the image-generation/runtime pipeline cannot directly access an original reference binary, preserve this reference inventory and do not fabricate unsupported facial details. The art direction may still define silhouette, palette, clothing blocks, stance, VFX and composition until the source image is available to the generation step.
+
 ## 1. Creative target
 
 The current placeholder look is not a target. The production identity should feel like a **European underground techno fighting comic**, not a generic browser game.
@@ -175,8 +208,9 @@ Portrait treatment:
 Gameplay read: rush / dodge / highest speed.
 
 Reference policy:
-- facial/body likeness must wait for an approved visual reference
-- current design work may define costume language, stance, palette and effects only
+- use the established group-photo identity for broad likeness and silhouette
+- do not fabricate close facial/body characteristics not supported by a usable approved source
+- current design work may always define costume language, stance, palette and effects
 
 Visual identity:
 - narrow, forward-moving silhouette
@@ -206,8 +240,9 @@ Portrait treatment:
 Gameplay read: defense / counter.
 
 Reference policy:
-- facial/body likeness must wait for an approved visual reference
-- current design work may define costume language, stance, palette and effects only
+- use the established group-photo identity for broad likeness and silhouette
+- do not fabricate close facial/body characteristics not supported by a usable approved source
+- current design work may always define costume language, stance, palette and effects
 
 Visual identity:
 - calmest idle in the roster
@@ -317,12 +352,13 @@ Review at actual mobile-landscape dimensions, not only full-resolution art.
 
 ## 9. Production workflow with agents
 
-1. Character Art Director creates 3 controlled visual routes for the test fighter.
-2. Product owner chooses one route.
-3. Art Director creates the full test-fighter sheet.
-4. Phaser agent integrates a temporary idle + attack set.
-5. QA captures combat screenshots at mobile landscape size.
-6. Art Director adjusts readability based on real in-game scale.
-7. Repeat the approved system across the remaining fighters.
+1. Character Art Director builds the reference board from the official La Brigade project material first.
+2. Character Art Director creates 3 controlled visual routes for the test fighter.
+3. Product owner chooses one route.
+4. Art Director creates the full test-fighter sheet.
+5. Phaser agent integrates a temporary idle + attack set.
+6. QA captures combat screenshots at mobile landscape size.
+7. Art Director adjusts readability based on real in-game scale.
+8. Repeat the approved system across the remaining fighters.
 
 No final five-character sprite production should begin before Gate A is approved.
