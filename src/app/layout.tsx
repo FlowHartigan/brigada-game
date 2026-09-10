@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import "./combat-ui.css";
+import "./art-direction.css";
 
 export const metadata: Metadata = {
   title: "La Brigade — 0+0=FIGHT",
