@@ -76,46 +76,65 @@ If two characters are confused in black silhouette, redesign before animation pr
 
 ### HARTZ — HIGH VOLTAGE
 
-Known cues:
-- grey / black ribbed jacket
+Approved current-reference cues:
+- short dark-brown hair, slightly swept / textured on top
+- round black sunglasses
+- light moustache and short beard / stubble around jaw and chin
+- grey / charcoal ribbed corduroy-style overshirt or jacket
 - black T-shirt
-- silver chain
+- thin silver chain
+- contemporary casual silhouette, not bulky
 
 Pixel signature:
-- slim, alert silhouette
-- open ribbed jacket creating a strong diagonal torso break
-- short silver chain rendered as a bright pixel cluster
-- slightly forward stance
-- angular attack poses
+- round dark sunglasses must stay readable as two strong dark circular/oval eye clusters joined by a thin bridge
+- short dark hair mass with a slight swept asymmetry
+- subtle beard/jaw cluster, never a large full beard
+- open grey ribbed jacket as the dominant clothing shape
+- black T-shirt creating a clean dark central torso block
+- thin silver chain as a small bright pixel accent
+- slim, alert and mobile fighting stance
+- slightly forward weight and angular hand poses
 
 Palette:
-- graphite
-- charcoal
-- dirty white
-- silver
-- cold electric blue-white accent
+- graphite / charcoal jacket
+- black T-shirt
+- dark brown hair
+- natural skin neutrals
+- dirty white / silver detail
+- cold electric blue-white VFX accent
 
 VFX:
 - thin waveform traces
 - short white-blue pixel breaks
 - no superhero lightning bolts
 
+Recognition rule:
+- HARTZ should be identifiable primarily by the combination **round black sunglasses + short dark hair + grey ribbed jacket + black shirt + silver chain**, not by facial likeness.
+
 ### PETOUX — LE MUR
 
+Approved current-reference cues:
+- short dark-brown hair
+- light short beard / stubble
+- grey sweatshirt / light neutral upper clothing direction
+- sarouel / harem-style trousers as a major silhouette cue
+
 Recognition strategy:
-- use approved Brigade reference for broad visual identity
-- distinguish through planted stance and stable clothing mass
+- use the approved Brigade reference for broad visual identity
 - do not invent a larger body purely because the gameplay archetype is a tank
+- distinguish through planted stance, sarouel silhouette and stable clothing mass
 
 Pixel signature:
 - square planted stance
 - forearms visibly forming defensive blocks
-- widest grounded silhouette through posture
+- very wide lower-leg/trouser silhouette created by the sarouel
+- compact upper silhouette contrasted with loose trousers
 - very small idle movement
 
 Palette:
-- black
-- warm charcoal
+- grey / light neutral top
+- black / charcoal sarouel
+- warm charcoal shadows
 - concrete beige / muted sand
 - amber accent
 
