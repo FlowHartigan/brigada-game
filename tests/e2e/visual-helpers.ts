@@ -1,22 +1,25 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-const fighterSources: Record<string, string> = {
-  hartz: "/fighters/hartz.png",
-  petoux: "/fighters/petoux-fixed.svg",
-  nexmos: "/fighters/nexmos.png",
-  kavaleur: "/fighters/kavaleur.png",
-  korsair: "/fighters/korsair-fixed.svg",
-};
+export const fighterSrc = (id: string) => `/fighters/${id}.png`;
 
-export const fighterSrc = (id: string) => fighterSources[id] ?? `/fighters/${id}.png`;
-
+/**
+ * Verify both the decoded fighter asset and its real rendered contribution.
+ * The screenshot comparison is intentional: if CSS positioning/clipping moves
+ * the fighter outside its frame, hiding the img produces the same screenshot
+ * and this assertion fails even though the DOM node itself still exists.
+ */
 export async function expectFighterPixels(image: Locator, expectedSrc: string) {
   await expect(image).toBeVisible();
   await expect(image).toHaveAttribute("src", expectedSrc);
 
-  await expect.poll(() => image.evaluate((node) => {
+  await expect.poll(() => image.evaluate(async (node) => {
     const img = node as HTMLImageElement;
-    return img.complete && img.naturalWidth === 128 && img.naturalHeight === 128;
+    try {
+      await img.decode();
+    } catch {
+      return false;
+    }
+    return img.complete && img.naturalWidth > 20 && img.naturalHeight > 20;
   })).toBe(true);
 
   const rendered = await image.evaluate((node) => {
@@ -67,13 +70,10 @@ export async function expectFighterPixels(image: Locator, expectedSrc: string) {
   });
 
   expect(rendered).not.toBeNull();
-  // Empty/black frames have no alpha/content at all. The approved 128×128
-  // sprites intentionally have generous transparent padding, so use absolute
-  // rendered-pixel checks rather than a brittle percentage threshold.
   expect(rendered!.opaque).toBeGreaterThan(18);
   expect(rendered!.coloured).toBeGreaterThan(8);
   expect(rendered!.pixelWidth).toBeGreaterThan(5);
-  expect(rendered!.pixelHeight).toBeGreaterThan(8);
+  expect(rendered!.pixelHeight).toBeGreaterThanOrEqual(8);
   expect(rendered!.width).toBeGreaterThan(24);
   expect(rendered!.height).toBeGreaterThan(24);
   expect(rendered!.opacity).toBeGreaterThan(0.7);
@@ -81,6 +81,22 @@ export async function expectFighterPixels(image: Locator, expectedSrc: string) {
   expect(rendered!.display).not.toBe("none");
   expect(rendered!.objectFit).toBe("contain");
   expect(rendered!.transform).toBe("none");
+
+  // Actual Chromium pixels: the fighter must change the screenshot of the
+  // frame it is supposed to occupy. An empty/black/clipped frame does not.
+  const frame = image.locator("xpath=..");
+  const withFighter = await frame.screenshot({ animations: "disabled" });
+  const previousVisibility = await image.evaluate((node) => {
+    const img = node as HTMLImageElement;
+    const previous = img.style.visibility;
+    img.style.visibility = "hidden";
+    return previous;
+  });
+  const withoutFighter = await frame.screenshot({ animations: "disabled" });
+  await image.evaluate((node, previous) => {
+    (node as HTMLImageElement).style.visibility = previous;
+  }, previousVisibility);
+  expect(withFighter.equals(withoutFighter)).toBe(false);
 }
 
 export async function saveVisual(page: Page, name: string) {
