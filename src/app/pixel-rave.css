@@ -1,0 +1,104 @@
+/* Replace the legacy poster overlay with a live, responsive selection screen. */
+.select-screen::before, .select-screen .fighter-card::after { content: none; }
+.select-screen .screen-heading { position: static; inset: auto; pointer-events: auto; }
+.select-screen .screen-heading > div, .select-screen .fighter-card > * { opacity: 1; }
+.select-screen .fighter-grid { position: static; left: auto; top: auto; width: auto; max-height: none; aspect-ratio: auto; transform: none; }
+.select-screen .fighter-card { height: auto; overflow: hidden; background: #161211 !important; }
+/* Selection-only presentation. The approved poster is displayed unchanged. */
+.select-screen {
+  --fighter-accent: #acd6e7;
+  display: grid;
+  grid-template-rows: auto minmax(250px, 1fr) auto auto;
+  background: repeating-linear-gradient(0deg, #ffffff02 0 1px, transparent 1px 4px), radial-gradient(ellipse at 35% 30%, #351814, #100e0e 70%);
+  border-radius: 3px;
+  border-color: #51403b;
+  color: #f6eee1;
+}
+.select-screen .screen-heading { padding: 20px 26px 12px; }
+.select-screen .screen-heading .eyebrow { color: #f54739; font-size: 12px; letter-spacing: .25em; }
+.select-screen .screen-heading h1 { font-family: Impact, 'Arial Narrow', sans-serif; font-size: clamp(21px, 3vw, 36px); letter-spacing: .02em; }
+.select-screen .text-button { min-height: 44px; color: #c5b9b1; font-size: 11px; }
+.selection-detail { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr); gap: 24px; padding: 0 26px 20px; min-height: 0; animation: select-reveal 180ms ease-out; }
+.selection-showcase { position: relative; display: flex; align-items: center; justify-content: center; min-height: 0; isolation: isolate; overflow: hidden; background: radial-gradient(ellipse at 50% 80%, #72302955, transparent 70%); border-bottom: 2px solid var(--fighter-accent); }
+.showcase-number { position: absolute; left: 0; top: 0; font: 100px / 1 Impact, sans-serif; color: #ffffff09; z-index: -1; }
+.roster-portrait, .roster-sprite { position: relative; overflow: hidden; aspect-ratio: var(--art-ratio); }
+.roster-portrait img, .roster-sprite img { position: absolute; width: var(--art-width); max-width: none; height: auto; left: var(--art-left); top: var(--art-top); image-rendering: pixelated; }
+.selection-showcase .roster-sprite { width: min(100%, 270px); flex-shrink: 0; }
+.selection-info { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: center; gap: 16px 24px; min-width: 0; }
+.selection-name p { margin: 0 0 3px; color: var(--fighter-accent); font: bold 12px monospace; letter-spacing: .18em; }
+.selection-name h2 { margin: 0; font: clamp(35px, 5vw, 64px) / 1 Impact, 'Arial Narrow', sans-serif; letter-spacing: .025em; }
+.selection-stats { display: grid; gap: 8px; align-content: center; }
+.select-screen .stat-row { grid-template-columns: 55px minmax(0, 1fr) 22px; gap: 6px; font: 11px monospace; }
+.select-screen .stat-track { height: 9px; border-radius: 0; background: #38312f; }
+.select-screen .stat-fill { border-radius: 0; background: repeating-linear-gradient(90deg, var(--fighter-accent) 0 7px, transparent 7px 9px); }
+.selection-special { min-width: 0; }
+.selection-special > span { display: block; color: #aa9990; font: 9px monospace; letter-spacing: .18em; margin-bottom: 5px; }
+.selection-special strong { display: block; color: var(--fighter-accent); font: bold 13px monospace; }
+.selection-special p { margin: 7px 0 0; font-size: 12px; line-height: 1.4; color: #c5b9b1; }
+.select-screen .selection-confirm { align-self: end; min-width: 0; width: 100%; min-height: 54px; border-radius: 0; border: 1px solid #ff7768; background: #d83126; color: #fff0df; font: bold 20px Impact, 'Arial Narrow', sans-serif; letter-spacing: .08em; box-shadow: 4px 4px 0 #591e18; }
+.selection-confirm span { margin-left: 12px; }
+.select-screen .fighter-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; padding: 6px 26px 16px; overflow: visible; }
+.select-screen .fighter-card { position: relative; min-width: 0; max-width: none; grid-column: auto; width: 100%; border-radius: 0; background: #161211; border: 2px solid #55453e; color: #e4d8cd; opacity: .7; transition: opacity 150ms ease, transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease; }
+.select-screen .fighter-card:hover { opacity: 1; transform: translateY(-2px); border-color: var(--fighter-accent); }
+.select-screen .fighter-card.is-selected { opacity: 1; transform: translateY(-4px); border-color: var(--fighter-accent); box-shadow: 0 0 16px color-mix(in srgb, var(--fighter-accent) 22%, transparent), 0 3px 0 var(--fighter-accent); }
+.select-screen button:focus-visible { outline: 2px solid #fff0df; outline-offset: 3px; }
+.select-screen .fighter-portrait { height: auto; aspect-ratio: 148 / 126; display: block; }
+.select-screen .fighter-portrait::before { content: none; }
+.roster-portrait { width: 100%; }
+.fighter-card-label { display: grid; gap: 3px; padding: 8px 7px; border-top: 1px solid #524039; }
+.fighter-card-label strong { font: clamp(13px, 2vw, 23px) / 1 Impact, 'Arial Narrow', sans-serif; letter-spacing: .025em; }
+.fighter-card-label > span { color: var(--fighter-accent); font: 9px monospace; }
+.selection-marker { position: absolute; top: 0; left: 0; padding: 4px 6px; background: var(--fighter-accent); color: #130d0c; font: bold 11px monospace; }
+.selection-footer { display: flex; justify-content: space-between; gap: 10px; padding: 9px 26px; border-top: 1px solid #49332c; color: #89766c; font: 9px monospace; letter-spacing: .08em; }
+@keyframes select-reveal { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (orientation: landscape) and (max-height: 560px) {
+  .select-screen { grid-template-rows: 52px minmax(150px, 1fr) 112px 20px; height: calc(100dvh - 28px); min-height: 334px; }
+  .select-screen .screen-heading { padding: 5px 16px; }
+  .select-screen .screen-heading .eyebrow { font-size: 9px; }
+  .select-screen .screen-heading h1 { font-size: 22px; }
+  .selection-detail { grid-template-columns: minmax(0, .55fr) minmax(0, 1.45fr); gap: 16px; padding: 0 16px 8px; }
+  .selection-showcase .roster-sprite { width: auto; height: 100%; }
+  .selection-info { gap: 7px 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .selection-name h2 { font-size: 33px; }
+  .selection-name p { font-size: 10px; }
+  .selection-stats { gap: 4px; }
+  .select-screen .stat-row { font-size: 9px; grid-template-columns: 46px minmax(0, 1fr) 20px; }
+  .select-screen .stat-track { height: 7px; }
+  .selection-special > span { font-size: 8px; margin-bottom: 3px; }
+  .selection-special strong { font-size: 10px; }
+  .selection-special p { font-size: 10px; margin-top: 3px; line-height: 1.25; }
+  .select-screen .selection-confirm { min-height: 44px; font-size: 18px; }
+  .select-screen .fighter-grid { gap: 8px; padding: 4px 16px 8px; }
+  .select-screen .fighter-card { display: grid; grid-template-columns: minmax(0, 1fr) 1fr; align-items: center; }
+  .select-screen .fighter-portrait { width: 100%; grid-column: 1 / -1; height: 65px; aspect-ratio: auto; display: flex; justify-content: center; background: #090707; }
+  .select-screen .roster-portrait { height: 100%; width: auto; }
+  .fighter-card-label { grid-column: 1 / -1; text-align: center; padding: 4px 2px; gap: 2px; }
+  .fighter-card-label strong { font-size: 15px; }
+  .fighter-card-label > span { font-size: 8px; }
+  .selection-footer { padding: 4px 16px; font-size: 8px; }
+}
+@media (max-width: 820px) and (orientation: landscape) {
+  .select-screen { height: calc(100dvh - 12px); }
+}
+@media (orientation: portrait) {
+  .select-screen { grid-template-rows: auto auto auto auto; align-content: start; }
+  .select-screen .screen-heading { padding: 15px 12px; gap: 4px; }
+  .select-screen .screen-heading h1 { font-size: 21px; }
+  .select-screen .screen-heading .eyebrow { font-size: 10px; }
+  .selection-detail { grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); gap: 12px; padding: 0 12px 20px; }
+  .selection-info { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .selection-name h2 { font-size: 32px; }
+  .selection-name p { font-size: 9px; letter-spacing: .07em; }
+  .selection-special strong { font-size: 11px; }
+  .selection-special p { font-size: 10px; }
+  .select-screen .selection-confirm { font-size: 16px; min-height: 48px; }
+  .select-screen .fighter-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px 8px 15px; }
+  .fighter-card-label { padding: 6px 1px; text-align: center; }
+  .fighter-card-label strong { font-size: clamp(10px, 2.7vw, 15px); }
+  .fighter-card-label > span { display: none; }
+  .selection-marker { font-size: 8px; padding: 2px 3px; }
+  .selection-footer { padding: 8px; font-size: 7px; letter-spacing: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .select-screen *, .select-screen *::before { animation: none !important; transition: none !important; }
+}

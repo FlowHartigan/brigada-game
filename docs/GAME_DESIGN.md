@@ -1,4 +1,4 @@
-# Game Design — LA BRIGADE: 0+0=FIGHT
+# Game Design — BRIGADA FIGHT
 
 ## High concept
 

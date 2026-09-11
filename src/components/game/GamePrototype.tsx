@@ -20,6 +20,8 @@ import {
 } from "@/game/engine/opponent-ai";
 import type { CombatAction, FighterDefinition, FighterId } from "@/game/engine/types";
 
+import { FighterArt } from "./FighterArt";
+
 type Scene = "home" | "select" | "versus" | "fight" | "result";
 
 const actionLabels: Record<CombatAction, string> = {
@@ -41,30 +43,27 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function FighterCard({
-  fighter,
-  onSelect,
-}: {
+const fighterAccents: Record<FighterId, string> = {
+  hartz: "#acd6e7", petoux: "#e9c9a4", nexmos: "#ff493d",
+  kavaleur: "#ff69b2", korsair: "#e7aa54",
+};
+
+function FighterCard({ fighter, active, onSelect }: {
   fighter: FighterDefinition;
+  active: boolean;
   onSelect: (id: FighterId) => void;
 }) {
   return (
-    <button className="fighter-card" onClick={() => onSelect(fighter.id)}>
-      <div className={`fighter-portrait fighter-${fighter.id}`} aria-hidden="true">
-        <span>{fighter.name.slice(0, 1)}</span>
-      </div>
-      <div className="fighter-copy">
-        <p className="eyebrow">{fighter.title}</p>
-        <h2>{fighter.name}</h2>
-        <p className="archetype">{fighter.archetype}</p>
-        <div className="stats">
-          <Stat label="FOR" value={fighter.stats.strength} />
-          <Stat label="VIE" value={fighter.stats.vitality} />
-          <Stat label="VIT" value={fighter.stats.speed} />
-          <Stat label="DEF" value={fighter.stats.defense} />
-        </div>
-        <p className="tagline">« {fighter.tagline} »</p>
-      </div>
+    <button
+      className={`fighter-card${active ? " is-selected" : ""}`}
+      style={{ "--fighter-accent": fighterAccents[fighter.id] } as React.CSSProperties}
+      aria-pressed={active}
+      aria-label={`${fighter.name} — ${fighter.title}`}
+      onClick={() => onSelect(fighter.id)}
+    >
+      <div className="fighter-portrait"><FighterArt id={fighter.id} portrait /></div>
+      <div className="fighter-card-label"><strong>{fighter.name}</strong><span>{fighter.title}</span></div>
+      {active && <span className="selection-marker" aria-hidden="true">P1</span>}
     </button>
   );
 }
@@ -76,6 +75,7 @@ function cooldownLabel(remainingMs: number): string {
 
 export function GamePrototype() {
   const [scene, setScene] = useState<Scene>("home");
+  const [previewId, setPreviewId] = useState<FighterId>("hartz");
   const [selectedId, setSelectedId] = useState<FighterId | null>(null);
   const [opponentId, setOpponentId] = useState<FighterId | null>(null);
   const [combatState, setCombatState] = useState<CombatState | null>(null);
@@ -210,20 +210,34 @@ export function GamePrototype() {
   }
 
   if (scene === "select") {
+    const preview = getFighter(previewId);
     return (
-      <section className="select-screen screen-panel">
+      <section className="select-screen screen-panel" style={{ "--fighter-accent": fighterAccents[preview.id] } as React.CSSProperties}>
         <header className="screen-heading">
-          <div>
-            <p className="eyebrow">LA BRIGADE</p>
-            <h1>CHOISIS TON COMBATTANT</h1>
-          </div>
+          <div><p className="eyebrow">BRIGADA FIGHT</p><h1>CHOISIS TON COMBATTANT</h1></div>
           <button className="text-button" onClick={() => setScene("home")}>RETOUR</button>
         </header>
-        <div className="fighter-grid">
-          {fighters.map((fighter) => (
-            <FighterCard key={fighter.id} fighter={fighter} onSelect={selectFighter} />
-          ))}
+        <div className="selection-detail" key={preview.id}>
+          <div className="selection-showcase" aria-hidden="true">
+            <span className="showcase-number">0{fighters.findIndex(f => f.id === preview.id) + 1}</span>
+            <FighterArt id={preview.id} />
+          </div>
+          <div className="selection-info" aria-live="polite" aria-atomic="true">
+            <div className="selection-name"><p>{preview.title}</p><h2>{preview.name}</h2></div>
+            <div className="selection-stats">
+              <Stat label="Force" value={preview.stats.strength} />
+              <Stat label="Vitalité" value={preview.stats.vitality} />
+              <Stat label="Vitesse" value={preview.stats.speed} />
+              <Stat label="Défense" value={preview.stats.defense} />
+            </div>
+            <div className="selection-special"><span>SPÉCIALITÉ</span><strong>{preview.special.name}</strong><p>{preview.special.description}</p></div>
+            <button className="primary-cta selection-confirm" onClick={() => selectFighter(preview.id)}>COMBATTRE <span aria-hidden="true">→</span></button>
+          </div>
         </div>
+        <div className="fighter-grid" role="group" aria-label="Les cinq combattants">
+          {fighters.map((fighter) => <FighterCard key={fighter.id} fighter={fighter} active={previewId === fighter.id} onSelect={setPreviewId} />)}
+        </div>
+        <div className="selection-footer"><span>LA BRIGADE · SAME CREW. DIFFERENT MOVES.</span><span>0 + 0 = TECHNO</span></div>
       </section>
     );
   }

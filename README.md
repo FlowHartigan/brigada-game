@@ -1,4 +1,4 @@
-# LA BRIGADE: 0+0=FIGHT
+# BRIGADA FIGHT
 
 Mobile-first 2D fighting game playable directly in a web browser.
 

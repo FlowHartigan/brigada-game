@@ -1,10 +1,12 @@
-# Character Art Direction — LA BRIGADE: 0+0=FIGHT
+# Character Art Direction — BRIGADA FIGHT
 
 ## 0. Approved visual reference
 
 The current approved roster look is stored in the repository at:
 
-`docs/art-direction/brigada-pixel-rave-roster-v1.webp`
+`public/assets/brigada-pixel-rave-roster-v1.png`
+
+The original WebP in `docs/art-direction/` was truncated and is retained only as historical context. The PNG is the intact image supplied by the product owner.
 
 This image is the **primary visual reference** for future character-art, UI and Phaser presentation work unless the product owner explicitly supersedes it.
 

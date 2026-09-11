@@ -12,9 +12,10 @@ import "./sprites/nexmos-idle.css";
 import "./sprites/kavaleur-idle.css";
 import "./sprites/korsair-idle.css";
 import "./sprite-fighters.css";
+import "./pixel-rave.css";
 
 export const metadata: Metadata = {
-  title: "La Brigade — BRIGADA FIGHT",
+  title: "BRIGADA FIGHT",
   description: "Mobile-first 2D fighting game by La Brigade.",
 };
 
