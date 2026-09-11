@@ -21,8 +21,14 @@ async function expectAnimatedSource(image: Locator, state: string) {
   await expect(image).toHaveAttribute("data-state", state, { timeout: 500 });
   await expect(image).toHaveAttribute("data-animated", "true");
   const source = await image.getAttribute("src");
-  expect(source).toMatch(/^data:image\/webp;base64,/);
-  expect(source!.length).toBeGreaterThan(300);
+  const fighterId = await image.getAttribute("data-fighter");
+
+  if (fighterId === "korsair") {
+    expect(source).toBe(`/fighters/korsair.png#combat-${state}`);
+  } else {
+    expect(source).toMatch(/^data:image\/webp;base64,/);
+    expect(source!.length).toBeGreaterThan(300);
+  }
 }
 
 test("every fighter uses real combat action frames without breaking Select, VS or Combat", async ({ page }) => {
