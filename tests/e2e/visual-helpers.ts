@@ -83,19 +83,30 @@ export async function expectFighterPixels(image: Locator, expectedSrc: string) {
   expect(rendered!.transform).toBe("none");
 
   // Actual Chromium pixels: the fighter must change the screenshot of the
-  // frame it is supposed to occupy. An empty/black/clipped frame does not.
+  // frame it is supposed to occupy. Use !important because the production
+  // fighter CSS intentionally protects visibility with an !important rule.
   const frame = image.locator("xpath=..");
   const withFighter = await frame.screenshot({ animations: "disabled" });
   const previousVisibility = await image.evaluate((node) => {
     const img = node as HTMLImageElement;
-    const previous = img.style.visibility;
-    img.style.visibility = "hidden";
+    const previous = {
+      value: img.style.getPropertyValue("visibility"),
+      priority: img.style.getPropertyPriority("visibility"),
+    };
+    img.style.setProperty("visibility", "hidden", "important");
     return previous;
   });
+  await expect.poll(() => image.evaluate((node) => getComputedStyle(node).visibility)).toBe("hidden");
   const withoutFighter = await frame.screenshot({ animations: "disabled" });
   await image.evaluate((node, previous) => {
-    (node as HTMLImageElement).style.visibility = previous;
+    const img = node as HTMLImageElement;
+    if (previous.value) {
+      img.style.setProperty("visibility", previous.value, previous.priority);
+    } else {
+      img.style.removeProperty("visibility");
+    }
   }, previousVisibility);
+  await expect.poll(() => image.evaluate((node) => getComputedStyle(node).visibility)).toBe("visible");
   expect(withFighter.equals(withoutFighter)).toBe(false);
 }
 
