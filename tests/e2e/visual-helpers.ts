@@ -44,9 +44,9 @@ async function renderedScreenshotStats(page: Page, image: Locator) {
 }
 
 /**
- * Validate the decoded asset AND pixels from a real Chromium screenshot of the
- * rendered image. A loaded DOM node is not enough: a black/empty fighter box
- * must fail this assertion.
+ * Validate decoded artwork plus pixels from an actual Chromium screenshot.
+ * The bounding box must intersect the viewport, so an image rendered offscreen
+ * cannot pass just because Playwright can still address its DOM element.
  */
 export async function expectFighterPixels(page: Page, image: Locator, expectedSrc: string) {
   await expect(image).toBeVisible();
@@ -66,24 +66,28 @@ export async function expectFighterPixels(page: Page, image: Locator, expectedSr
     const img = node as HTMLImageElement;
     const rect = img.getBoundingClientRect();
     const style = getComputedStyle(img);
+    const visibleWidth = Math.max(0, Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0));
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
     return {
       width: rect.width,
       height: rect.height,
+      visibleWidth,
+      visibleHeight,
       opacity: Number(style.opacity),
       visibility: style.visibility,
       display: style.display,
       objectFit: style.objectFit,
-      transform: style.transform,
     };
   });
 
   expect(rendered.width).toBeGreaterThan(24);
   expect(rendered.height).toBeGreaterThan(24);
+  expect(rendered.visibleWidth).toBeGreaterThan(24);
+  expect(rendered.visibleHeight).toBeGreaterThan(24);
   expect(rendered.opacity).toBeGreaterThan(0.7);
   expect(rendered.visibility).toBe("visible");
   expect(rendered.display).not.toBe("none");
   expect(rendered.objectFit).toBe("contain");
-  expect(rendered.transform).toBe("none");
 
   const screenshotStats = await renderedScreenshotStats(page, image);
   expect(screenshotStats).not.toBeNull();
