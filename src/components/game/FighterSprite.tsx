@@ -35,7 +35,9 @@ export function FighterSprite({
   className?: string;
 }) {
   const frame = frameFor(id, state);
-  const style = { "--sprite-frame": frame } as CSSProperties;
+  const style = {
+    "--sprite-offset": `${frame * -100}%`,
+  } as CSSProperties;
 
   return (
     <span
