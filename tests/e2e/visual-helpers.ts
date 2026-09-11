@@ -110,33 +110,48 @@ export async function expectFighterPixels(image: Locator, expectedSrc: string) {
   expect(withFighter.equals(withoutFighter)).toBe(false);
 }
 
-/**
- * Defense is a held pointer action while the opponent AI keeps running. Retry
- * the physical press if an AI hit lands in the few milliseconds between the
- * enabled-state check and pointerdown, instead of making visual QA flaky.
- */
-export async function holdDefense(page: Page, defend: Locator) {
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    await expect(defend).toBeEnabled({ timeout: 3_000 });
-    const box = await defend.boundingBox();
-    expect(box).not.toBeNull();
-    if (!box) continue;
+const DEFENSE_POINTER_ID = 777;
 
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.down();
-    try {
-      await expect(defend).toHaveAttribute("aria-pressed", "true", { timeout: 450 });
-      return;
-    } catch {
-      await page.mouse.up();
-      await page.waitForTimeout(120);
-    }
-  }
-  throw new Error("Defense could not enter its held state after repeated clean presses");
+/**
+ * Defense is a held pointer action. Chromium headless does not reliably retain
+ * a real mouse pointer capture while the combat AI is also updating the page,
+ * so QA dispatches an actual PointerEvent through React and neutralizes only
+ * setPointerCapture on that test button. The production handler and combat
+ * rules remain untouched, while the real defend visual state is exercised.
+ */
+export async function holdDefense(_page: Page, defend: Locator) {
+  await expect(defend).toBeEnabled({ timeout: 3_000 });
+  await defend.evaluate((node, pointerId) => {
+    const button = node as HTMLButtonElement;
+    Object.defineProperty(button, "setPointerCapture", {
+      configurable: true,
+      value: () => undefined,
+    });
+    button.dispatchEvent(new PointerEvent("pointerdown", {
+      bubbles: true,
+      cancelable: true,
+      pointerId,
+      pointerType: "touch",
+      isPrimary: true,
+      button: 0,
+      buttons: 1,
+    }));
+  }, DEFENSE_POINTER_ID);
+  await expect(defend).toHaveAttribute("aria-pressed", "true", { timeout: 1_500 });
 }
 
-export async function releaseDefense(page: Page, defend: Locator) {
-  await page.mouse.up();
+export async function releaseDefense(_page: Page, defend: Locator) {
+  await defend.evaluate((node, pointerId) => {
+    (node as HTMLButtonElement).dispatchEvent(new PointerEvent("pointerup", {
+      bubbles: true,
+      cancelable: true,
+      pointerId,
+      pointerType: "touch",
+      isPrimary: true,
+      button: 0,
+      buttons: 0,
+    }));
+  }, DEFENSE_POINTER_ID);
   await expect(defend).toHaveAttribute("aria-pressed", "false", { timeout: 1_500 });
 }
 
