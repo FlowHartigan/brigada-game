@@ -1,8 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { expectFighterPixels, fighterSrc, holdDefense, releaseDefense, saveVisual } from "./visual-helpers";
 
-const rosterSource = "/art/brigada-pixel-rave-roster-v1.webp";
-
-test("mobile landscape player sees fighter art through the full game flow and can use combat controls", async ({ page }) => {
+test("mobile landscape player sees real fighter pixels through the full game flow and combat states", async ({ page }) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
 
@@ -13,97 +12,68 @@ test("mobile landscape player sees fighter art through the full game flow and ca
 
   await page.goto("/");
   await expect(page).toHaveTitle(/BRIGADA FIGHT/);
-  await expect(page.getByText("BRIGADA FIGHT")).toBeVisible();
-
   await page.getByRole("button", { name: "FIGHT" }).click();
-  await expect(page.locator(".select-screen .fighter-grid")).toBeVisible();
-
   await page.getByRole("button", { name: "HARTZ — HIGH VOLTAGE" }).click();
-  await expect(page.locator(".selection-name h2")).toHaveText("HARTZ");
+
   const showcase = page.locator('.selection-showcase img.fighter-art-image[data-fighter="hartz"]');
-  await expect(showcase).toBeVisible();
-  await expect(showcase).toHaveAttribute("src", rosterSource);
-  await expect(showcase).toHaveAttribute("data-crop-x", "3%");
+  await expectFighterPixels(page, showcase, fighterSrc("hartz"));
+  await saveVisual(page, "flow-selection-hartz");
 
   await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
   await expect(page.getByText("VS", { exact: true })).toBeVisible();
 
   const vsPlayerImage = page.locator(".versus-fighter.left img.fighter-sprite-direct");
-  await expect(vsPlayerImage).toBeVisible();
-  await expect(vsPlayerImage).toHaveAttribute("src", rosterSource);
-  await expect(vsPlayerImage).toHaveAttribute("data-fighter", "hartz");
-  await expect.poll(() => vsPlayerImage.evaluate((img) => {
-    const image = img as HTMLImageElement;
-    return image.complete && image.naturalWidth > 100 && image.naturalHeight > 100;
-  })).toBe(true);
+  await expectFighterPixels(page, vsPlayerImage, fighterSrc("hartz"));
+  const vsOpponentImage = page.locator(".versus-fighter.right img.fighter-sprite-direct");
+  const opponentId = await vsOpponentImage.getAttribute("data-fighter");
+  expect(opponentId).toBeTruthy();
+  await expectFighterPixels(page, vsOpponentImage, fighterSrc(opponentId!));
+  await saveVisual(page, `flow-vs-hartz-${opponentId}`);
 
   await page.getByRole("button", { name: "COMBATTRE" }).click();
   await expect(page.locator(".fight-screen")).toBeVisible();
 
   const playerSprite = page.locator(".arena-left.fighter-hartz");
-  const playerIdleImage = playerSprite.locator("img.fighter-sprite-direct");
-  await expect(playerSprite).toBeVisible();
-  await expect(playerIdleImage).toBeVisible();
-  await expect(playerIdleImage).toHaveAttribute("src", rosterSource);
-  await expect(playerIdleImage).toHaveAttribute("data-fighter", "hartz");
-  await expect(playerIdleImage).toHaveAttribute("data-state", "idle");
-  await expect.poll(() => playerIdleImage.evaluate((img) => {
-    const image = img as HTMLImageElement;
-    return image.complete && image.naturalWidth > 100 && image.naturalHeight > 100;
-  })).toBe(true);
-  expect(await playerIdleImage.evaluate((element) => getComputedStyle(element).imageRendering)).toBe("pixelated");
+  const playerImage = playerSprite.locator("img.fighter-sprite-direct");
+  await expect(playerImage).toHaveAttribute("data-state", "idle");
+  await expectFighterPixels(page, playerImage, fighterSrc("hartz"));
 
-  const opponentSprite = page.locator(".arena-right");
-  const opponentImage = opponentSprite.locator("img.fighter-sprite-direct");
-  await expect(opponentImage).toBeVisible();
-  await expect(opponentImage).toHaveAttribute("src", rosterSource);
-  await expect.poll(() => opponentImage.evaluate((img) => {
-    const image = img as HTMLImageElement;
-    return image.complete && image.naturalWidth > 100 && image.naturalHeight > 100;
-  })).toBe(true);
+  const opponentImage = page.locator(".arena-right img.fighter-sprite-direct");
+  const arenaOpponentId = await opponentImage.getAttribute("data-fighter");
+  expect(arenaOpponentId).toBeTruthy();
+  await expectFighterPixels(page, opponentImage, fighterSrc(arenaOpponentId!));
+  await saveVisual(page, `flow-fight-hartz-${arenaOpponentId}`);
 
   const attack = page.getByRole("button", { name: /ATTAQUE/ });
   const defend = page.getByRole("button", { name: /DÉFENSE/ });
   const dodge = page.getByRole("button", { name: /ESQUIVE/ });
   const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
-  await expect(attack).toBeVisible();
-  await expect(defend).toBeVisible();
-  await expect(dodge).toBeVisible();
-  await expect(special).toBeVisible();
-  await expect(special).toBeDisabled();
-
-  const enemyHp = page.locator(".opponent-hud .hud-name span");
-  const hpBefore = await enemyHp.textContent();
-  await attack.click();
-  await expect.poll(async () => enemyHp.textContent()).not.toBe(hpBefore);
+  await holdDefense(page, defend);
+  await expectFighterPixels(page, playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-defend");
+  await releaseDefense(page, defend);
 
   await expect(dodge).toBeEnabled({ timeout: 2_000 });
   await dodge.click();
-  await expect(dodge).toBeDisabled();
+  await expectFighterPixels(page, playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-dodge");
 
-  await expect(defend).toBeEnabled({ timeout: 2_000 });
-  const box = await defend.boundingBox();
-  expect(box).not.toBeNull();
-  if (box) {
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.down();
-    await expect(defend).toHaveAttribute("aria-pressed", "true");
+  const enemyHp = page.locator(".opponent-hud .hud-name span");
+  const hpBefore = await enemyHp.textContent();
+  await expect(attack).toBeEnabled({ timeout: 3_000 });
+  await attack.click();
+  await expect.poll(async () => enemyHp.textContent()).not.toBe(hpBefore);
+  await expectFighterPixels(page, playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-attack");
 
-    const defendImage = playerSprite.locator('img.fighter-sprite-direct[data-state="defend"]');
-    await expect(defendImage).toBeVisible();
-    await expect(defendImage).toHaveAttribute("src", rosterSource);
-    await expect(defendImage).toHaveAttribute("data-fighter", "hartz");
+  await expect(special).toBeEnabled({ timeout: 12_000 });
+  await special.click();
+  await expect(special).toBeDisabled();
+  await expectFighterPixels(page, playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-special");
 
-    await page.mouse.up();
-    await expect(defend).toHaveAttribute("aria-pressed", "false");
-    await expect(playerSprite.locator('img.fighter-sprite-direct[data-state="idle"]')).toBeVisible();
-  }
-
-  const viewportFits = await page.evaluate(
-    () => document.documentElement.scrollWidth <= window.innerWidth + 1,
-  );
-  expect(viewportFits).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);
 });

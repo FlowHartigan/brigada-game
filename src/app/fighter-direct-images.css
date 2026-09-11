@@ -1,7 +1,7 @@
-/* Final authoritative fighter rendering.
-   The approved /art/brigada-pixel-rave-roster-v1.webp is rendered as a real
-   <img> and cropped inside each frame. The broken legacy PNG atlas is never
-   needed for selection, VS, result or combat. */
+/* Authoritative fighter rendering.
+   Every fighter is a standalone transparent PNG under /public/fighters.
+   No roster crop, background-position hack or atlas transform is allowed on
+   Select, VS, Result or Combat. This file is imported last on purpose. */
 
 .select-screen .fighter-card > .fighter-portrait,
 .select-screen .fighter-card > .fighter-card-label,
@@ -41,11 +41,16 @@
 .fighter-art-image,
 .fighter-sprite-direct {
   position: absolute !important;
-  width: 615% !important;
-  height: auto !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
   max-width: none !important;
+  max-height: none !important;
   min-width: 0 !important;
-  object-fit: fill !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   image-rendering: pixelated !important;
@@ -54,27 +59,53 @@
   -webkit-user-drag: none;
   opacity: 1 !important;
   visibility: visible !important;
+  z-index: 2 !important;
 }
 
 .fighter-art-image {
+  transform: none !important;
   filter: drop-shadow(0 12px 7px rgba(0, 0, 0, .42));
 }
 
 .fighter-sprite-direct {
-  display: block !important;
+  transform: none !important;
   filter: drop-shadow(0 18px 10px rgba(0, 0, 0, .5));
 }
 
-/* Mirror the opponent frame, not the cropped image itself, so its inline crop
-   transform is never overwritten. */
-.versus-screen .versus-fighter.right .versus-portrait,
+/* Combat positioning is explicit here so legacy atlas/mirroring rules cannot
+   leave the opponent outside the arena. Mirror only the opponent image, never
+   the absolutely positioned container. */
+.arena-shell .arena-fighter {
+  position: absolute !important;
+  z-index: 4 !important;
+  translate: none !important;
+  scale: none !important;
+}
+
+.arena-shell .arena-left {
+  left: 18% !important;
+  right: auto !important;
+  transform: none !important;
+}
+
 .arena-shell .arena-right {
+  left: auto !important;
+  right: 18% !important;
+  transform: none !important;
+}
+
+.arena-shell .arena-right > .fighter-sprite-direct {
   transform: scaleX(-1) !important;
 }
 
-/* Text labels inside the mirrored arena frame should remain readable. */
+/* VS keeps the existing mirrored composition, which is already visually
+   validated and does not affect absolute arena positioning. */
+.versus-screen .versus-fighter.right .versus-portrait {
+  transform: scaleX(-1) !important;
+}
+
 .arena-shell .arena-right > span:not(.fighter-sprite-frame) {
-  transform: translateX(-50%) scaleX(-1) !important;
+  transform: none !important;
 }
 
 .arena-shell .arena-fighter.is-defending .fighter-sprite-direct {
@@ -94,5 +125,13 @@
     width: auto !important;
     height: 100% !important;
     aspect-ratio: 1 / 1 !important;
+  }
+
+  .arena-shell .arena-left {
+    left: 16% !important;
+  }
+
+  .arena-shell .arena-right {
+    right: 16% !important;
   }
 }

@@ -1,0 +1,65 @@
+import { expect, test } from "@playwright/test";
+import { fighters } from "../../src/game/data/fighters";
+import { expectFighterPixels, fighterSrc, holdDefense, releaseDefense, saveVisual } from "./visual-helpers";
+
+test("every fighter stays visibly rendered through Select, VS, Combat, defend, dodge, attack and special", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 844, height: 390 });
+
+  for (const fighter of fighters) {
+    await page.goto("/");
+    await page.getByRole("button", { name: "FIGHT", exact: true }).click();
+    await page.getByRole("button", { name: `${fighter.name} — ${fighter.title}`, exact: true }).click();
+
+    const selectionImage = page.locator(`.selection-showcase img.fighter-art-image[data-fighter="${fighter.id}"]`);
+    await expectFighterPixels(page, selectionImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-selection-${fighter.id}`);
+
+    await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
+    const vsPlayerImage = page.locator(".versus-fighter.left img.fighter-sprite-direct");
+    const vsOpponentImage = page.locator(".versus-fighter.right img.fighter-sprite-direct");
+    await expectFighterPixels(page, vsPlayerImage, fighterSrc(fighter.id));
+    const opponentId = await vsOpponentImage.getAttribute("data-fighter");
+    expect(opponentId).toBeTruthy();
+    await expectFighterPixels(page, vsOpponentImage, fighterSrc(opponentId!));
+    await saveVisual(page, `regression-vs-${fighter.id}-${opponentId}`);
+
+    await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
+    const arena = page.locator(".arena-left");
+    const playerImage = arena.locator("img.fighter-sprite-direct");
+    const opponentImage = page.locator(".arena-right img.fighter-sprite-direct");
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
+    const combatOpponentId = await opponentImage.getAttribute("data-fighter");
+    expect(combatOpponentId).toBeTruthy();
+    await expectFighterPixels(page, opponentImage, fighterSrc(combatOpponentId!));
+    await saveVisual(page, `regression-fight-${fighter.id}-${combatOpponentId}`);
+
+    const attack = page.getByRole("button", { name: /ATTAQUE/ });
+    const dodge = page.getByRole("button", { name: /ESQUIVE/ });
+    const defend = page.getByRole("button", { name: /DÉFENSE/ });
+    const special = page.getByRole("button", { name: /SPÉCIAL/ });
+
+    await holdDefense(page, defend);
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-defend-${fighter.id}`);
+    await releaseDefense(page, defend);
+
+    await expect(dodge).toBeEnabled({ timeout: 3_000 });
+    await dodge.click();
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-dodge-${fighter.id}`);
+
+    await expect(attack).toBeEnabled({ timeout: 3_000 });
+    await attack.click();
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-attack-${fighter.id}`);
+
+    await expect(special).toBeEnabled({ timeout: 12_000 });
+    await special.click();
+    await expect(special).toBeDisabled();
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-special-${fighter.id}`);
+
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  }
+});

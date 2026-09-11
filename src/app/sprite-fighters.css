@@ -3,15 +3,17 @@
   height: clamp(144px, 19vw, 240px) !important;
   border: 0 !important;
   border-radius: 0 !important;
-  background-color: transparent !important;
-  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
-  background-repeat: no-repeat !important;
-  background-size: 900% 100% !important;
+  background: transparent !important;
   image-rendering: pixelated;
   filter: drop-shadow(0 16px 10px rgba(0,0,0,.48));
   transform-origin: 50% 100%;
 }
 
+/*
+ * Fighter artwork is rendered exclusively by the standalone <img> inside the
+ * arena. Do not reintroduce atlas/background-position sprites here: a hidden
+ * background copy can mask broken <img> rendering and makes visual QA lie.
+ */
 .arena-fighter::before,
 .arena-fighter::after {
   display: none !important;
@@ -31,16 +33,6 @@
   letter-spacing: .13em;
   white-space: nowrap;
 }
-
-.arena-fighter.fighter-hartz { background-position: 0% 50% !important; }
-.arena-fighter.fighter-petoux { background-position: 12.5% 50% !important; }
-.arena-fighter.fighter-nexmos { background-position: 25% 50% !important; }
-.arena-fighter.fighter-kavaleur { background-position: 37.5% 50% !important; }
-.arena-fighter.fighter-korsair { background-position: 50% 50% !important; }
-
-.arena-fighter.fighter-hartz.is-defending { background-position: 75% 50% !important; }
-.arena-fighter.fighter-hartz.is-dodging { background-position: 87.5% 50% !important; }
-.arena-fighter.fighter-hartz.is-special { background-position: 100% 50% !important; }
 
 .arena-fighter.is-hit {
   animation: sprite-hit-shake 180ms steps(2, end);
