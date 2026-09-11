@@ -6,6 +6,7 @@ import "./art-direction.css";
 import "./sprite-fighters.css";
 import "./pixel-rave.css";
 import "./vs-screen.css";
+import "./vs-atlas.css";
 
 export const metadata: Metadata = {
   title: "BRIGADA FIGHT",
