@@ -32,14 +32,14 @@ for (const viewport of landscapeViewports) {
       await expect(player.locator("h2")).toHaveText(fighter.name);
       await expect(player.locator("p")).toHaveText(fighter.title);
       await expect(playerImage).toHaveAttribute("data-fighter", fighter.id);
-      await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+      await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
 
       const opponentName = await opponent.locator("h2").textContent();
       const opponentFighter = fighters.find(candidate => candidate.name === opponentName);
       expect(opponentFighter).toBeTruthy();
       expect(opponentName).not.toBe(fighter.name);
       await expect(opponentImage).toHaveAttribute("data-fighter", opponentFighter!.id);
-      await expectFighterPixels(opponentImage, fighterSrc(opponentFighter!.id));
+      await expectFighterPixels(page, opponentImage, fighterSrc(opponentFighter!.id));
 
       const playerFrame = player.locator(".versus-portrait");
       const opponentFrame = opponent.locator(".versus-portrait");
