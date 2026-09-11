@@ -19,10 +19,12 @@
   height: 100%;
   max-width: none;
   object-fit: fill;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  user-select: none;
   -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 
 /* Disable the legacy CSS-background sprite path. */
