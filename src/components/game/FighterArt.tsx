@@ -1,14 +1,18 @@
 import type { CSSProperties } from "react";
 import type { FighterId } from "@/game/engine/types";
-import { fighterImage, fighterPosition } from "./fighterImages";
+import { fighterImage, fighterPositionX } from "./fighterImages";
 
 /**
- * Character-select artwork. The image itself is the approved roster WebP;
- * each fighter is framed through object-position so Safari renders a normal
- * image element rather than a fragile CSS background/atlas slice.
+ * Character-select artwork rendered from the approved roster WebP. The crop
+ * reproduces the existing 615% / 33% art-direction framing with a real <img>.
  */
 export function FighterArt({ id, portrait = false }: { id: FighterId; portrait?: boolean }) {
-  const style = { objectPosition: fighterPosition(id) } as CSSProperties;
+  const x = fighterPositionX(id);
+  const style = {
+    left: x,
+    top: "33%",
+    transform: `translate(-${x}, -33%)`,
+  } as CSSProperties;
 
   return (
     <div className={portrait ? "roster-portrait" : "roster-sprite"} aria-hidden="true">
@@ -20,6 +24,7 @@ export function FighterArt({ id, portrait = false }: { id: FighterId; portrait?:
         loading="eager"
         decoding="sync"
         data-fighter={id}
+        data-crop-x={x}
         style={style}
       />
     </div>
