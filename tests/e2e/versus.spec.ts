@@ -32,11 +32,10 @@ for (const viewport of landscapeViewports) {
       expect(fighters.map(candidate => candidate.name)).toContain(opponentName);
       expect(opponentName).not.toBe(fighter.name);
 
-      await expect.poll(async () => playerArt.evaluate(element => getComputedStyle(element).backgroundImage)).not.toBe("none");
-      await expect.poll(async () => opponentArt.evaluate(element => getComputedStyle(element).backgroundImage)).not.toBe("none");
-
-      expect(await playerArt.evaluate(element => getComputedStyle(element).backgroundImage)).toContain("data:image/png;base64");
-      expect(await opponentArt.evaluate(element => getComputedStyle(element).backgroundImage)).toContain("data:image/png;base64");
+      const playerBackground = await playerArt.evaluate(element => getComputedStyle(element).backgroundImage);
+      const opponentBackground = await opponentArt.evaluate(element => getComputedStyle(element).backgroundImage);
+      expect(playerBackground).toContain("brigada-fighters-atlas-v1.png");
+      expect(opponentBackground).toContain("brigada-fighters-atlas-v1.png");
       expect(await playerArt.evaluate(element => getComputedStyle(element).imageRendering)).toBe("pixelated");
       expect(await opponentArt.evaluate(element => getComputedStyle(element).imageRendering)).toBe("pixelated");
 
