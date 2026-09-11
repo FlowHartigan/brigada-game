@@ -10,28 +10,32 @@ const cropX: Record<string, string> = {
   korsair: "96%",
 };
 
-async function imageContainsVisiblePixels(locator: Locator) {
+async function imageContainsOpaquePixels(locator: Locator) {
   return locator.evaluate((img) => {
     const image = img as HTMLImageElement;
     if (!image.complete || image.naturalWidth < 100 || image.naturalHeight < 100) return false;
     const canvas = document.createElement("canvas");
-    canvas.width = 64;
-    canvas.height = 64;
+    canvas.width = 32;
+    canvas.height = 32;
     const context = canvas.getContext("2d");
     if (!context) return false;
-    context.drawImage(image, 0, 0, 64, 64);
-    const pixels = context.getImageData(0, 0, 64, 64).data;
+    context.drawImage(image, 0, 0, 32, 32);
+    const pixels = context.getImageData(0, 0, 32, 32).data;
     let opaque = 0;
-    let min = 255;
-    let max = 0;
-    for (let i = 0; i < pixels.length; i += 4) {
-      if (pixels[i + 3] > 20) opaque += 1;
-      const luminance = Math.round((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3);
-      min = Math.min(min, luminance);
-      max = Math.max(max, luminance);
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] > 20) opaque += 1;
     }
-    return opaque > 500 && max - min > 20;
+    return opaque > 500;
   });
+}
+
+async function imageCoversFrame(image: Locator, frame: Locator) {
+  const imageBox = await image.boundingBox();
+  const frameBox = await frame.boundingBox();
+  if (!imageBox || !frameBox) return false;
+  const centerX = frameBox.x + frameBox.width / 2;
+  const centerY = frameBox.y + frameBox.height / 2;
+  return centerX >= imageBox.x && centerX <= imageBox.x + imageBox.width && centerY >= imageBox.y && centerY <= imageBox.y + imageBox.height;
 }
 
 for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }, { width: 390, height: 844 }]) {
@@ -54,18 +58,20 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
       await expect(cardImages).toHaveCount(5);
       await expect.poll(() => cardImages.evaluateAll(images => images.every(img => {
         const image = img as HTMLImageElement;
-        return image.complete && image.naturalWidth > 100 && image.naturalHeight > 100 && image.getAttribute("src") === "/art/brigada-pixel-rave-roster-v1.webp";
+        return image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024 && image.getAttribute("src") === "/art/brigada-pixel-rave-roster-v1.webp";
       }))).toBe(true);
 
       for (const candidate of fighters) {
         const cardImage = page.locator(`.fighter-card img.fighter-art-image[data-fighter="${candidate.id}"]`);
-        const portrait = cardImage.locator("xpath=..").locator("xpath=..");
+        const frame = cardImage.locator("xpath=..");
         await expect(cardImage).toBeVisible();
         await expect(cardImage).toHaveAttribute("src", rosterSource);
         await expect(cardImage).toHaveAttribute("data-crop-x", cropX[candidate.id]);
-        expect(await imageContainsVisiblePixels(cardImage)).toBe(true);
+        expect(await imageContainsOpaquePixels(cardImage)).toBe(true);
+        expect(await imageCoversFrame(cardImage, frame)).toBe(true);
         expect(await cardImage.evaluate(image => getComputedStyle(image).opacity)).toBe("1");
-        const portraitBox = await portrait.boundingBox();
+        expect(await frame.evaluate(element => getComputedStyle(element).overflow)).toBe("hidden");
+        const portraitBox = await frame.boundingBox();
         expect(portraitBox).not.toBeNull();
         if (portraitBox) {
           expect(portraitBox.width).toBeGreaterThan(30);
@@ -86,7 +92,8 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
       await expect(showcaseImage).toHaveAttribute("src", rosterSource);
       await expect(showcaseImage).toHaveAttribute("data-fighter", fighter.id);
       await expect(showcaseImage).toHaveAttribute("data-crop-x", cropX[fighter.id]);
-      expect(await imageContainsVisiblePixels(showcaseImage)).toBe(true);
+      expect(await imageContainsOpaquePixels(showcaseImage)).toBe(true);
+      expect(await imageCoversFrame(showcaseImage, showcaseFrame)).toBe(true);
       expect(await showcaseImage.evaluate(image => getComputedStyle(image).imageRendering)).toBe("pixelated");
       expect(await showcaseImage.evaluate(image => getComputedStyle(image).visibility)).toBe("visible");
 
