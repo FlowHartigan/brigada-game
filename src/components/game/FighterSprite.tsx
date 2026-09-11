@@ -1,13 +1,9 @@
-import type { CSSProperties } from "react";
 import type { FighterId } from "@/game/engine/types";
-import { fighterImage, fighterPositionX } from "./fighterImages";
+import { fighterImage } from "./fighterImages";
 
 export type FighterSpriteState = "idle" | "defend" | "dodge" | "special";
 
-/**
- * Runtime fighter visual. Every state stays on the known-good roster WebP so
- * no interaction can swap a fighter to the broken legacy atlas.
- */
+/** Runtime fighter visual backed by the fighter's standalone PNG. */
 export function FighterSprite({
   id,
   state = "idle",
@@ -19,13 +15,6 @@ export function FighterSprite({
   label?: string;
   className?: string;
 }) {
-  const x = fighterPositionX(id);
-  const style = {
-    left: x,
-    top: "33%",
-    transform: `translate(-${x}, -33%)`,
-  } as CSSProperties;
-
   return (
     <img
       className={`fighter-sprite-direct ${className}`.trim()}
@@ -37,8 +26,6 @@ export function FighterSprite({
       decoding="sync"
       data-fighter={id}
       data-state={state}
-      data-crop-x={x}
-      style={style}
     />
   );
 }
