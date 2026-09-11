@@ -1,7 +1,7 @@
-/* Final authoritative fighter rendering.
-   The approved /art/brigada-pixel-rave-roster-v1.webp is rendered as a real
-   <img> and cropped inside each frame. The broken legacy PNG atlas is never
-   needed for selection, VS, result or combat. */
+/* Authoritative fighter rendering.
+   Every fighter is a standalone transparent PNG under /public/fighters.
+   No roster crop, background-position hack or atlas transform is allowed on
+   Select, VS, Result or Combat. This file is imported last on purpose. */
 
 .select-screen .fighter-card > .fighter-portrait,
 .select-screen .fighter-card > .fighter-card-label,
@@ -41,11 +41,17 @@
 .fighter-art-image,
 .fighter-sprite-direct {
   position: absolute !important;
-  width: 615% !important;
-  height: auto !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
   max-width: none !important;
+  max-height: none !important;
   min-width: 0 !important;
-  object-fit: fill !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+  transform: none !important;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   image-rendering: pixelated !important;
@@ -54,6 +60,7 @@
   -webkit-user-drag: none;
   opacity: 1 !important;
   visibility: visible !important;
+  z-index: 2 !important;
 }
 
 .fighter-art-image {
@@ -61,18 +68,16 @@
 }
 
 .fighter-sprite-direct {
-  display: block !important;
   filter: drop-shadow(0 18px 10px rgba(0, 0, 0, .5));
 }
 
-/* Mirror the opponent frame, not the cropped image itself, so its inline crop
-   transform is never overwritten. */
+/* Mirror the opponent frame, not the image, so direct image positioning cannot
+   be overwritten by combat/VS transforms. */
 .versus-screen .versus-fighter.right .versus-portrait,
 .arena-shell .arena-right {
   transform: scaleX(-1) !important;
 }
 
-/* Text labels inside the mirrored arena frame should remain readable. */
 .arena-shell .arena-right > span:not(.fighter-sprite-frame) {
   transform: translateX(-50%) scaleX(-1) !important;
 }
