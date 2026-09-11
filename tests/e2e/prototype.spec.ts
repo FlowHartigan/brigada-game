@@ -26,16 +26,24 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
   await expect(page.locator(".fight-screen")).toBeVisible();
 
   const playerSprite = page.locator(".arena-left.fighter-hartz");
+  const playerFrame = playerSprite.locator(".fighter-sprite-frame");
+  const playerImage = playerSprite.locator("img.fighter-sprite-image");
   await expect(playerSprite).toBeVisible();
-  const idleSprite = await playerSprite.evaluate((element) => getComputedStyle(element).backgroundImage);
-  const idlePosition = await playerSprite.evaluate((element) => getComputedStyle(element).backgroundPosition);
-  expect(idleSprite).toContain("brigada-fighters-atlas-v1.png");
-  const rendering = await playerSprite.evaluate((element) => getComputedStyle(element).imageRendering);
-  expect(rendering).toBe("pixelated");
+  await expect(playerImage).toBeVisible();
+  await expect.poll(() => playerImage.evaluate((img) => {
+    const image = img as HTMLImageElement;
+    return image.complete && image.naturalWidth === 1152 && image.naturalHeight === 128;
+  })).toBe(true);
+  await expect(playerFrame).toHaveAttribute("data-frame", "0");
+  expect(await playerImage.evaluate((element) => getComputedStyle(element).imageRendering)).toBe("pixelated");
 
   const opponentSprite = page.locator(".arena-right");
-  const opponentArt = await opponentSprite.evaluate((element) => getComputedStyle(element).backgroundImage);
-  expect(opponentArt).toContain("brigada-fighters-atlas-v1.png");
+  const opponentImage = opponentSprite.locator("img.fighter-sprite-image");
+  await expect(opponentImage).toBeVisible();
+  await expect.poll(() => opponentImage.evaluate((img) => {
+    const image = img as HTMLImageElement;
+    return image.complete && image.naturalWidth === 1152;
+  })).toBe(true);
 
   const attack = page.getByRole("button", { name: /ATTAQUE/ });
   const defend = page.getByRole("button", { name: /DÉFENSE/ });
@@ -64,9 +72,10 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await expect(defend).toHaveAttribute("aria-pressed", "true");
-    await expect.poll(async () => playerSprite.evaluate((element) => getComputedStyle(element).backgroundPosition)).not.toBe(idlePosition);
+    await expect(playerFrame).toHaveAttribute("data-frame", "6");
     await page.mouse.up();
     await expect(defend).toHaveAttribute("aria-pressed", "false");
+    await expect(playerFrame).toHaveAttribute("data-frame", "0");
   }
 
   const viewportFits = await page.evaluate(
