@@ -1,27 +1,41 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
 
+const rosterSource = "/art/brigada-pixel-rave-roster-v1.webp";
+const cropX: Record<string, string> = {
+  hartz: "3%",
+  petoux: "26%",
+  nexmos: "49%",
+  kavaleur: "73%",
+  korsair: "96%",
+};
+
 async function imageContainsVisiblePixels(locator: Locator) {
   return locator.evaluate((img) => {
     const image = img as HTMLImageElement;
-    if (!image.complete || image.naturalWidth !== 128 || image.naturalHeight !== 128) return false;
+    if (!image.complete || image.naturalWidth < 100 || image.naturalHeight < 100) return false;
     const canvas = document.createElement("canvas");
-    canvas.width = 128;
-    canvas.height = 128;
+    canvas.width = 64;
+    canvas.height = 64;
     const context = canvas.getContext("2d");
     if (!context) return false;
-    context.drawImage(image, 0, 0);
-    const pixels = context.getImageData(0, 0, 128, 128).data;
-    let count = 0;
-    for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] > 20) count += 1;
+    context.drawImage(image, 0, 0, 64, 64);
+    const pixels = context.getImageData(0, 0, 64, 64).data;
+    let opaque = 0;
+    let min = 255;
+    let max = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i + 3] > 20) opaque += 1;
+      const luminance = Math.round((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3);
+      min = Math.min(min, luminance);
+      max = Math.max(max, luminance);
     }
-    return count > 250;
+    return opaque > 500 && max - min > 20;
   });
 }
 
 for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }, { width: 390, height: 844 }]) {
-  test(`all five fighters render real images and can be confirmed at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`all five fighters are visibly cropped from approved art and can be confirmed at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
@@ -36,10 +50,28 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
       await expect(cards).toHaveCount(5);
       for (const card of await cards.all()) await expect(card).toBeInViewport({ ratio: 1 });
 
-      await expect.poll(() => page.locator(".fighter-card img.fighter-art-image").evaluateAll(images => images.every(img => {
+      const cardImages = page.locator(".fighter-card img.fighter-art-image");
+      await expect(cardImages).toHaveCount(5);
+      await expect.poll(() => cardImages.evaluateAll(images => images.every(img => {
         const image = img as HTMLImageElement;
-        return image.complete && image.naturalWidth === 128 && image.naturalHeight === 128 && image.src.includes("/fighters/");
+        return image.complete && image.naturalWidth > 100 && image.naturalHeight > 100 && image.getAttribute("src") === "/art/brigada-pixel-rave-roster-v1.webp";
       }))).toBe(true);
+
+      for (const candidate of fighters) {
+        const cardImage = page.locator(`.fighter-card img.fighter-art-image[data-fighter="${candidate.id}"]`);
+        const portrait = cardImage.locator("xpath=..").locator("xpath=..");
+        await expect(cardImage).toBeVisible();
+        await expect(cardImage).toHaveAttribute("src", rosterSource);
+        await expect(cardImage).toHaveAttribute("data-crop-x", cropX[candidate.id]);
+        expect(await imageContainsVisiblePixels(cardImage)).toBe(true);
+        expect(await cardImage.evaluate(image => getComputedStyle(image).opacity)).toBe("1");
+        const portraitBox = await portrait.boundingBox();
+        expect(portraitBox).not.toBeNull();
+        if (portraitBox) {
+          expect(portraitBox.width).toBeGreaterThan(30);
+          expect(portraitBox.height).toBeGreaterThan(30);
+        }
+      }
 
       await page.getByRole("button", { name: `${fighter.name} — ${fighter.title}`, exact: true }).click();
       await expect(page.locator(".fighter-card[aria-pressed=true]")).toHaveCount(1);
@@ -49,12 +81,16 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
       await expect(page.locator(".selection-stats .stat-row strong")).toHaveText(Object.values(fighter.stats).map(String));
 
       const showcaseImage = page.locator(".selection-showcase img.fighter-art-image");
+      const showcaseFrame = page.locator(".selection-showcase .roster-sprite");
       await expect(showcaseImage).toBeVisible();
-      await expect(showcaseImage).toHaveAttribute("src", `/fighters/${fighter.id}.png`);
+      await expect(showcaseImage).toHaveAttribute("src", rosterSource);
+      await expect(showcaseImage).toHaveAttribute("data-fighter", fighter.id);
+      await expect(showcaseImage).toHaveAttribute("data-crop-x", cropX[fighter.id]);
       expect(await imageContainsVisiblePixels(showcaseImage)).toBe(true);
       expect(await showcaseImage.evaluate(image => getComputedStyle(image).imageRendering)).toBe("pixelated");
+      expect(await showcaseImage.evaluate(image => getComputedStyle(image).visibility)).toBe("visible");
 
-      const box = await showcaseImage.boundingBox();
+      const box = await showcaseFrame.boundingBox();
       expect(box).not.toBeNull();
       if (box) {
         expect(box.width).toBeGreaterThan(80);
