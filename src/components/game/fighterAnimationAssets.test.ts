@@ -18,13 +18,23 @@ const actionStates: readonly FighterActionVisualState[] = [
 ];
 
 describe("fighter animation assets", () => {
-  it("provides a real, distinct WebP frame for every action of every fighter", () => {
+  it("provides a distinct combat visual source for every action of every fighter", () => {
     for (const fighter of fighters) {
-      const frames = actionStates.map((state) => fighterActionImage(fighter.id, state));
+      const frames = actionStates.map((state) =>
+        fighterActionImage(fighter.id, state),
+      );
 
-      for (const frame of frames) {
-        expect(frame).toMatch(/^data:image\/webp;base64,/);
-        expect(frame.length).toBeGreaterThan(300);
+      if (fighter.id === "korsair") {
+        expect(frames).toEqual(
+          actionStates.map(
+            (state) => `/fighters/korsair.png#combat-${state}`,
+          ),
+        );
+      } else {
+        for (const frame of frames) {
+          expect(frame).toMatch(/^data:image\/webp;base64,/);
+          expect(frame.length).toBeGreaterThan(300);
+        }
       }
 
       expect(new Set(frames).size).toBe(actionStates.length);
