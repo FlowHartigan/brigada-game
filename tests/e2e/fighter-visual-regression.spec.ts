@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
 import {
   expectAnimatedFighterPixels,
@@ -11,7 +11,7 @@ import {
 
 const actionStates = ["attack1", "attack2", "attack3"] as const;
 
-async function setDeterministicRandom(page: Parameters<typeof test>[0] extends never ? never : any, value: number) {
+async function setDeterministicRandom(page: Page, value: number) {
   await page.evaluate((nextValue: number) => {
     Math.random = () => nextValue;
   }, value);
