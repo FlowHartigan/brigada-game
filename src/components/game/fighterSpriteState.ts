@@ -5,8 +5,8 @@ import type {
 } from "@/game/engine/combat";
 import type { FighterSpriteState } from "./FighterSprite";
 
-const HIT_WINDOW_MS = 360;
-const ACTION_WINDOW_MS = 430;
+const HIT_WINDOW_MS = 520;
+const ACTION_WINDOW_MS = 560;
 
 function latestMatchingEvent(
   state: CombatState,
@@ -37,6 +37,10 @@ export function resolveFighterSpriteState(
   // Guard break must visually win over every transient action.
   if (runtime.stunnedUntil > state.now) return "stunned";
 
+  // A newly-triggered dodge is an explicit current action and must not be
+  // hidden by a hit flash that happened a few milliseconds earlier.
+  if (runtime.invulnerableUntil > state.now) return "dodge";
+
   const hit = latestMatchingEvent(
     state,
     HIT_WINDOW_MS,
@@ -45,8 +49,6 @@ export function resolveFighterSpriteState(
       (event.type === "hit" || event.type === "counter"),
   );
   if (hit) return "hit";
-
-  if (runtime.invulnerableUntil > state.now) return "dodge";
 
   const special = latestMatchingEvent(
     state,
