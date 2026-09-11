@@ -1,27 +1,14 @@
 import type { CSSProperties } from "react";
 import type { FighterId } from "@/game/engine/types";
+import { fighterImage } from "./fighterImages";
 
 export type FighterSpriteState = "idle" | "defend" | "dodge" | "special";
 
-const idleFrames: Record<FighterId, number> = {
-  hartz: 0,
-  petoux: 1,
-  nexmos: 2,
-  kavaleur: 3,
-  korsair: 4,
-};
-
-const hartzFrames: Record<FighterSpriteState, number> = {
-  idle: 0,
+const hartzFrames: Record<Exclude<FighterSpriteState, "idle">, number> = {
   defend: 6,
   dodge: 7,
   special: 8,
 };
-
-function frameFor(id: FighterId, state: FighterSpriteState): number {
-  if (id === "hartz") return hartzFrames[state];
-  return idleFrames[id];
-}
 
 export function FighterSprite({
   id,
@@ -34,7 +21,28 @@ export function FighterSprite({
   label?: string;
   className?: string;
 }) {
-  const frame = frameFor(id, state);
+  // Idle art is always a dedicated transparent PNG. This is deliberately
+  // boring and robust: no atlas cropping, no background-position, no Safari
+  // dependency. HARTZ keeps his existing non-idle atlas frames for combat.
+  if (state === "idle" || id !== "hartz") {
+    return (
+      <img
+        className={`fighter-sprite-direct ${className}`.trim()}
+        src={fighterImage(id)}
+        alt={label ?? ""}
+        aria-hidden={label ? undefined : true}
+        draggable={false}
+        width={128}
+        height={128}
+        loading="eager"
+        decoding="sync"
+        data-fighter={id}
+        data-state="idle"
+      />
+    );
+  }
+
+  const frame = hartzFrames[state];
   const style = {
     "--sprite-offset": `${frame * -100}%`,
   } as CSSProperties;
