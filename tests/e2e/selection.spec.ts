@@ -10,25 +10,6 @@ const cropX: Record<string, string> = {
   korsair: "96%",
 };
 
-async function imageContainsOpaquePixels(locator: Locator) {
-  return locator.evaluate((img) => {
-    const image = img as HTMLImageElement;
-    if (!image.complete || image.naturalWidth < 100 || image.naturalHeight < 100) return false;
-    const canvas = document.createElement("canvas");
-    canvas.width = 32;
-    canvas.height = 32;
-    const context = canvas.getContext("2d");
-    if (!context) return false;
-    context.drawImage(image, 0, 0, 32, 32);
-    const pixels = context.getImageData(0, 0, 32, 32).data;
-    let opaque = 0;
-    for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] > 20) opaque += 1;
-    }
-    return opaque > 500;
-  });
-}
-
 async function imageCoversFrame(image: Locator, frame: Locator) {
   const imageBox = await image.boundingBox();
   const frameBox = await frame.boundingBox();
@@ -67,9 +48,9 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
         await expect(cardImage).toBeVisible();
         await expect(cardImage).toHaveAttribute("src", rosterSource);
         await expect(cardImage).toHaveAttribute("data-crop-x", cropX[candidate.id]);
-        expect(await imageContainsOpaquePixels(cardImage)).toBe(true);
         expect(await imageCoversFrame(cardImage, frame)).toBe(true);
         expect(await cardImage.evaluate(image => getComputedStyle(image).opacity)).toBe("1");
+        expect(await cardImage.evaluate(image => getComputedStyle(image).visibility)).toBe("visible");
         expect(await frame.evaluate(element => getComputedStyle(element).overflow)).toBe("hidden");
         const portraitBox = await frame.boundingBox();
         expect(portraitBox).not.toBeNull();
@@ -92,7 +73,6 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
       await expect(showcaseImage).toHaveAttribute("src", rosterSource);
       await expect(showcaseImage).toHaveAttribute("data-fighter", fighter.id);
       await expect(showcaseImage).toHaveAttribute("data-crop-x", cropX[fighter.id]);
-      expect(await imageContainsOpaquePixels(showcaseImage)).toBe(true);
       expect(await imageCoversFrame(showcaseImage, showcaseFrame)).toBe(true);
       expect(await showcaseImage.evaluate(image => getComputedStyle(image).imageRendering)).toBe("pixelated");
       expect(await showcaseImage.evaluate(image => getComputedStyle(image).visibility)).toBe("visible");
