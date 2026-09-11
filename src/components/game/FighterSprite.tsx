@@ -11,7 +11,8 @@ export type FighterSpriteState = "idle" | FighterActionVisualState;
  * Runtime fighter visual. Idle uses the production standalone PNG; combat
  * actions swap only the image source while keeping the exact same container,
  * sizing and mirroring rules. If an action asset ever fails to decode, the
- * sprite immediately falls back to the proven idle PNG instead of vanishing.
+ * sprite falls back to the proven idle PNG while preserving the requested
+ * presentation state so state-driven combat feedback remains active.
  */
 export function FighterSprite({
   id,
@@ -40,10 +41,12 @@ export function FighterSprite({
       data-state={state}
       data-animated={state === "idle" ? "false" : "true"}
       onError={(event) => {
-        if (event.currentTarget.src !== idleSrc) {
-          event.currentTarget.src = idleSrc;
-          event.currentTarget.dataset.state = "idle";
-          event.currentTarget.dataset.animated = "false";
+        const image = event.currentTarget;
+        if (image.getAttribute("src") !== idleSrc) {
+          image.src = idleSrc;
+          image.dataset.state = state;
+          image.dataset.animated = state === "idle" ? "false" : "true";
+          image.dataset.fallback = "true";
         }
       }}
     />
