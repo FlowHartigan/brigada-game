@@ -13,6 +13,7 @@ import "./sprites/kavaleur-idle.css";
 import "./sprites/korsair-idle.css";
 import "./sprite-fighters.css";
 import "./pixel-rave.css";
+import "./vs-screen.css";
 
 export const metadata: Metadata = {
   title: "BRIGADA FIGHT",
