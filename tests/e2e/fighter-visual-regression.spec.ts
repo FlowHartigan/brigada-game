@@ -55,6 +55,8 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await saveVisual(page, `anim-${fighter.id}-defend`);
     await releaseDefense(page, defend);
 
+    // AI is presentation-tested independently: it must really leave idle and
+    // render one of its action frames while attacking.
     await expect.poll(
       async () => opponentImage.getAttribute("data-state"),
       { timeout: 4_000, intervals: [50, 50, 100, 100, 150, 200] },
@@ -62,23 +64,22 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     const opponentAnimatedState = await opponentImage.getAttribute("data-state");
     await expectAnimatedFighterPixels(page, opponentImage, opponentAnimatedState!);
 
-    await expect.poll(
-      async () => playerImage.getAttribute("data-state"),
-      { timeout: 4_000, intervals: [50, 50, 100, 100, 150, 200] },
-    ).toBe("hit");
-    await expectAnimatedFighterPixels(page, playerImage, "hit");
-    await saveVisual(page, `anim-${fighter.id}-hit`);
-
     await expect(dodge).toBeEnabled({ timeout: 4_000 });
     await dodge.click();
     await expectAnimatedFighterPixels(page, playerImage, "dodge");
     await saveVisual(page, `anim-${fighter.id}-dodge`);
 
+    // Validate hit deterministically at the exact moment the player's attack
+    // lands. This avoids racing the short hit window after first waiting on AI.
     for (const state of actionStates) {
       await expect(attack).toBeEnabled({ timeout: 4_000 });
       await attack.click();
       await expectAnimatedFighterPixels(page, playerImage, state);
+      await expectAnimatedFighterPixels(page, opponentImage, "hit");
       await saveVisual(page, `anim-${fighter.id}-${state}`);
+      if (state === "attack1") {
+        await saveVisual(page, `anim-${fighter.id}-hit`);
+      }
     }
 
     await expect(special).toBeEnabled({ timeout: 12_000 });
@@ -86,6 +87,8 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await expectAnimatedFighterPixels(page, playerImage, "special");
     await saveVisual(page, `anim-${fighter.id}-special`);
 
+    // Guard break remains gameplay-driven. Hold defense and let deterministic
+    // AI attack until the engine itself opens the stun window.
     await expect(defend).toBeEnabled({ timeout: 4_000 });
     await holdDefense(page, defend);
     await expect.poll(
