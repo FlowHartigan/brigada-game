@@ -12,26 +12,26 @@ test("every fighter stays visibly rendered through Select, VS, Combat, defend, d
     await page.getByRole("button", { name: `${fighter.name} — ${fighter.title}`, exact: true }).click();
 
     const selectionImage = page.locator(`.selection-showcase img.fighter-art-image[data-fighter="${fighter.id}"]`);
-    await expectFighterPixels(selectionImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, selectionImage, fighterSrc(fighter.id));
     await saveVisual(page, `regression-selection-${fighter.id}`);
 
     await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
     const vsPlayerImage = page.locator(".versus-fighter.left img.fighter-sprite-direct");
     const vsOpponentImage = page.locator(".versus-fighter.right img.fighter-sprite-direct");
-    await expectFighterPixels(vsPlayerImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, vsPlayerImage, fighterSrc(fighter.id));
     const opponentId = await vsOpponentImage.getAttribute("data-fighter");
     expect(opponentId).toBeTruthy();
-    await expectFighterPixels(vsOpponentImage, fighterSrc(opponentId!));
+    await expectFighterPixels(page, vsOpponentImage, fighterSrc(opponentId!));
     await saveVisual(page, `regression-vs-${fighter.id}-${opponentId}`);
 
     await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
     const arena = page.locator(".arena-left");
     const playerImage = arena.locator("img.fighter-sprite-direct");
     const opponentImage = page.locator(".arena-right img.fighter-sprite-direct");
-    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
     const combatOpponentId = await opponentImage.getAttribute("data-fighter");
     expect(combatOpponentId).toBeTruthy();
-    await expectFighterPixels(opponentImage, fighterSrc(combatOpponentId!));
+    await expectFighterPixels(page, opponentImage, fighterSrc(combatOpponentId!));
     await saveVisual(page, `regression-fight-${fighter.id}-${combatOpponentId}`);
 
     const attack = page.getByRole("button", { name: /ATTAQUE/ });
@@ -40,27 +40,24 @@ test("every fighter stays visibly rendered through Select, VS, Combat, defend, d
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
     await holdDefense(page, defend);
-    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
     await saveVisual(page, `regression-defend-${fighter.id}`);
     await releaseDefense(page, defend);
 
     await expect(dodge).toBeEnabled({ timeout: 3_000 });
     await dodge.click();
-    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
     await saveVisual(page, `regression-dodge-${fighter.id}`);
 
     await expect(attack).toBeEnabled({ timeout: 3_000 });
     await attack.click();
-    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
     await saveVisual(page, `regression-attack-${fighter.id}`);
 
-    // Special state may be shorter than Playwright's polling interval. The
-    // cooldown confirms the action fired; the pixel assertion confirms the
-    // fighter never disappeared when the state transitioned.
     await expect(special).toBeEnabled({ timeout: 12_000 });
     await special.click();
     await expect(special).toBeDisabled();
-    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
     await saveVisual(page, `regression-special-${fighter.id}`);
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
