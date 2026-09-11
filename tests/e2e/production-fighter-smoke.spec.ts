@@ -4,6 +4,7 @@ import { expectFighterPixels, fighterSrc, saveVisual } from "./visual-helpers";
 
 const productionUrl = "https://brigada-game.vercel.app";
 
+// This test intentionally targets the deployed production alias, not localhost.
 test("production keeps fighters visible through selection VS and combat", async ({ page }) => {
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 844, height: 390 });
