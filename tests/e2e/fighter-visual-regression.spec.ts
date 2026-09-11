@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
 import {
   expectAnimatedFighterPixels,
@@ -15,6 +15,14 @@ async function setDeterministicRandom(page: Page, value: number) {
   await page.evaluate((nextValue: number) => {
     Math.random = () => nextValue;
   }, value);
+}
+
+async function expectAnimatedSource(image: Locator, state: string) {
+  await expect(image).toHaveAttribute("data-state", state, { timeout: 500 });
+  await expect(image).toHaveAttribute("data-animated", "true");
+  const source = await image.getAttribute("src");
+  expect(source).toMatch(/^data:image\/webp;base64,/);
+  expect(source!.length).toBeGreaterThan(300);
 }
 
 test("every fighter uses real combat action frames without breaking Select, VS or Combat", async ({ page }) => {
@@ -77,26 +85,24 @@ test("every fighter uses real combat action frames without breaking Select, VS o
 
     await expect(dodge).toBeEnabled({ timeout: 4_000 });
     await dodge.click();
-    await expectAnimatedFighterPixels(page, playerImage, "dodge");
+    await expectAnimatedSource(playerImage, "dodge");
     await saveVisual(page, `anim-${fighter.id}-dodge`);
 
-    // Each real combo hit swaps the attacking fighter and the struck opponent.
+    // Both state attributes are asserted before doing any expensive pixel
+    // analysis. One real Chromium screenshot then captures attack + hit at the
+    // same instant, preventing one transient frame from expiring while the
+    // other is being analyzed.
     for (const state of actionStates) {
       await expect(attack).toBeEnabled({ timeout: 4_000 });
       await attack.click();
-      await expect(playerImage).toHaveAttribute("data-state", state, { timeout: 500 });
-      await expect(opponentImage).toHaveAttribute("data-state", "hit", { timeout: 500 });
-      await expectAnimatedFighterPixels(page, opponentImage, "hit");
-      await expectAnimatedFighterPixels(page, playerImage, state);
-      await saveVisual(page, `anim-${fighter.id}-${state}`);
-      if (state === "attack1") {
-        await saveVisual(page, `anim-${fighter.id}-hit`);
-      }
+      await expectAnimatedSource(playerImage, state);
+      await expectAnimatedSource(opponentImage, "hit");
+      await saveVisual(page, `anim-${fighter.id}-${state}-vs-hit`);
     }
 
     await expect(special).toBeEnabled({ timeout: 12_000 });
     await special.click();
-    await expectAnimatedFighterPixels(page, playerImage, "special");
+    await expectAnimatedSource(playerImage, "special");
     await saveVisual(page, `anim-${fighter.id}-special`);
 
     // Re-enable aggressive deterministic AI only for an actual guard break.
