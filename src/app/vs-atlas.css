@@ -5,17 +5,33 @@
   width: min(100%, 340px);
   aspect-ratio: 1;
   min-height: 0;
-  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
   background-repeat: no-repeat !important;
   background-size: 900% 100% !important;
   image-rendering: pixelated;
 }
 
-.versus-screen .versus-portrait.fighter-hartz { background-position: 0% 50% !important; }
-.versus-screen .versus-portrait.fighter-petoux { background-position: 12.5% 50% !important; }
-.versus-screen .versus-portrait.fighter-nexmos { background-position: 25% 50% !important; }
-.versus-screen .versus-portrait.fighter-kavaleur { background-position: 37.5% 50% !important; }
-.versus-screen .versus-portrait.fighter-korsair { background-position: 50% 50% !important; }
+/* Repeat the image declaration on each fighter selector so these rules match and override
+   the legacy fighter-specific background declarations in vs-screen.css. */
+.versus-screen .versus-portrait.fighter-hartz {
+  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
+  background-position: 0% 50% !important;
+}
+.versus-screen .versus-portrait.fighter-petoux {
+  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
+  background-position: 12.5% 50% !important;
+}
+.versus-screen .versus-portrait.fighter-nexmos {
+  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
+  background-position: 25% 50% !important;
+}
+.versus-screen .versus-portrait.fighter-kavaleur {
+  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
+  background-position: 37.5% 50% !important;
+}
+.versus-screen .versus-portrait.fighter-korsair {
+  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
+  background-position: 50% 50% !important;
+}
 
 @media (orientation: landscape) and (max-height: 560px) {
   .versus-screen .versus-portrait {
