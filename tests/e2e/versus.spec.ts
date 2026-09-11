@@ -1,34 +1,35 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
 
+const rosterSource = "/art/brigada-pixel-rave-roster-v1.webp";
+const cropX: Record<string, string> = {
+  hartz: "3%",
+  petoux: "26%",
+  nexmos: "49%",
+  kavaleur: "73%",
+  korsair: "96%",
+};
+
 const landscapeViewports = [
   { width: 844, height: 390 },
   { width: 667, height: 375 },
 ];
 
-async function frameContainsVisiblePixels(locator: Locator) {
-  return locator.evaluate((frame) => {
-    const img = frame.querySelector("img") as HTMLImageElement | null;
-    if (!img || !img.complete || img.naturalWidth !== 1152 || img.naturalHeight !== 128) return false;
-    const index = Number((frame as HTMLElement).dataset.frame ?? "-1");
-    if (index < 0 || index > 8) return false;
-    const canvas = document.createElement("canvas");
-    canvas.width = 128;
-    canvas.height = 128;
-    const context = canvas.getContext("2d");
-    if (!context) return false;
-    context.drawImage(img, index * 128, 0, 128, 128, 0, 0, 128, 128);
-    const alpha = context.getImageData(0, 0, 128, 128).data;
-    for (let i = 3; i < alpha.length; i += 4) {
-      if (alpha[i] > 0) return true;
-    }
-    return false;
-  });
+async function imageCoversFrame(image: Locator, frame: Locator) {
+  const imageBox = await image.boundingBox();
+  const frameBox = await frame.boundingBox();
+  if (!imageBox || !frameBox) return false;
+  const centerX = frameBox.x + frameBox.width / 2;
+  const centerY = frameBox.y + frameBox.height / 2;
+  return centerX >= imageBox.x && centerX <= imageBox.x + imageBox.width && centerY >= imageBox.y && centerY <= imageBox.y + imageBox.height;
 }
 
 for (const viewport of landscapeViewports) {
-  test(`premium VS screen uses real visible fighter images at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`premium VS screen visibly crops the exact fighters at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
+    page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
 
     for (const fighter of fighters) {
       await page.goto("/");
@@ -42,41 +43,59 @@ for (const viewport of landscapeViewports) {
 
       const player = page.locator(".versus-fighter.left");
       const opponent = page.locator(".versus-fighter.right");
-      const playerArt = player.locator(".versus-portrait");
-      const opponentArt = opponent.locator(".versus-portrait");
-      const playerFrame = playerArt.locator(".fighter-sprite-frame");
-      const opponentFrame = opponentArt.locator(".fighter-sprite-frame");
-      const playerImage = playerArt.locator("img.fighter-sprite-image");
-      const opponentImage = opponentArt.locator("img.fighter-sprite-image");
+      const playerFrame = player.locator(".versus-portrait");
+      const opponentFrame = opponent.locator(".versus-portrait");
+      const playerImage = player.locator("img.fighter-sprite-direct");
+      const opponentImage = opponent.locator("img.fighter-sprite-direct");
 
       await expect(player.locator("h2")).toHaveText(fighter.name);
       await expect(player.locator("p")).toHaveText(fighter.title);
+      await expect(playerImage).toBeVisible();
+      await expect(playerImage).toHaveAttribute("src", rosterSource);
+      await expect(playerImage).toHaveAttribute("data-fighter", fighter.id);
+      await expect(playerImage).toHaveAttribute("data-crop-x", cropX[fighter.id]);
+      await expect.poll(() => playerImage.evaluate(img => {
+        const image = img as HTMLImageElement;
+        return image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024;
+      })).toBe(true);
+      expect(await imageCoversFrame(playerImage, playerFrame)).toBe(true);
 
       const opponentName = await opponent.locator("h2").textContent();
-      expect(fighters.map(candidate => candidate.name)).toContain(opponentName);
+      const opponentFighter = fighters.find(candidate => candidate.name === opponentName);
+      expect(opponentFighter).toBeTruthy();
       expect(opponentName).not.toBe(fighter.name);
-
-      await expect(playerImage).toBeVisible();
       await expect(opponentImage).toBeVisible();
-      await expect.poll(() => playerImage.evaluate((img) => {
+      await expect(opponentImage).toHaveAttribute("src", rosterSource);
+      await expect(opponentImage).toHaveAttribute("data-fighter", opponentFighter!.id);
+      await expect(opponentImage).toHaveAttribute("data-crop-x", cropX[opponentFighter!.id]);
+      await expect.poll(() => opponentImage.evaluate(img => {
         const image = img as HTMLImageElement;
-        return image.complete && image.naturalWidth === 1152 && image.naturalHeight === 128;
+        return image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024;
       })).toBe(true);
-      await expect.poll(() => opponentImage.evaluate((img) => {
-        const image = img as HTMLImageElement;
-        return image.complete && image.naturalWidth === 1152 && image.naturalHeight === 128;
-      })).toBe(true);
+      expect(await imageCoversFrame(opponentImage, opponentFrame)).toBe(true);
 
-      expect(await frameContainsVisiblePixels(playerFrame)).toBe(true);
-      expect(await frameContainsVisiblePixels(opponentFrame)).toBe(true);
       expect(await playerImage.evaluate(element => getComputedStyle(element).imageRendering)).toBe("pixelated");
       expect(await opponentImage.evaluate(element => getComputedStyle(element).imageRendering)).toBe("pixelated");
+      expect(await playerImage.evaluate(element => getComputedStyle(element).opacity)).toBe("1");
+      expect(await opponentImage.evaluate(element => getComputedStyle(element).opacity)).toBe("1");
+      expect(await playerFrame.evaluate(element => getComputedStyle(element).overflow)).toBe("hidden");
+      expect(await opponentFrame.evaluate(element => getComputedStyle(element).overflow)).toBe("hidden");
 
-      await expect(playerArt).toBeInViewport({ ratio: .85 });
-      await expect(opponentArt).toBeInViewport({ ratio: .85 });
+      const playerBox = await playerFrame.boundingBox();
+      const opponentBox = await opponentFrame.boundingBox();
+      expect(playerBox).not.toBeNull();
+      expect(opponentBox).not.toBeNull();
+      if (playerBox && opponentBox) {
+        expect(playerBox.width).toBeGreaterThan(100);
+        expect(playerBox.height).toBeGreaterThan(100);
+        expect(opponentBox.width).toBeGreaterThan(100);
+        expect(opponentBox.height).toBeGreaterThan(100);
+      }
+
       await expect(page.getByRole("button", { name: "COMBATTRE", exact: true })).toBeInViewport({ ratio: 1 });
-
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
     }
+
+    expect(errors).toEqual([]);
   });
 }

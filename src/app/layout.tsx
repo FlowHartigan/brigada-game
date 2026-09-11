@@ -8,6 +8,7 @@ import "./pixel-rave.css";
 import "./vs-screen.css";
 import "./vs-atlas.css";
 import "./fighter-sprite-images.css";
+import "./fighter-direct-images.css";
 
 export const metadata: Metadata = {
   title: "BRIGADA FIGHT",

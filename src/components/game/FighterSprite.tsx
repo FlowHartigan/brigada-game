@@ -1,28 +1,13 @@
 import type { CSSProperties } from "react";
 import type { FighterId } from "@/game/engine/types";
+import { fighterImage, fighterPositionX } from "./fighterImages";
 
 export type FighterSpriteState = "idle" | "defend" | "dodge" | "special";
 
-const idleFrames: Record<FighterId, number> = {
-  hartz: 0,
-  petoux: 1,
-  nexmos: 2,
-  kavaleur: 3,
-  korsair: 4,
-};
-
-const hartzFrames: Record<FighterSpriteState, number> = {
-  idle: 0,
-  defend: 6,
-  dodge: 7,
-  special: 8,
-};
-
-function frameFor(id: FighterId, state: FighterSpriteState): number {
-  if (id === "hartz") return hartzFrames[state];
-  return idleFrames[id];
-}
-
+/**
+ * Runtime fighter visual. Every state stays on the known-good roster WebP so
+ * no interaction can swap a fighter to the broken legacy atlas.
+ */
 export function FighterSprite({
   id,
   state = "idle",
@@ -34,29 +19,26 @@ export function FighterSprite({
   label?: string;
   className?: string;
 }) {
-  const frame = frameFor(id, state);
+  const x = fighterPositionX(id);
   const style = {
-    "--sprite-offset": `${frame * -100}%`,
+    left: x,
+    top: "33%",
+    transform: `translate(-${x}, -33%)`,
   } as CSSProperties;
 
   return (
-    <span
-      className={`fighter-sprite-frame ${className}`.trim()}
-      style={style}
+    <img
+      className={`fighter-sprite-direct ${className}`.trim()}
+      src={fighterImage(id)}
+      alt={label ?? ""}
+      aria-hidden={label ? undefined : true}
+      draggable={false}
+      loading="eager"
+      decoding="sync"
       data-fighter={id}
-      data-frame={frame}
-    >
-      <img
-        className="fighter-sprite-image"
-        src="/sprites/brigada-fighters-atlas-v1.png"
-        alt={label ?? ""}
-        aria-hidden={label ? undefined : true}
-        draggable={false}
-        width={1152}
-        height={128}
-        loading="eager"
-        decoding="sync"
-      />
-    </span>
+      data-state={state}
+      data-crop-x={x}
+      style={style}
+    />
   );
 }
