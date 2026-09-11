@@ -1,0 +1,88 @@
+/* iOS/Safari-safe fighter rendering.
+   The atlas is rendered as a real <img> and cropped inside a fixed frame instead of
+   relying on CSS background-image positioning, which disappeared on iPhone Safari. */
+.fighter-sprite-frame {
+  --sprite-offset: 0%;
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.fighter-sprite-image {
+  position: absolute;
+  top: 0;
+  left: var(--sprite-offset);
+  width: 900%;
+  height: 100%;
+  max-width: none;
+  object-fit: fill;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* Disable the legacy CSS-background sprite path. */
+.versus-screen .versus-portrait,
+.result-screen .result-portrait,
+.arena-shell .arena-fighter {
+  background-image: none !important;
+}
+
+.versus-screen .versus-portrait {
+  overflow: hidden !important;
+}
+
+.versus-screen .versus-portrait > .fighter-sprite-frame {
+  position: absolute;
+  inset: 0;
+}
+
+.versus-fighter.right .fighter-sprite-frame {
+  transform: scaleX(-1);
+}
+
+.result-screen .result-portrait {
+  overflow: hidden !important;
+}
+
+.result-screen .result-portrait > .fighter-sprite-frame {
+  position: absolute;
+  inset: 0;
+}
+
+.arena-shell .arena-fighter {
+  position: absolute;
+  overflow: hidden !important;
+}
+
+.arena-shell .arena-fighter > .fighter-sprite-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 1 !important;
+}
+
+/* The old implementation mirrored the entire opponent container. Mirror only the image. */
+.arena-shell .arena-right {
+  transform: none !important;
+}
+
+.arena-shell .arena-right > .fighter-sprite-frame {
+  transform: scaleX(-1);
+}
+
+.arena-shell .arena-fighter > span:not(.fighter-sprite-frame) {
+  z-index: 2;
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .versus-screen .versus-portrait > .fighter-sprite-frame,
+  .arena-shell .arena-fighter > .fighter-sprite-frame {
+    min-height: 0;
+  }
+}
