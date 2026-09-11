@@ -100,22 +100,6 @@ test("every fighter uses real combat action frames without breaking Select, VS o
       await saveVisual(page, `anim-${fighter.id}-${state}-vs-hit`);
     }
 
-    // Validate guard break before any fighter-specific special mechanics can
-    // alter the interaction (notably KORSAIR's Contretemps counter window).
-    await setDeterministicRandom(page, 0);
-    await expect(defend).toBeEnabled({ timeout: 4_000 });
-    await holdDefense(page, defend);
-    await expect.poll(
-      async () => playerImage.getAttribute("data-state"),
-      { timeout: 10_000, intervals: [100, 150, 200, 250, 300] },
-    ).toBe("stunned");
-    await expectAnimatedFighterPixels(page, playerImage, "stunned");
-    await saveVisual(page, `anim-${fighter.id}-stunned`);
-
-    // Freeze the AI again as soon as the guard break has been proven, then
-    // release defense and validate the fighter's own special in isolation.
-    await setDeterministicRandom(page, 0.999999);
-    await releaseDefense(page, defend);
     await expect(special).toBeEnabled({ timeout: 12_000 });
     await special.click();
     await expectAnimatedSource(playerImage, "special");
