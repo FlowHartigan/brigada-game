@@ -1,24 +1,19 @@
 import type { FighterId } from "@/game/engine/types";
 
 /**
- * The approved roster WebP is the single visual source of truth. Each fighter
- * uses the same crop positions that were already validated by the art-direction
- * background treatment, but rendered through a real <img> for browser reliability.
+ * Runtime fighter artwork uses one standalone PNG per fighter. These assets are
+ * deliberately not cropped from the large roster composition: every screen
+ * receives the complete transparent 128×128 fighter image, which prevents CSS
+ * positioning/cropping from moving the character outside its frame.
  */
-export const fighterRosterImage = "/art/brigada-pixel-rave-roster-v1.webp";
-
-const fighterCropX: Record<FighterId, string> = {
-  hartz: "3%",
-  petoux: "26%",
-  nexmos: "49%",
-  kavaleur: "73%",
-  korsair: "96%",
+const fighterImages: Record<FighterId, string> = {
+  hartz: "/fighters/hartz.png",
+  petoux: "/fighters/petoux.png",
+  nexmos: "/fighters/nexmos.png",
+  kavaleur: "/fighters/kavaleur.png",
+  korsair: "/fighters/korsair.png",
 };
 
-export function fighterImage(_id: FighterId): string {
-  return fighterRosterImage;
-}
-
-export function fighterPositionX(id: FighterId): string {
-  return fighterCropX[id];
+export function fighterImage(id: FighterId): string {
+  return fighterImages[id];
 }
