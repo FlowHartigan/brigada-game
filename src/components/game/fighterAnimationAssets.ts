@@ -16,6 +16,8 @@ export type FighterActionVisualState =
   | "stunned"
   | "win";
 
+export type FighterSpriteState = "idle" | FighterActionVisualState;
+
 const actionFrames = {
   hartz: hartzActionFrames,
   petoux: petouxActionFrames,
