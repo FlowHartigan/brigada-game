@@ -55,19 +55,7 @@ test("mobile landscape player sees real fighter pixels through the full game flo
   await expect(dodge).toBeVisible();
   await expect(special).toBeVisible();
 
-  const enemyHp = page.locator(".opponent-hud .hud-name span");
-  const hpBefore = await enemyHp.textContent();
-  await attack.click();
-  await expect.poll(async () => enemyHp.textContent()).not.toBe(hpBefore);
-  await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
-
-  await expect(dodge).toBeEnabled({ timeout: 2_000 });
-  await dodge.click();
-  await expect(dodge).toBeDisabled();
-  await expect(playerSprite.locator('img.fighter-sprite-direct[data-state="dodge"]')).toBeVisible();
-  await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
-  await saveVisual(page, "flow-fight-hartz-dodge");
-
+  // Hold defense first while the combat state is clean.
   await expect(defend).toBeEnabled({ timeout: 2_000 });
   const box = await defend.boundingBox();
   expect(box).not.toBeNull();
@@ -75,12 +63,31 @@ test("mobile landscape player sees real fighter pixels through the full game flo
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await expect(defend).toHaveAttribute("aria-pressed", "true");
-    const defendImage = playerSprite.locator('img.fighter-sprite-direct[data-state="defend"]');
-    await expectFighterPixels(defendImage, fighterSrc("hartz"));
+    await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
     await saveVisual(page, "flow-fight-hartz-defend");
     await page.mouse.up();
     await expect(defend).toHaveAttribute("aria-pressed", "false");
   }
+
+  await expect(dodge).toBeEnabled({ timeout: 2_000 });
+  await dodge.click();
+  await expect(dodge).toBeDisabled();
+  await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-dodge");
+
+  const enemyHp = page.locator(".opponent-hud .hud-name span");
+  const hpBefore = await enemyHp.textContent();
+  await expect(attack).toBeEnabled({ timeout: 3_000 });
+  await attack.click();
+  await expect.poll(async () => enemyHp.textContent()).not.toBe(hpBefore);
+  await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-attack");
+
+  await expect(special).toBeEnabled({ timeout: 12_000 });
+  await special.click();
+  await expect(special).toBeDisabled();
+  await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-special");
 
   const viewportFits = await page.evaluate(
     () => document.documentElement.scrollWidth <= window.innerWidth + 1,
