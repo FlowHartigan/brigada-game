@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
 
 const landscapeViewports = [
@@ -6,7 +6,7 @@ const landscapeViewports = [
   { width: 667, height: 375 },
 ];
 
-async function frameContainsVisiblePixels(locator: ReturnType<import("@playwright/test").Page["locator"]>) {
+async function frameContainsVisiblePixels(locator: Locator) {
   return locator.evaluate((frame) => {
     const img = frame.querySelector("img") as HTMLImageElement | null;
     if (!img || !img.complete || img.naturalWidth !== 1152 || img.naturalHeight !== 128) return false;
