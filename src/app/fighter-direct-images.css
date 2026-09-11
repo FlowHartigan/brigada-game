@@ -62,8 +62,15 @@
   z-index: 2 !important;
 }
 
+/*
+ * Character-select PNGs intentionally keep different amounts of transparent
+ * padding. Scale them from a shared bottom-center ground line using the
+ * centralized values from fighterPresentation.ts. This changes presentation
+ * only: the source images and their aspect ratios are untouched.
+ */
 .fighter-art-image {
-  transform: none !important;
+  transform: translateY(var(--fighter-art-y, 0%)) scale(var(--fighter-art-scale, 1)) !important;
+  transform-origin: 50% 100% !important;
   filter: drop-shadow(0 12px 7px rgba(0, 0, 0, .42));
 }
 
