@@ -21,6 +21,7 @@ import {
 import type { CombatAction, FighterDefinition, FighterId } from "@/game/engine/types";
 
 import { FighterArt } from "./FighterArt";
+import { FighterSprite, type FighterSpriteState } from "./FighterSprite";
 
 type Scene = "home" | "select" | "versus" | "fight" | "result";
 
@@ -248,7 +249,9 @@ export function GamePrototype() {
     return (
       <section className="versus-screen screen-panel">
         <div className="versus-fighter left">
-          <div className={`versus-portrait fighter-${selected.id}`}>{selected.name[0]}</div>
+          <div className={`versus-portrait fighter-${selected.id}`}>
+            <FighterSprite id={selected.id} label={selected.name} className="versus-sprite" />
+          </div>
           <p>{selected.title}</p>
           <h2>{selected.name}</h2>
         </div>
@@ -258,7 +261,9 @@ export function GamePrototype() {
           <button className="primary-cta compact" onClick={startFight}>COMBATTRE</button>
         </div>
         <div className="versus-fighter right">
-          <div className={`versus-portrait fighter-${opponent.id}`}>{opponent.name[0]}</div>
+          <div className={`versus-portrait fighter-${opponent.id}`}>
+            <FighterSprite id={opponent.id} label={opponent.name} className="versus-sprite" />
+          </div>
           <p>{opponent.title}</p>
           <h2>{opponent.name}</h2>
         </div>
@@ -272,12 +277,13 @@ export function GamePrototype() {
     const playerWon = combatState.winner === "player";
     const opponentWon = combatState.winner === "opponent";
     const winnerName = playerWon ? selected.name : opponentWon ? opponent.name : "ÉGALITÉ";
+    const winnerId = playerWon ? selected.id : opponent.id;
 
     return (
       <section className="result-screen screen-panel">
         <p className="eyebrow">{combatState.endReason === "timeout" ? "TIME" : "KO"}</p>
-        <div className={`result-portrait fighter-${playerWon ? selected.id : opponent.id}`}>
-          {playerWon ? selected.name[0] : opponent.name[0]}
+        <div className={`result-portrait fighter-${winnerId}`}>
+          <FighterSprite id={winnerId} label={winnerName} className="result-sprite" />
         </div>
         <h1>{combatState.winner === "draw" ? "DRAW" : `${winnerName} WINS`}</h1>
         <p className="result-detail">
@@ -326,6 +332,22 @@ export function GamePrototype() {
     ].filter(Boolean).join(" ");
   }
 
+  function fighterSpriteState(side: CombatSide): FighterSpriteState {
+    if (!combatState) return "idle";
+    const runtime = combatState[side];
+    const recent = Boolean(lastEvent && combatState.now - lastEvent.at < 360);
+    const usedSpecial = Boolean(
+      recent &&
+      lastEvent?.actor === side &&
+      ["special", "counter-ready", "counter"].includes(lastEvent.type),
+    );
+
+    if (runtime.isDefending) return "defend";
+    if (runtime.invulnerableUntil > combatState.now) return "dodge";
+    if (usedSpecial) return "special";
+    return "idle";
+  }
+
   return (
     <section className="fight-screen screen-panel">
       <header className="fight-hud">
@@ -348,8 +370,14 @@ export function GamePrototype() {
         <div className="blackboard">0 + 0 = TECHNO</div>
         <div className="speaker speaker-left" />
         <div className="speaker speaker-right" />
-        <div className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}><span>{selected.name}</span></div>
-        <div className={`arena-fighter arena-right fighter-${opponent.id} ${fighterVisualState("opponent")}`}><span>{opponent.name}</span></div>
+        <div className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}>
+          <FighterSprite id={selected.id} state={fighterSpriteState("player")} label={selected.name} className="arena-sprite" />
+          <span>{selected.name}</span>
+        </div>
+        <div className={`arena-fighter arena-right fighter-${opponent.id} ${fighterVisualState("opponent")}`}>
+          <FighterSprite id={opponent.id} state={fighterSpriteState("opponent")} label={opponent.name} className="arena-sprite" />
+          <span>{opponent.name}</span>
+        </div>
         <div className="arena-floor" />
         <div className="combat-callout" key={lastEvent?.id ?? 0}>{lastEvent?.message ?? "FIGHT!"}</div>
       </div>
