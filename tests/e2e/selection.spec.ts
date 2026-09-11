@@ -20,7 +20,7 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
 
       for (const candidate of fighters) {
         const cardImage = page.locator(`.fighter-card img.fighter-art-image[data-fighter="${candidate.id}"]`);
-        await expectFighterPixels(cardImage, fighterSrc(candidate.id));
+        await expectFighterPixels(page, cardImage, fighterSrc(candidate.id));
       }
 
       await page.getByRole("button", { name: `${fighter.name} — ${fighter.title}`, exact: true }).click();
@@ -30,7 +30,7 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
       await expect(page.locator(".selection-special strong")).toHaveText(fighter.special.name);
 
       const showcaseImage = page.locator(`.selection-showcase img.fighter-art-image[data-fighter="${fighter.id}"]`);
-      await expectFighterPixels(showcaseImage, fighterSrc(fighter.id));
+      await expectFighterPixels(page, showcaseImage, fighterSrc(fighter.id));
       expect(await showcaseImage.evaluate(image => getComputedStyle(image).imageRendering)).toBe("pixelated");
 
       const showcaseFrame = page.locator(".selection-showcase .roster-sprite");
