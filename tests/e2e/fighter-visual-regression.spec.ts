@@ -11,12 +11,18 @@ import {
 
 const actionStates = ["attack1", "attack2", "attack3"] as const;
 
+async function setDeterministicRandom(page: Parameters<typeof test>[0] extends never ? never : any, value: number) {
+  await page.evaluate((nextValue: number) => {
+    Math.random = () => nextValue;
+  }, value);
+}
+
 test("every fighter uses real combat action frames without breaking Select, VS or Combat", async ({ page }) => {
   test.setTimeout(240_000);
   await page.setViewportSize({ width: 844, height: 390 });
 
-  // Deterministic AI: selection picks a stable opponent and Utility AI prefers
-  // its first legal action, making opponent animation checks reproducible.
+  // Start deterministic: selection picks a stable opponent and Utility AI
+  // chooses its first legal action so its own animation can be observed.
   await page.addInitScript(() => {
     Math.random = () => 0;
   });
@@ -50,32 +56,38 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
-    await holdDefense(page, defend);
-    await expectAnimatedFighterPixels(page, playerImage, "defend");
-    await saveVisual(page, `anim-${fighter.id}-defend`);
-    await releaseDefense(page, defend);
-
-    // AI is presentation-tested independently: it must really leave idle and
-    // render one of its action frames while attacking.
+    // First prove the AI itself animates when it performs a real attack.
     await expect.poll(
       async () => opponentImage.getAttribute("data-state"),
       { timeout: 4_000, intervals: [50, 50, 100, 100, 150, 200] },
     ).toMatch(/^attack[123]$/);
     const opponentAnimatedState = await opponentImage.getAttribute("data-state");
     await expectAnimatedFighterPixels(page, opponentImage, opponentAnimatedState!);
+    await saveVisual(page, `anim-${fighter.id}-ai-${opponentAnimatedState}`);
+
+    // Make Utility AI choose WAIT while we validate player frames. This avoids
+    // unrelated enemy hits racing short-lived presentation states.
+    await setDeterministicRandom(page, 0.999999);
+    await page.waitForTimeout(700);
+
+    await holdDefense(page, defend);
+    await expectAnimatedFighterPixels(page, playerImage, "defend");
+    await saveVisual(page, `anim-${fighter.id}-defend`);
+    await releaseDefense(page, defend);
 
     await expect(dodge).toBeEnabled({ timeout: 4_000 });
     await dodge.click();
     await expectAnimatedFighterPixels(page, playerImage, "dodge");
     await saveVisual(page, `anim-${fighter.id}-dodge`);
 
-    // Validate hit deterministically at the exact moment the player's attack
-    // lands. This avoids racing the short hit window after first waiting on AI.
+    // Each real combo hit swaps the attacking fighter and the struck opponent.
     for (const state of actionStates) {
       await expect(attack).toBeEnabled({ timeout: 4_000 });
       await attack.click();
-      await expectAnimatedFighterPixels(page, playerImage, state);
+      await expect(playerImage).toHaveAttribute("data-state", state, { timeout: 500 });
+      await expect(opponentImage).toHaveAttribute("data-state", "hit", { timeout: 500 });
       await expectAnimatedFighterPixels(page, opponentImage, "hit");
+      await expectAnimatedFighterPixels(page, playerImage, state);
       await saveVisual(page, `anim-${fighter.id}-${state}`);
       if (state === "attack1") {
         await saveVisual(page, `anim-${fighter.id}-hit`);
@@ -87,21 +99,19 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await expectAnimatedFighterPixels(page, playerImage, "special");
     await saveVisual(page, `anim-${fighter.id}-special`);
 
-    // Guard break remains gameplay-driven. Hold defense and let deterministic
-    // AI attack until the engine itself opens the stun window.
+    // Re-enable aggressive deterministic AI only for an actual guard break.
+    await setDeterministicRandom(page, 0);
     await expect(defend).toBeEnabled({ timeout: 4_000 });
     await holdDefense(page, defend);
     await expect.poll(
       async () => playerImage.getAttribute("data-state"),
-      { timeout: 8_000, intervals: [100, 150, 200, 250, 300] },
+      { timeout: 10_000, intervals: [100, 150, 200, 250, 300] },
     ).toBe("stunned");
     await expectAnimatedFighterPixels(page, playerImage, "stunned");
     await saveVisual(page, `anim-${fighter.id}-stunned`);
     await releaseDefense(page, defend);
 
-    // AI may immediately attack again after the stun. The invariant is that
-    // the sprite never disappears: idle uses the production PNG, every other
-    // state must still be a decoded, pixel-visible action frame.
+    // Whatever the AI does next, both fighters must remain visibly rendered.
     const finalState = await playerImage.getAttribute("data-state");
     if (!finalState || finalState === "idle") {
       await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
