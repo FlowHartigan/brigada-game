@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
-import { expectFighterPixels, fighterSrc, saveVisual } from "./visual-helpers";
+import { expectFighterPixels, fighterSrc, holdDefense, releaseDefense, saveVisual } from "./visual-helpers";
 
 test("every fighter stays visibly rendered through Select, VS, Combat, defend, dodge, attack and special", async ({ page }) => {
   test.setTimeout(120_000);
@@ -39,20 +39,10 @@ test("every fighter stays visibly rendered through Select, VS, Combat, defend, d
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
-    // Test the held defense from a clean combat state. Running this before
-    // dodge/attack avoids an action lock masking the pointer-hold behavior.
-    await expect(defend).toBeEnabled({ timeout: 3_000 });
-    const defendBox = await defend.boundingBox();
-    expect(defendBox).not.toBeNull();
-    if (defendBox) {
-      await page.mouse.move(defendBox.x + defendBox.width / 2, defendBox.y + defendBox.height / 2);
-      await page.mouse.down();
-      await expect(defend).toHaveAttribute("aria-pressed", "true");
-      await expectFighterPixels(playerImage, fighterSrc(fighter.id));
-      await saveVisual(page, `regression-defend-${fighter.id}`);
-      await page.mouse.up();
-      await expect(defend).toHaveAttribute("aria-pressed", "false");
-    }
+    await holdDefense(page, defend);
+    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-defend-${fighter.id}`);
+    await releaseDefense(page, defend);
 
     await expect(dodge).toBeEnabled({ timeout: 3_000 });
     await dodge.click();
