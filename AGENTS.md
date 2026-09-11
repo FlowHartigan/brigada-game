@@ -4,7 +4,7 @@ This file defines the operating rules for every coding agent working on this rep
 
 ## Product goal
 
-Build **LA BRIGADE: 0+0=FIGHT**, a mobile-first 2D fighting game playable directly in a browser.
+Build **BRIGADA FIGHT**, a mobile-first 2D fighting game playable directly in a browser.
 
 The first milestone is a small, polished fighting prototype rather than a broad game with many systems.
 

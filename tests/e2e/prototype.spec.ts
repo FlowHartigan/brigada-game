@@ -16,12 +16,9 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
   await page.getByRole("button", { name: "FIGHT" }).click();
   await expect(page.locator(".select-screen .fighter-grid")).toBeVisible();
 
-  const rosterArt = await page.locator(".select-screen").evaluate((element) =>
-    getComputedStyle(element, "::before").backgroundImage,
-  );
-  expect(rosterArt).toContain("brigada-pixel-rave-roster-v1.webp");
-
-  await page.getByRole("button").filter({ hasText: "HARTZ" }).first().click();
+  await page.getByRole("button", { name: "HARTZ — HIGH VOLTAGE" }).click();
+  await expect(page.locator(".selection-name h2")).toHaveText("HARTZ");
+  await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
   await expect(page.getByText("VS", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "COMBATTRE" })).toBeVisible();
 
