@@ -110,6 +110,36 @@ export async function expectFighterPixels(image: Locator, expectedSrc: string) {
   expect(withFighter.equals(withoutFighter)).toBe(false);
 }
 
+/**
+ * Defense is a held pointer action while the opponent AI keeps running. Retry
+ * the physical press if an AI hit lands in the few milliseconds between the
+ * enabled-state check and pointerdown, instead of making visual QA flaky.
+ */
+export async function holdDefense(page: Page, defend: Locator) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    await expect(defend).toBeEnabled({ timeout: 3_000 });
+    const box = await defend.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) continue;
+
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    try {
+      await expect(defend).toHaveAttribute("aria-pressed", "true", { timeout: 450 });
+      return;
+    } catch {
+      await page.mouse.up();
+      await page.waitForTimeout(120);
+    }
+  }
+  throw new Error("Defense could not enter its held state after repeated clean presses");
+}
+
+export async function releaseDefense(page: Page, defend: Locator) {
+  await page.mouse.up();
+  await expect(defend).toHaveAttribute("aria-pressed", "false", { timeout: 1_500 });
+}
+
 export async function saveVisual(page: Page, name: string) {
   await page.screenshot({
     path: `test-results/visual-${name}.png`,
