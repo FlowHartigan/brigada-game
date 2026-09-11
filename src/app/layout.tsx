@@ -3,16 +3,10 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "./combat-ui.css";
 import "./art-direction.css";
-import "./sprites/hartz-idle.css";
-import "./sprites/hartz-defend.css";
-import "./sprites/hartz-dodge.css";
-import "./sprites/hartz-special.css";
-import "./sprites/petoux-idle.css";
-import "./sprites/nexmos-idle.css";
-import "./sprites/kavaleur-idle.css";
-import "./sprites/korsair-idle.css";
 import "./sprite-fighters.css";
 import "./pixel-rave.css";
+import "./vs-screen.css";
+import "./vs-atlas.css";
 
 export const metadata: Metadata = {
   title: "BRIGADA FIGHT",

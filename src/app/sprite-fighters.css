@@ -4,9 +4,9 @@
   border: 0 !important;
   border-radius: 0 !important;
   background-color: transparent !important;
+  background-image: url("/sprites/brigada-fighters-atlas-v1.png") !important;
   background-repeat: no-repeat !important;
-  background-position: center !important;
-  background-size: contain !important;
+  background-size: 900% 100% !important;
   image-rendering: pixelated;
   filter: drop-shadow(0 16px 10px rgba(0,0,0,.48));
   transform-origin: 50% 100%;
@@ -32,23 +32,15 @@
   white-space: nowrap;
 }
 
-.arena-fighter.fighter-hartz { background-image: var(--sprite-hartz-idle) !important; }
-.arena-fighter.fighter-petoux { background-image: var(--sprite-petoux-idle) !important; }
-.arena-fighter.fighter-nexmos { background-image: var(--sprite-nexmos-idle) !important; }
-.arena-fighter.fighter-kavaleur { background-image: var(--sprite-kavaleur-idle) !important; }
-.arena-fighter.fighter-korsair { background-image: var(--sprite-korsair-idle) !important; }
+.arena-fighter.fighter-hartz { background-position: 0% 50% !important; }
+.arena-fighter.fighter-petoux { background-position: 12.5% 50% !important; }
+.arena-fighter.fighter-nexmos { background-position: 25% 50% !important; }
+.arena-fighter.fighter-kavaleur { background-position: 37.5% 50% !important; }
+.arena-fighter.fighter-korsair { background-position: 50% 50% !important; }
 
-.arena-fighter.fighter-hartz.is-defending {
-  background-image: var(--sprite-hartz-defend) !important;
-}
-
-.arena-fighter.fighter-hartz.is-dodging {
-  background-image: var(--sprite-hartz-dodge) !important;
-}
-
-.arena-fighter.fighter-hartz.is-special {
-  background-image: var(--sprite-hartz-special) !important;
-}
+.arena-fighter.fighter-hartz.is-defending { background-position: 75% 50% !important; }
+.arena-fighter.fighter-hartz.is-dodging { background-position: 87.5% 50% !important; }
+.arena-fighter.fighter-hartz.is-special { background-position: 100% 50% !important; }
 
 .arena-fighter.is-hit {
   animation: sprite-hit-shake 180ms steps(2, end);
@@ -59,21 +51,11 @@
   filter: saturate(.35) brightness(.85) drop-shadow(0 14px 9px rgba(0,0,0,.5));
 }
 
-.arena-fighter.is-dodging {
-  animation: sprite-dodge 220ms steps(3, end);
-}
+.arena-fighter.is-dodging { animation: sprite-dodge 220ms steps(3, end); }
+.arena-fighter.is-special { animation: sprite-special-pop 260ms steps(2, end); }
 
-.arena-fighter.is-special {
-  animation: sprite-special-pop 260ms steps(2, end);
-}
-
-.arena-right {
-  transform: scaleX(-1);
-}
-
-.arena-right > span {
-  transform: translateX(-50%) scaleX(-1);
-}
+.arena-right { transform: scaleX(-1); }
+.arena-right > span { transform: translateX(-50%) scaleX(-1); }
 
 @keyframes sprite-hit-shake {
   0%, 100% { translate: 0 0; }

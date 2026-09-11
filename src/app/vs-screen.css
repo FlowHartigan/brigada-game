@@ -1,0 +1,313 @@
+/* Premium BRIGADA FIGHT VS screen. Reuses the approved in-project fighter sprite assets. */
+.versus-screen {
+  --player-accent: #acd6e7;
+  --opponent-accent: #ff493d;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(110px, 16vw, 180px) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: min(720px, calc(100dvh - 28px));
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--player-accent) 10%, transparent), transparent 34%, transparent 66%, color-mix(in srgb, var(--opponent-accent) 10%, transparent)),
+    radial-gradient(circle at 50% 50%, rgba(108, 20, 17, .28), transparent 34%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px),
+    #0a0909;
+  border-color: #4e2d27;
+}
+
+.versus-screen::before,
+.versus-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.versus-screen::before {
+  background:
+    linear-gradient(115deg, transparent 0 47%, rgba(223, 47, 35, .13) 47.3% 47.9%, transparent 48.2% 100%),
+    linear-gradient(65deg, transparent 0 51%, rgba(255, 255, 255, .035) 51.2% 51.5%, transparent 51.8% 100%);
+}
+
+.versus-screen::after {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.09) 0 1px, transparent 1.2px),
+    linear-gradient(90deg, transparent 0 49.7%, rgba(255,255,255,.04) 50%, transparent 50.3% 100%);
+  background-size: 8px 8px, 100% 100%;
+  opacity: .18;
+  mix-blend-mode: screen;
+}
+
+.versus-fighter {
+  --vs-accent: #f3efe8;
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  align-items: end;
+  padding: clamp(18px, 3vw, 36px);
+  overflow: hidden;
+}
+
+.versus-fighter.left {
+  --vs-accent: var(--player-accent);
+  justify-items: start;
+  text-align: left;
+  animation: vs-enter-left 420ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.versus-fighter.right {
+  --vs-accent: var(--opponent-accent);
+  justify-items: end;
+  text-align: right;
+  animation: vs-enter-right 420ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.versus-fighter::before {
+  position: absolute;
+  top: 16px;
+  z-index: 4;
+  color: var(--vs-accent);
+  font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: .22em;
+  opacity: .9;
+}
+
+.versus-fighter.left::before { content: "PLAYER 01"; left: clamp(18px, 3vw, 36px); }
+.versus-fighter.right::before { content: "RANDOM OPPONENT"; right: clamp(18px, 3vw, 36px); }
+
+.versus-fighter::after {
+  content: "";
+  position: absolute;
+  width: min(36vw, 340px);
+  aspect-ratio: 1;
+  bottom: 7%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--vs-accent) 24%, transparent), transparent 67%);
+  filter: blur(12px);
+  opacity: .9;
+  z-index: -1;
+}
+
+.versus-fighter.left::after { left: -8%; }
+.versus-fighter.right::after { right: -8%; }
+
+.versus-screen .versus-portrait {
+  position: relative;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: contain;
+  image-rendering: pixelated;
+  font-size: 0;
+  filter: drop-shadow(0 18px 10px rgba(0,0,0,.52));
+  transform-origin: 50% 100%;
+  animation: vs-fighter-breathe 1.9s steps(2, end) 520ms infinite;
+}
+
+.versus-screen .versus-portrait::before,
+.versus-screen .versus-portrait::after { display: none !important; }
+
+.versus-screen .versus-portrait.fighter-hartz { background-image: var(--sprite-hartz-idle) !important; }
+.versus-screen .versus-portrait.fighter-petoux { background-image: var(--sprite-petoux-idle) !important; }
+.versus-screen .versus-portrait.fighter-nexmos { background-image: var(--sprite-nexmos-idle) !important; }
+.versus-screen .versus-portrait.fighter-kavaleur { background-image: var(--sprite-kavaleur-idle) !important; }
+.versus-screen .versus-portrait.fighter-korsair { background-image: var(--sprite-korsair-idle) !important; }
+
+.versus-fighter p,
+.versus-fighter h2 {
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  text-shadow: 0 2px 0 #000, 0 0 18px rgba(0,0,0,.75);
+}
+
+.versus-fighter p {
+  color: var(--vs-accent);
+  font: 800 clamp(9px, 1.1vw, 12px)/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.versus-fighter h2 {
+  margin-top: 5px;
+  max-width: 100%;
+  color: #fff6eb;
+  font: clamp(34px, 5.5vw, 74px)/.88 Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.versus-center {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 8px;
+  text-align: center;
+}
+
+.versus-center::before {
+  content: "BRIGADA FIGHT";
+  color: #cfc2b8;
+  font: 800 clamp(8px, 1vw, 11px)/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: .2em;
+  white-space: nowrap;
+}
+
+.versus-center::after {
+  content: "0 + 0 = TECHNO";
+  color: #715b51;
+  font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: .1em;
+  white-space: nowrap;
+}
+
+.versus-center > span {
+  order: -1;
+  color: #8d7469;
+  font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: .18em;
+}
+
+.versus-center > strong {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(86px, 12vw, 142px);
+  aspect-ratio: 1;
+  color: #fff0e3;
+  font: clamp(62px, 9vw, 116px)/1 Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-style: italic;
+  letter-spacing: -.08em;
+  text-shadow: 5px 5px 0 #7a1d17, -2px -2px 0 #1c0c0a, 0 0 30px rgba(239, 52, 39, .4);
+  transform: rotate(-4deg);
+  animation: vs-impact 540ms cubic-bezier(.1,.9,.2,1) 120ms both;
+}
+
+.versus-center > strong::before,
+.versus-center > strong::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 170%;
+  height: 2px;
+  background: #d8372b;
+  z-index: -1;
+  opacity: .65;
+}
+
+.versus-center > strong::before { transform: translate(-50%, -50%) rotate(-15deg); }
+.versus-center > strong::after { transform: translate(-50%, -50%) rotate(15deg); }
+
+.versus-screen .versus-center .primary-cta {
+  width: min(100%, 150px);
+  min-height: 48px;
+  border-radius: 0;
+  border: 1px solid #ff7c70;
+  background: #d83126;
+  color: #fff3e6;
+  box-shadow: 4px 4px 0 #571712;
+  font: 800 clamp(14px, 1.8vw, 20px)/1 Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  letter-spacing: .08em;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.versus-screen .versus-center .primary-cta:hover,
+.versus-screen .versus-center .primary-cta:focus-visible {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #571712;
+  filter: brightness(1.08);
+}
+
+.versus-screen .versus-center .primary-cta:focus-visible {
+  outline: 2px solid #fff3e6;
+  outline-offset: 4px;
+}
+
+.versus-fighter:has(.fighter-hartz) { --vs-accent: #acd6e7; }
+.versus-fighter:has(.fighter-petoux) { --vs-accent: #e9c9a4; }
+.versus-fighter:has(.fighter-nexmos) { --vs-accent: #ff493d; }
+.versus-fighter:has(.fighter-kavaleur) { --vs-accent: #ff69b2; }
+.versus-fighter:has(.fighter-korsair) { --vs-accent: #e7aa54; }
+
+@keyframes vs-enter-left {
+  from { opacity: 0; transform: translateX(-8%) scale(.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes vs-enter-right {
+  from { opacity: 0; transform: translateX(8%) scale(.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes vs-impact {
+  0% { opacity: 0; scale: 2.1; filter: blur(6px) brightness(2); }
+  55% { opacity: 1; scale: .9; filter: blur(0) brightness(1.35); }
+  75% { scale: 1.08; }
+  100% { scale: 1; filter: brightness(1); }
+}
+
+@keyframes vs-fighter-breathe {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -3px; }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .versus-screen {
+    height: calc(100dvh - 12px);
+    min-height: 320px;
+    grid-template-columns: minmax(0, 1fr) clamp(96px, 15vw, 132px) minmax(0, 1fr);
+  }
+  .versus-fighter { padding: 14px 18px; }
+  .versus-fighter.left::before { left: 18px; top: 10px; }
+  .versus-fighter.right::before { right: 18px; top: 10px; }
+  .versus-screen .versus-portrait { min-height: 180px; }
+  .versus-fighter h2 { font-size: clamp(29px, 5vw, 50px); }
+  .versus-fighter p { font-size: 8px; }
+  .versus-center { gap: 6px; padding: 10px 4px; }
+  .versus-center > strong { width: 80px; font-size: 64px; }
+  .versus-screen .versus-center .primary-cta { min-height: 42px; font-size: 15px; }
+  .versus-center::before { font-size: 7px; }
+  .versus-center::after, .versus-center > span { font-size: 7px; }
+}
+
+@media (orientation: portrait) {
+  .versus-screen {
+    grid-template-columns: 1fr 72px 1fr;
+    min-height: calc(100dvh - 28px);
+  }
+  .versus-fighter { padding: 16px 8px; }
+  .versus-fighter.left::before { left: 8px; }
+  .versus-fighter.right::before { right: 8px; }
+  .versus-fighter::before { font-size: 7px; letter-spacing: .08em; }
+  .versus-screen .versus-portrait { min-height: 44vh; }
+  .versus-fighter h2 { font-size: clamp(25px, 8vw, 42px); }
+  .versus-fighter p { font-size: 7px; letter-spacing: .06em; }
+  .versus-center { gap: 8px; padding: 12px 2px; }
+  .versus-center > strong { width: 64px; font-size: 52px; }
+  .versus-center::before, .versus-center::after, .versus-center > span { font-size: 6px; letter-spacing: .05em; }
+  .versus-screen .versus-center .primary-cta { width: 68px; min-height: 46px; padding-inline: 2px; font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .versus-screen *, .versus-screen *::before, .versus-screen *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
