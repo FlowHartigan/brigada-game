@@ -2,7 +2,7 @@
    The atlas is rendered as a real <img> and cropped inside a fixed frame instead of
    relying on CSS background-image positioning, which disappeared on iPhone Safari. */
 .fighter-sprite-frame {
-  --sprite-frame: 0;
+  --sprite-offset: 0%;
   position: relative;
   display: block;
   overflow: hidden;
@@ -14,7 +14,7 @@
 .fighter-sprite-image {
   position: absolute;
   top: 0;
-  left: calc(var(--sprite-frame) * -100%);
+  left: var(--sprite-offset);
   width: 900%;
   height: 100%;
   max-width: none;
