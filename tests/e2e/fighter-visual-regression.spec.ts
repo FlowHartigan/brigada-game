@@ -100,12 +100,8 @@ test("every fighter uses real combat action frames without breaking Select, VS o
       await saveVisual(page, `anim-${fighter.id}-${state}-vs-hit`);
     }
 
-    await expect(special).toBeEnabled({ timeout: 12_000 });
-    await special.click();
-    await expectAnimatedSource(playerImage, "special");
-    await saveVisual(page, `anim-${fighter.id}-special`);
-
-    // Re-enable aggressive deterministic AI only for an actual guard break.
+    // Validate guard break before any fighter-specific special mechanics can
+    // alter the interaction (notably KORSAIR's Contretemps counter window).
     await setDeterministicRandom(page, 0);
     await expect(defend).toBeEnabled({ timeout: 4_000 });
     await holdDefense(page, defend);
@@ -115,9 +111,17 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     ).toBe("stunned");
     await expectAnimatedFighterPixels(page, playerImage, "stunned");
     await saveVisual(page, `anim-${fighter.id}-stunned`);
-    await releaseDefense(page, defend);
 
-    // Whatever the AI does next, both fighters must remain visibly rendered.
+    // Freeze the AI again as soon as the guard break has been proven, then
+    // release defense and validate the fighter's own special in isolation.
+    await setDeterministicRandom(page, 0.999999);
+    await releaseDefense(page, defend);
+    await expect(special).toBeEnabled({ timeout: 12_000 });
+    await special.click();
+    await expectAnimatedSource(playerImage, "special");
+    await saveVisual(page, `anim-${fighter.id}-special`);
+
+    // Whatever transient state remains, both fighters must stay rendered.
     const finalState = await playerImage.getAttribute("data-state");
     if (!finalState || finalState === "idle") {
       await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
