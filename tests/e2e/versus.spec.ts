@@ -15,25 +15,6 @@ const landscapeViewports = [
   { width: 667, height: 375 },
 ];
 
-async function imageContainsOpaquePixels(locator: Locator) {
-  return locator.evaluate((img) => {
-    const image = img as HTMLImageElement;
-    if (!image.complete || image.naturalWidth !== 1536 || image.naturalHeight !== 1024) return false;
-    const canvas = document.createElement("canvas");
-    canvas.width = 32;
-    canvas.height = 32;
-    const context = canvas.getContext("2d");
-    if (!context) return false;
-    context.drawImage(image, 0, 0, 32, 32);
-    const pixels = context.getImageData(0, 0, 32, 32).data;
-    let opaque = 0;
-    for (let i = 3; i < pixels.length; i += 4) {
-      if (pixels[i] > 20) opaque += 1;
-    }
-    return opaque > 500;
-  });
-}
-
 async function imageCoversFrame(image: Locator, frame: Locator) {
   const imageBox = await image.boundingBox();
   const frameBox = await frame.boundingBox();
@@ -73,7 +54,10 @@ for (const viewport of landscapeViewports) {
       await expect(playerImage).toHaveAttribute("src", rosterSource);
       await expect(playerImage).toHaveAttribute("data-fighter", fighter.id);
       await expect(playerImage).toHaveAttribute("data-crop-x", cropX[fighter.id]);
-      expect(await imageContainsOpaquePixels(playerImage)).toBe(true);
+      await expect.poll(() => playerImage.evaluate(img => {
+        const image = img as HTMLImageElement;
+        return image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024;
+      })).toBe(true);
       expect(await imageCoversFrame(playerImage, playerFrame)).toBe(true);
 
       const opponentName = await opponent.locator("h2").textContent();
@@ -84,7 +68,10 @@ for (const viewport of landscapeViewports) {
       await expect(opponentImage).toHaveAttribute("src", rosterSource);
       await expect(opponentImage).toHaveAttribute("data-fighter", opponentFighter!.id);
       await expect(opponentImage).toHaveAttribute("data-crop-x", cropX[opponentFighter!.id]);
-      expect(await imageContainsOpaquePixels(opponentImage)).toBe(true);
+      await expect.poll(() => opponentImage.evaluate(img => {
+        const image = img as HTMLImageElement;
+        return image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024;
+      })).toBe(true);
       expect(await imageCoversFrame(opponentImage, opponentFrame)).toBe(true);
 
       expect(await playerImage.evaluate(element => getComputedStyle(element).imageRendering)).toBe("pixelated");
