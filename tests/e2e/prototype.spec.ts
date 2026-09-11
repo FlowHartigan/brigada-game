@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("mobile landscape player can reach and use the fight controls", async ({ page }) => {
+test("mobile landscape player sees the real fighter images and can use combat controls", async ({ page }) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
 
@@ -20,29 +20,35 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
   await expect(page.locator(".selection-name h2")).toHaveText("HARTZ");
   await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
   await expect(page.getByText("VS", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "COMBATTRE" })).toBeVisible();
+
+  const vsPlayerImage = page.locator(".versus-fighter.left img.fighter-sprite-direct");
+  await expect(vsPlayerImage).toBeVisible();
+  await expect(vsPlayerImage).toHaveAttribute("src", "/fighters/hartz.png");
+  await expect.poll(() => vsPlayerImage.evaluate((img) => {
+    const image = img as HTMLImageElement;
+    return image.complete && image.naturalWidth === 128 && image.naturalHeight === 128;
+  })).toBe(true);
 
   await page.getByRole("button", { name: "COMBATTRE" }).click();
   await expect(page.locator(".fight-screen")).toBeVisible();
 
   const playerSprite = page.locator(".arena-left.fighter-hartz");
-  const playerFrame = playerSprite.locator(".fighter-sprite-frame");
-  const playerImage = playerSprite.locator("img.fighter-sprite-image");
+  const playerIdleImage = playerSprite.locator("img.fighter-sprite-direct");
   await expect(playerSprite).toBeVisible();
-  await expect(playerImage).toBeVisible();
-  await expect.poll(() => playerImage.evaluate((img) => {
+  await expect(playerIdleImage).toBeVisible();
+  await expect(playerIdleImage).toHaveAttribute("src", "/fighters/hartz.png");
+  await expect.poll(() => playerIdleImage.evaluate((img) => {
     const image = img as HTMLImageElement;
-    return image.complete && image.naturalWidth === 1152 && image.naturalHeight === 128;
+    return image.complete && image.naturalWidth === 128 && image.naturalHeight === 128;
   })).toBe(true);
-  await expect(playerFrame).toHaveAttribute("data-frame", "0");
-  expect(await playerImage.evaluate((element) => getComputedStyle(element).imageRendering)).toBe("pixelated");
+  expect(await playerIdleImage.evaluate((element) => getComputedStyle(element).imageRendering)).toBe("pixelated");
 
   const opponentSprite = page.locator(".arena-right");
-  const opponentImage = opponentSprite.locator("img.fighter-sprite-image");
+  const opponentImage = opponentSprite.locator("img.fighter-sprite-direct");
   await expect(opponentImage).toBeVisible();
   await expect.poll(() => opponentImage.evaluate((img) => {
     const image = img as HTMLImageElement;
-    return image.complete && image.naturalWidth === 1152;
+    return image.complete && image.naturalWidth === 128 && image.naturalHeight === 128 && image.src.includes("/fighters/");
   })).toBe(true);
 
   const attack = page.getByRole("button", { name: /ATTAQUE/ });
@@ -72,10 +78,19 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await expect(defend).toHaveAttribute("aria-pressed", "true");
-    await expect(playerFrame).toHaveAttribute("data-frame", "6");
+
+    const defendFrame = playerSprite.locator('.fighter-sprite-frame[data-frame="6"]');
+    const defendImage = defendFrame.locator("img.fighter-sprite-image");
+    await expect(defendFrame).toBeVisible();
+    await expect(defendImage).toBeVisible();
+    await expect.poll(() => defendImage.evaluate((img) => {
+      const image = img as HTMLImageElement;
+      return image.complete && image.naturalWidth === 1152 && image.naturalHeight === 128;
+    })).toBe(true);
+
     await page.mouse.up();
     await expect(defend).toHaveAttribute("aria-pressed", "false");
-    await expect(playerFrame).toHaveAttribute("data-frame", "0");
+    await expect(playerSprite.locator("img.fighter-sprite-direct")).toBeVisible();
   }
 
   const viewportFits = await page.evaluate(
