@@ -110,7 +110,14 @@ export async function expectAnimatedFighterPixels(
   await expect(image).toHaveAttribute("data-state", state, { timeout: 1_000 });
   await expect(image).toHaveAttribute("data-animated", "true");
   const source = await image.getAttribute("src");
-  expect(source).toMatch(/^data:image\/webp;base64,/);
+  const fighterId = await image.getAttribute("data-fighter");
+
+  if (fighterId === "korsair") {
+    expect(source).toBe(`/fighters/korsair.png#combat-${state}`);
+  } else {
+    expect(source).toMatch(/^data:image\/webp;base64,/);
+  }
+
   await expectVisibleRenderedPixels(page, image);
 }
 
