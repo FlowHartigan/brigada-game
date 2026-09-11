@@ -1,10 +1,25 @@
 import { expect, test } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
-import { expectFighterPixels, fighterSrc, holdDefense, releaseDefense, saveVisual } from "./visual-helpers";
+import {
+  expectAnimatedFighterPixels,
+  expectFighterPixels,
+  fighterSrc,
+  holdDefense,
+  releaseDefense,
+  saveVisual,
+} from "./visual-helpers";
 
-test("every fighter stays visibly rendered through Select, VS, Combat, defend, dodge, attack and special", async ({ page }) => {
-  test.setTimeout(120_000);
+const actionStates = ["attack1", "attack2", "attack3"] as const;
+
+test("every fighter uses real combat action frames without breaking Select, VS or Combat", async ({ page }) => {
+  test.setTimeout(240_000);
   await page.setViewportSize({ width: 844, height: 390 });
+
+  // Deterministic AI: selection picks a stable opponent and Utility AI prefers
+  // its first legal action, making opponent animation checks reproducible.
+  await page.addInitScript(() => {
+    Math.random = () => 0;
+  });
 
   for (const fighter of fighters) {
     await page.goto("/");
@@ -13,7 +28,6 @@ test("every fighter stays visibly rendered through Select, VS, Combat, defend, d
 
     const selectionImage = page.locator(`.selection-showcase img.fighter-art-image[data-fighter="${fighter.id}"]`);
     await expectFighterPixels(page, selectionImage, fighterSrc(fighter.id));
-    await saveVisual(page, `regression-selection-${fighter.id}`);
 
     await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
     const vsPlayerImage = page.locator(".versus-fighter.left img.fighter-sprite-direct");
@@ -22,43 +36,77 @@ test("every fighter stays visibly rendered through Select, VS, Combat, defend, d
     const opponentId = await vsOpponentImage.getAttribute("data-fighter");
     expect(opponentId).toBeTruthy();
     await expectFighterPixels(page, vsOpponentImage, fighterSrc(opponentId!));
-    await saveVisual(page, `regression-vs-${fighter.id}-${opponentId}`);
 
     await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
-    const arena = page.locator(".arena-left");
-    const playerImage = arena.locator("img.fighter-sprite-direct");
+    const playerImage = page.locator(".arena-left img.fighter-sprite-direct");
     const opponentImage = page.locator(".arena-right img.fighter-sprite-direct");
     await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
     const combatOpponentId = await opponentImage.getAttribute("data-fighter");
     expect(combatOpponentId).toBeTruthy();
     await expectFighterPixels(page, opponentImage, fighterSrc(combatOpponentId!));
-    await saveVisual(page, `regression-fight-${fighter.id}-${combatOpponentId}`);
 
     const attack = page.getByRole("button", { name: /ATTAQUE/ });
     const dodge = page.getByRole("button", { name: /ESQUIVE/ });
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
+    // Defense frame is held for as long as the real gameplay defense state is active.
     await holdDefense(page, defend);
-    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
-    await saveVisual(page, `regression-defend-${fighter.id}`);
+    await expectAnimatedFighterPixels(page, playerImage, "defend");
+    await saveVisual(page, `anim-${fighter.id}-defend`);
     await releaseDefense(page, defend);
 
-    await expect(dodge).toBeEnabled({ timeout: 3_000 });
-    await dodge.click();
-    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
-    await saveVisual(page, `regression-dodge-${fighter.id}`);
+    // Deterministic AI must visibly animate too, not just the player.
+    await expect.poll(
+      async () => opponentImage.getAttribute("data-state"),
+      { timeout: 4_000, intervals: [50, 50, 100, 100, 150, 200] },
+    ).toMatch(/^attack[123]$/);
+    const opponentAnimatedState = await opponentImage.getAttribute("data-state");
+    await expectAnimatedFighterPixels(page, opponentImage, opponentAnimatedState!);
 
-    await expect(attack).toBeEnabled({ timeout: 3_000 });
-    await attack.click();
-    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
-    await saveVisual(page, `regression-attack-${fighter.id}`);
+    // A real enemy hit must swap the player's frame to hit.
+    await expect.poll(
+      async () => playerImage.getAttribute("data-state"),
+      { timeout: 4_000, intervals: [50, 50, 100, 100, 150, 200] },
+    ).toBe("hit");
+    await expectAnimatedFighterPixels(page, playerImage, "hit");
+    await saveVisual(page, `anim-${fighter.id}-hit`);
+
+    await expect(dodge).toBeEnabled({ timeout: 4_000 });
+    await dodge.click();
+    await expectAnimatedFighterPixels(page, playerImage, "dodge");
+    await saveVisual(page, `anim-${fighter.id}-dodge`);
+
+    for (const state of actionStates) {
+      await expect(attack).toBeEnabled({ timeout: 4_000 });
+      await attack.click();
+      await expectAnimatedFighterPixels(page, playerImage, state);
+      await saveVisual(page, `anim-${fighter.id}-${state}`);
+    }
 
     await expect(special).toBeEnabled({ timeout: 12_000 });
     await special.click();
-    await expect(special).toBeDisabled();
+    await expectAnimatedFighterPixels(page, playerImage, "special");
+    await saveVisual(page, `anim-${fighter.id}-special`);
+
+    // Guard break is gameplay-driven: hold defense and let deterministic AI
+    // attack until the engine reports the actual stun window.
+    await expect(defend).toBeEnabled({ timeout: 4_000 });
+    await holdDefense(page, defend);
+    await expect.poll(
+      async () => playerImage.getAttribute("data-state"),
+      { timeout: 8_000, intervals: [100, 150, 200, 250, 300] },
+    ).toBe("stunned");
+    await expectAnimatedFighterPixels(page, playerImage, "stunned");
+    await saveVisual(page, `anim-${fighter.id}-stunned`);
+    await releaseDefense(page, defend);
+
+    // After transient states expire the proven idle artwork must come back.
+    await expect.poll(
+      async () => playerImage.getAttribute("data-state"),
+      { timeout: 3_000 },
+    ).toBe("idle");
     await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
-    await saveVisual(page, `regression-special-${fighter.id}`);
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   }
