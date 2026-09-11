@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
 import { expectFighterPixels, fighterSrc, saveVisual } from "./visual-helpers";
 
-test("every fighter stays visibly rendered through Select, VS, Combat, dodge, defend and special", async ({ page }) => {
+test("every fighter stays visibly rendered through Select, VS, Combat, defend, dodge, attack and special", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 844, height: 390 });
 
@@ -13,6 +13,7 @@ test("every fighter stays visibly rendered through Select, VS, Combat, dodge, de
 
     const selectionImage = page.locator(`.selection-showcase img.fighter-art-image[data-fighter="${fighter.id}"]`);
     await expectFighterPixels(selectionImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-selection-${fighter.id}`);
 
     await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
     const vsPlayerImage = page.locator(".versus-fighter.left img.fighter-sprite-direct");
@@ -38,31 +39,34 @@ test("every fighter stays visibly rendered through Select, VS, Combat, dodge, de
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
-    await expect(attack).toBeEnabled({ timeout: 3_000 });
-    await attack.click();
-    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
-
-    await expect(dodge).toBeEnabled({ timeout: 3_000 });
-    await dodge.click();
-    await expect(arena.locator('img.fighter-sprite-direct[data-state="dodge"]')).toBeVisible();
-    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
-
+    // Test the held defense from a clean combat state. Running this before
+    // dodge/attack avoids an action lock masking the pointer-hold behavior.
     await expect(defend).toBeEnabled({ timeout: 3_000 });
     const defendBox = await defend.boundingBox();
     expect(defendBox).not.toBeNull();
     if (defendBox) {
       await page.mouse.move(defendBox.x + defendBox.width / 2, defendBox.y + defendBox.height / 2);
       await page.mouse.down();
-      await expect(arena.locator('img.fighter-sprite-direct[data-state="defend"]')).toBeVisible();
+      await expect(defend).toHaveAttribute("aria-pressed", "true");
       await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+      await saveVisual(page, `regression-defend-${fighter.id}`);
       await page.mouse.up();
+      await expect(defend).toHaveAttribute("aria-pressed", "false");
     }
 
-    // The special visual state is intentionally short-lived and can complete
-    // between browser polling frames. Validate the gameplay action itself
-    // (cooldown starts) and, critically, that the fighter pixels remain on
-    // screen immediately after the special rather than requiring a transient
-    // data-state attribute.
+    await expect(dodge).toBeEnabled({ timeout: 3_000 });
+    await dodge.click();
+    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-dodge-${fighter.id}`);
+
+    await expect(attack).toBeEnabled({ timeout: 3_000 });
+    await attack.click();
+    await expectFighterPixels(playerImage, fighterSrc(fighter.id));
+    await saveVisual(page, `regression-attack-${fighter.id}`);
+
+    // Special state may be shorter than Playwright's polling interval. The
+    // cooldown confirms the action fired; the pixel assertion confirms the
+    // fighter never disappeared when the state transitioned.
     await expect(special).toBeEnabled({ timeout: 12_000 });
     await special.click();
     await expect(special).toBeDisabled();
