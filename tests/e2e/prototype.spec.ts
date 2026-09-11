@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectFighterPixels, fighterSrc, saveVisual } from "./visual-helpers";
+import { expectFighterPixels, fighterSrc, holdDefense, releaseDefense, saveVisual } from "./visual-helpers";
 
 test("mobile landscape player sees real fighter pixels through the full game flow and combat states", async ({ page }) => {
   const consoleErrors: string[] = [];
@@ -55,19 +55,10 @@ test("mobile landscape player sees real fighter pixels through the full game flo
   await expect(dodge).toBeVisible();
   await expect(special).toBeVisible();
 
-  // Hold defense first while the combat state is clean.
-  await expect(defend).toBeEnabled({ timeout: 2_000 });
-  const box = await defend.boundingBox();
-  expect(box).not.toBeNull();
-  if (box) {
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.down();
-    await expect(defend).toHaveAttribute("aria-pressed", "true");
-    await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
-    await saveVisual(page, "flow-fight-hartz-defend");
-    await page.mouse.up();
-    await expect(defend).toHaveAttribute("aria-pressed", "false");
-  }
+  await holdDefense(page, defend);
+  await expectFighterPixels(playerSprite.locator("img.fighter-sprite-direct"), fighterSrc("hartz"));
+  await saveVisual(page, "flow-fight-hartz-defend");
+  await releaseDefense(page, defend);
 
   await expect(dodge).toBeEnabled({ timeout: 2_000 });
   await dodge.click();
