@@ -10,8 +10,8 @@ test("mobile landscape player can reach and use the fight controls", async ({ pa
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
   await page.goto("/");
-  await expect(page).toHaveTitle(/La Brigade/);
-  await expect(page.getByText("0+0=FIGHT")).toBeVisible();
+  await expect(page).toHaveTitle(/BRIGADA FIGHT/);
+  await expect(page.getByText("BRIGADA FIGHT")).toBeVisible();
 
   await page.getByRole("button", { name: "FIGHT" }).click();
   await expect(page.locator(".select-screen .fighter-grid")).toBeVisible();
