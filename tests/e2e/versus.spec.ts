@@ -6,28 +6,27 @@ const landscapeViewports = [
   { width: 667, height: 375 },
 ];
 
-async function frameContainsVisiblePixels(locator: Locator) {
-  return locator.evaluate((frame) => {
-    const img = frame.querySelector("img") as HTMLImageElement | null;
-    if (!img || !img.complete || img.naturalWidth !== 1152 || img.naturalHeight !== 128) return false;
-    const index = Number((frame as HTMLElement).dataset.frame ?? "-1");
-    if (index < 0 || index > 8) return false;
+async function imageContainsVisiblePixels(locator: Locator) {
+  return locator.evaluate((img) => {
+    const image = img as HTMLImageElement;
+    if (!image.complete || image.naturalWidth !== 128 || image.naturalHeight !== 128) return false;
     const canvas = document.createElement("canvas");
     canvas.width = 128;
     canvas.height = 128;
     const context = canvas.getContext("2d");
     if (!context) return false;
-    context.drawImage(img, index * 128, 0, 128, 128, 0, 0, 128, 128);
-    const alpha = context.getImageData(0, 0, 128, 128).data;
-    for (let i = 3; i < alpha.length; i += 4) {
-      if (alpha[i] > 0) return true;
+    context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(0, 0, 128, 128).data;
+    let count = 0;
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] > 20) count += 1;
     }
-    return false;
+    return count > 250;
   });
 }
 
 for (const viewport of landscapeViewports) {
-  test(`premium VS screen uses real visible fighter images at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`premium VS screen renders the exact fighter PNGs at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
 
     for (const fighter of fighters) {
@@ -42,40 +41,38 @@ for (const viewport of landscapeViewports) {
 
       const player = page.locator(".versus-fighter.left");
       const opponent = page.locator(".versus-fighter.right");
-      const playerArt = player.locator(".versus-portrait");
-      const opponentArt = opponent.locator(".versus-portrait");
-      const playerFrame = playerArt.locator(".fighter-sprite-frame");
-      const opponentFrame = opponentArt.locator(".fighter-sprite-frame");
-      const playerImage = playerArt.locator("img.fighter-sprite-image");
-      const opponentImage = opponentArt.locator("img.fighter-sprite-image");
+      const playerImage = player.locator("img.fighter-sprite-direct");
+      const opponentImage = opponent.locator("img.fighter-sprite-direct");
 
       await expect(player.locator("h2")).toHaveText(fighter.name);
       await expect(player.locator("p")).toHaveText(fighter.title);
+      await expect(playerImage).toBeVisible();
+      await expect(playerImage).toHaveAttribute("src", `/fighters/${fighter.id}.png`);
+      expect(await imageContainsVisiblePixels(playerImage)).toBe(true);
 
       const opponentName = await opponent.locator("h2").textContent();
-      expect(fighters.map(candidate => candidate.name)).toContain(opponentName);
+      const opponentFighter = fighters.find(candidate => candidate.name === opponentName);
+      expect(opponentFighter).toBeTruthy();
       expect(opponentName).not.toBe(fighter.name);
-
-      await expect(playerImage).toBeVisible();
       await expect(opponentImage).toBeVisible();
-      await expect.poll(() => playerImage.evaluate((img) => {
-        const image = img as HTMLImageElement;
-        return image.complete && image.naturalWidth === 1152 && image.naturalHeight === 128;
-      })).toBe(true);
-      await expect.poll(() => opponentImage.evaluate((img) => {
-        const image = img as HTMLImageElement;
-        return image.complete && image.naturalWidth === 1152 && image.naturalHeight === 128;
-      })).toBe(true);
+      await expect(opponentImage).toHaveAttribute("src", `/fighters/${opponentFighter!.id}.png`);
+      expect(await imageContainsVisiblePixels(opponentImage)).toBe(true);
 
-      expect(await frameContainsVisiblePixels(playerFrame)).toBe(true);
-      expect(await frameContainsVisiblePixels(opponentFrame)).toBe(true);
       expect(await playerImage.evaluate(element => getComputedStyle(element).imageRendering)).toBe("pixelated");
       expect(await opponentImage.evaluate(element => getComputedStyle(element).imageRendering)).toBe("pixelated");
 
-      await expect(playerArt).toBeInViewport({ ratio: .85 });
-      await expect(opponentArt).toBeInViewport({ ratio: .85 });
-      await expect(page.getByRole("button", { name: "COMBATTRE", exact: true })).toBeInViewport({ ratio: 1 });
+      const playerBox = await playerImage.boundingBox();
+      const opponentBox = await opponentImage.boundingBox();
+      expect(playerBox).not.toBeNull();
+      expect(opponentBox).not.toBeNull();
+      if (playerBox && opponentBox) {
+        expect(playerBox.width).toBeGreaterThan(100);
+        expect(playerBox.height).toBeGreaterThan(100);
+        expect(opponentBox.width).toBeGreaterThan(100);
+        expect(opponentBox.height).toBeGreaterThan(100);
+      }
 
+      await expect(page.getByRole("button", { name: "COMBATTRE", exact: true })).toBeInViewport({ ratio: 1 });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
     }
   });
