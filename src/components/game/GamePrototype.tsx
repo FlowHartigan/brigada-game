@@ -200,7 +200,7 @@ export function GamePrototype() {
         <div className="chalk-mark">0 + 0 = TECHNO</div>
         <div className="home-title">
           <p>LA BRIGADE</p>
-          <h1>0+0=FIGHT</h1>
+          <h1>BRIGADA FIGHT</h1>
           <span>FIGHTING GAME · MOBILE WEB</span>
         </div>
         <button className="primary-cta" onClick={() => setScene("select")}>FIGHT</button>

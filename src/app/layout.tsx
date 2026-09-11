@@ -14,7 +14,7 @@ import "./sprites/korsair-idle.css";
 import "./sprite-fighters.css";
 
 export const metadata: Metadata = {
-  title: "La Brigade — 0+0=FIGHT",
+  title: "La Brigade — BRIGADA FIGHT",
   description: "Mobile-first 2D fighting game by La Brigade.",
 };
 
