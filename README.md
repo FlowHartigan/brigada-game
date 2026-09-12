@@ -18,12 +18,14 @@ Mobile-first 2D fighting game playable directly in a web browser.
 - Deterministic TypeScript combat engine separated from rendering
 - Vitest for game-logic tests
 - Playwright/browser verification for end-to-end checks
-- Vercel for preview and production deployments
+- Vercel for production deployments and explicit one-off previews
 
 AI is not part of the deterministic combat loop. Future generative features may enrich dialogue, flavor text, events, or solo content without controlling frame-critical gameplay.
 
 ## Development workflow
 
-Work is developed on feature branches, verified with automated tests and a browser preview, then merged into `main`.
+Work is developed on focused feature/fix/chore branches and validated by GitHub CI: source-size guard, unit tests, typecheck, production build and Chromium/Playwright QA.
+
+Normal branches do **not** trigger Vercel previews. `main` deploys automatically to production. A one-off `vercel-preview-*` branch is used only when a live hosting-specific preview is materially useful.
 
 See `AGENTS.md` and `docs/` on the active development branch for project rules, architecture, and roadmap.
