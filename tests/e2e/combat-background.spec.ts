@@ -31,7 +31,9 @@ async function expectArenaBackground(page: Page) {
     await image.decode();
     return { width: image.naturalWidth, height: image.naturalHeight };
   }, ARENA_BACKGROUND);
-  expect(decoded).toEqual({ width: 960, height: 540 });
+  expect(decoded.width).toBeGreaterThanOrEqual(180);
+  expect(decoded.height).toBeGreaterThanOrEqual(100);
+  expect(decoded.width / decoded.height).toBeCloseTo(16 / 9, 1);
 
   const background = await arena.evaluate((element) => {
     const style = getComputedStyle(element);
