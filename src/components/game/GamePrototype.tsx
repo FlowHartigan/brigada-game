@@ -19,9 +19,11 @@ import {
   type RecentPlayerAction,
 } from "@/game/engine/opponent-ai";
 import type { CombatAction, FighterDefinition, FighterId } from "@/game/engine/types";
+import { runtimeCombatRng } from "@/game/runtimeRng";
 
 import { FighterArt } from "./FighterArt";
 import { FighterSprite } from "./FighterSprite";
+import { PhaserCombatStage } from "./PhaserCombatStage";
 import { resolveFighterSpriteState } from "./fighterSpriteState";
 
 type Scene = "home" | "select" | "versus" | "fight" | "result";
@@ -110,7 +112,8 @@ export function GamePrototype() {
 
   function selectFighter(id: FighterId) {
     const candidates = fighters.filter((fighter) => fighter.id !== id);
-    const randomOpponent = candidates[Math.floor(Math.random() * candidates.length)];
+    const randomOpponent =
+      candidates[Math.floor(runtimeCombatRng() * candidates.length)];
 
     setSelectedId(id);
     setOpponentId(randomOpponent.id);
@@ -146,7 +149,13 @@ export function GamePrototype() {
     const now = Date.now();
     setCombatState((current) => {
       if (!current) return current;
-      const transition = performCombatAction(current, "player", action, now);
+      const transition = performCombatAction(
+        current,
+        "player",
+        action,
+        now,
+        runtimeCombatRng,
+      );
       if (transition.accepted) recordPlayerAction(action, now);
       return transition.state;
     });
@@ -187,7 +196,7 @@ export function GamePrototype() {
           working,
           playerHistoryRef.current,
           now,
-          Math.random,
+          runtimeCombatRng,
         );
 
         if (intent === "wait") return working;
@@ -200,7 +209,7 @@ export function GamePrototype() {
           "opponent",
           intent,
           now,
-          Math.random,
+          runtimeCombatRng,
         ).state;
         return working;
       });
@@ -451,9 +460,7 @@ export function GamePrototype() {
       </header>
 
       <div className="arena-shell">
-        <div className="blackboard">0 + 0 = TECHNO</div>
-        <div className="speaker speaker-left" />
-        <div className="speaker speaker-right" />
+        <PhaserCombatStage lastEvent={lastEvent} />
         <div
           className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}
         >
@@ -476,7 +483,6 @@ export function GamePrototype() {
           />
           <span>{opponent.name}</span>
         </div>
-        <div className="arena-floor" />
         <div className="combat-callout" key={lastEvent?.id ?? 0}>
           {lastEvent?.message ?? "FIGHT!"}
         </div>
