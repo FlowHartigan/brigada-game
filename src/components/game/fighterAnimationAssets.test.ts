@@ -17,17 +17,20 @@ const actionStates: readonly FighterActionVisualState[] = [
   "win",
 ];
 
-const kavaleurV2Expected = [
-  "/fighters/kavaleur-v2/attack.png",
-  "/fighters/kavaleur-v2/attack.png",
-  "/fighters/kavaleur-v2/attack.png",
-  "/fighters/kavaleur-v2/defend.png",
-  "/fighters/kavaleur-v2/dodge.png",
-  "/fighters/kavaleur-v2/special.png",
-  "/fighters/kavaleur-v2/hit.png",
-  "/fighters/kavaleur-v2/hit.png",
-  "/fighters/kavaleur-v2/win.png",
-];
+function refreshedPngExpected(id: "kavaleur" | "korsair") {
+  const root = `/fighters/${id}-v2`;
+  return [
+    `${root}/attack.png`,
+    `${root}/attack.png`,
+    `${root}/attack.png`,
+    `${root}/defend.png`,
+    `${root}/dodge.png`,
+    `${root}/special.png`,
+    `${root}/hit.png`,
+    `${root}/hit.png`,
+    `${root}/win.png`,
+  ];
+}
 
 describe("fighter animation assets", () => {
   it("provides the approved combat visual source for every action of every fighter", () => {
@@ -36,19 +39,12 @@ describe("fighter animation assets", () => {
         fighterActionImage(fighter.id, state),
       );
 
-      if (fighter.id === "korsair") {
-        expect(frames).toEqual(
-          actionStates.map(
-            (state) => `/fighters/korsair.png#combat-${state}`,
-          ),
-        );
-        continue;
-      }
-
-      if (fighter.id === "kavaleur") {
-        expect(frames).toEqual(kavaleurV2Expected);
+      if (fighter.id === "kavaleur" || fighter.id === "korsair") {
+        expect(frames).toEqual(refreshedPngExpected(fighter.id));
         for (const frame of frames) {
-          expect(frame).toMatch(/^\/fighters\/kavaleur-v2\/.+\.png$/);
+          expect(frame).toMatch(
+            new RegExp(`^/fighters/${fighter.id}-v2/.+\\.png$`),
+          );
         }
         expect(new Set(frames).size).toBe(6);
         continue;
