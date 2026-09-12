@@ -4,8 +4,10 @@ import {
   expectFighterPixels,
   expectPhaserCombatReady,
   expectPhaserFighterState,
+  fighterArtSrc,
   fighterSrc,
   holdDefense,
+  kavaleurActionSrc,
   releaseDefense,
   saveVisual,
 } from "./visual-helpers";
@@ -26,6 +28,8 @@ async function expectAnimatedSource(image: Locator, state: string) {
 
   if (fighterId === "korsair") {
     expect(source).toBe(`/fighters/korsair.png#combat-${state}`);
+  } else if (fighterId === "kavaleur") {
+    expect(source).toBe(kavaleurActionSrc(state));
   } else {
     expect(source).toMatch(/^data:image\/webp;base64,/);
     expect(source!.length).toBeGreaterThan(300);
@@ -50,7 +54,7 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await page.getByRole("button", { name: `${fighter.name} — ${fighter.title}`, exact: true }).click();
 
     const selectionImage = page.locator(`.selection-showcase img.fighter-art-image[data-fighter="${fighter.id}"]`);
-    await expectFighterPixels(page, selectionImage, fighterSrc(fighter.id));
+    await expectFighterPixels(page, selectionImage, fighterArtSrc(fighter.id));
 
     await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
     const vsPlayerImage = page.locator(".versus-fighter.left img.fighter-sprite-direct");

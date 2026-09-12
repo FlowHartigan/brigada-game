@@ -1,6 +1,25 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-export const fighterSrc = (id: string) => `/fighters/${id}.png`;
+export const fighterSrc = (id: string) =>
+  id === "kavaleur" ? "/fighters/kavaleur-v2/idle.png" : `/fighters/${id}.png`;
+
+export const fighterArtSrc = (id: string) =>
+  id === "kavaleur" ? "/fighters/kavaleur-v2/front.png" : fighterSrc(id);
+
+const kavaleurActionFile: Record<string, string> = {
+  attack1: "attack.png",
+  attack2: "attack.png",
+  attack3: "attack.png",
+  defend: "defend.png",
+  dodge: "dodge.png",
+  special: "special.png",
+  hit: "hit.png",
+  stunned: "hit.png",
+  win: "win.png",
+};
+
+export const kavaleurActionSrc = (state: string) =>
+  `/fighters/kavaleur-v2/${kavaleurActionFile[state]}`;
 
 type CombatRenderSide = "player" | "opponent";
 
@@ -116,6 +135,8 @@ export async function expectAnimatedFighterPixels(
 
   if (fighterId === "korsair") {
     expect(source).toBe(`/fighters/korsair.png#combat-${state}`);
+  } else if (fighterId === "kavaleur") {
+    expect(source).toBe(kavaleurActionSrc(state));
   } else {
     expect(source).toMatch(/^data:image\/webp;base64,/);
   }
