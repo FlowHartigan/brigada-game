@@ -8,6 +8,65 @@ type FighterArtAdjustment = {
   y: number;
 };
 
+export type FighterCombatPresentation = {
+  /** Uniform multiplier applied after the visible-alpha-height normalization. */
+  scale: number;
+  /** Small presentation-only adjustment in stage pixels. */
+  offsetX: number;
+  /** Small presentation-only adjustment in stage pixels. */
+  offsetY: number;
+};
+
+type FighterSourceBounds = {
+  frameHeight: number;
+  visibleHeight: number;
+  bottomPadding: number;
+};
+
+/**
+ * These bounds were measured from the alpha channel of the approved idle PNGs.
+ * They are only used by the React fallback; Phaser measures its loaded texture
+ * at runtime so it also stays correct for action frames.
+ */
+const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
+  hartz: { frameHeight: 128, visibleHeight: 75, bottomPadding: 4 },
+  petoux: { frameHeight: 74, visibleHeight: 74, bottomPadding: 0 },
+  nexmos: { frameHeight: 128, visibleHeight: 73, bottomPadding: 4 },
+  kavaleur: { frameHeight: 128, visibleHeight: 74, bottomPadding: 4 },
+  korsair: { frameHeight: 75, visibleHeight: 75, bottomPadding: 0 },
+};
+
+const FALLBACK_VISIBLE_HEIGHT_RATIO = 0.72;
+
+/**
+ * Single combat presentation map. The same neutral baseline makes the opaque
+ * fighter height and floor contact consistent; only intentional art-direction
+ * corrections belong here.
+ */
+export const fighterCombatPresentation: Record<FighterId, FighterCombatPresentation> = {
+  hartz: { scale: 1, offsetX: 0, offsetY: 0 },
+  petoux: { scale: 1, offsetX: 0, offsetY: 0 },
+  nexmos: { scale: 1, offsetX: 0, offsetY: 0 },
+  kavaleur: { scale: 1, offsetX: 0, offsetY: 0 },
+  korsair: { scale: 1, offsetX: 0, offsetY: 0 },
+};
+
+export function fighterCombatFallbackStyle(id: FighterId): CSSProperties {
+  const presentation = fighterCombatPresentation[id];
+  const bounds = fighterSourceBounds[id];
+  const scale =
+    ((FALLBACK_VISIBLE_HEIGHT_RATIO * bounds.frameHeight) / bounds.visibleHeight) *
+    presentation.scale;
+  const groundOffset = (bounds.bottomPadding / bounds.frameHeight) * scale * 100;
+
+  return {
+    "--fighter-combat-scale": scale,
+    "--fighter-combat-ground-offset": `${groundOffset}%`,
+    "--fighter-combat-offset-x": `${presentation.offsetX}px`,
+    "--fighter-combat-offset-y": `${presentation.offsetY}px`,
+  } as CSSProperties;
+}
+
 /**
  * Presentation-only tuning for the five standalone fighter PNGs.
  *
