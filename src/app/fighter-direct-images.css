@@ -105,6 +105,23 @@
   transform: scaleX(-1) !important;
 }
 
+/* Once Phaser confirms that every requested fighter texture decoded, the DOM
+   sprites become a transparent fallback. The labels stay above the canvas and
+   React can instantly take over again if Phaser fails on a future browser. */
+.arena-shell.has-phaser-fighters .arena-fighter {
+  overflow: visible !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.arena-shell.has-phaser-fighters .arena-fighter::before {
+  display: none !important;
+}
+
+.arena-shell.has-phaser-fighters .arena-fighter > .fighter-sprite-direct {
+  opacity: 0 !important;
+}
+
 /* VS keeps the existing mirrored composition, which is already visually
    validated and does not affect absolute arena positioning. */
 .versus-screen .versus-fighter.right .versus-portrait {
@@ -121,6 +138,10 @@
 
 .arena-shell .arena-fighter.is-dodging .fighter-sprite-direct {
   opacity: .76 !important;
+}
+
+.arena-shell.has-phaser-fighters .arena-fighter.is-dodging .fighter-sprite-direct {
+  opacity: 0 !important;
 }
 
 .arena-shell .arena-fighter.is-special .fighter-sprite-direct {
