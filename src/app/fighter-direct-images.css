@@ -195,3 +195,9 @@
     right: 16% !important;
   }
 }
+
+/* KORSAIR's VS uses the standalone PNG, not the retired background atlas.
+   Match the specificity of vs-atlas.css so its extra image cannot bleed through. */
+.versus-screen .versus-portrait.fighter-korsair {
+  background-image: none !important;
+}
