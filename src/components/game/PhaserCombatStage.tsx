@@ -93,9 +93,10 @@ export function PhaserCombatStage({
 
     async function mountPhaser() {
       const Phaser = (await import("phaser")).default;
-      const parent = hostRef.current;
+      const host = hostRef.current;
 
-      if (cancelled || !parent) return;
+      if (cancelled || !host) return;
+      const stageHost: HTMLDivElement = host;
 
       const fighterIds = [playerId, opponentId] as const;
       const requiredTextureKeys = fighterIds.flatMap((id) =>
@@ -123,7 +124,7 @@ export function PhaserCombatStage({
 
           this.load.on("loaderror", (file: { key?: string }) => {
             if (!file.key?.startsWith("brigada-fighter-")) return;
-            parent.dataset.fighterLoadError = file.key;
+            stageHost.dataset.fighterLoadError = file.key;
           });
         }
 
@@ -196,13 +197,13 @@ export function PhaserCombatStage({
               .setOrigin(0.5, 1)
               .setDepth(10);
 
-            parent.dataset.fightersReady = "true";
-            parent.dataset.playerFighter = playerId;
-            parent.dataset.opponentFighter = opponentId;
+            stageHost.dataset.fightersReady = "true";
+            stageHost.dataset.playerFighter = playerId;
+            stageHost.dataset.opponentFighter = opponentId;
             readyCallbackRef.current?.(true);
             this.syncFighters();
           } else {
-            parent.dataset.fightersReady = "false";
+            stageHost.dataset.fightersReady = "false";
             readyCallbackRef.current?.(false);
           }
         }
@@ -273,10 +274,10 @@ export function PhaserCombatStage({
             opponentVisual,
           );
 
-          parent.dataset.playerState = playerVisual;
-          parent.dataset.opponentState = opponentVisual;
-          parent.dataset.playerTexture = fighterTextureKey(playerId, playerVisual);
-          parent.dataset.opponentTexture = fighterTextureKey(opponentId, opponentVisual);
+          stageHost.dataset.playerState = playerVisual;
+          stageHost.dataset.opponentState = opponentVisual;
+          stageHost.dataset.playerTexture = fighterTextureKey(playerId, playerVisual);
+          stageHost.dataset.opponentTexture = fighterTextureKey(opponentId, opponentVisual);
         }
 
         private syncFighterSprite(
@@ -456,7 +457,7 @@ export function PhaserCombatStage({
 
       game = new Phaser.Game({
         type: Phaser.CANVAS,
-        parent,
+        parent: stageHost,
         width: STAGE_WIDTH,
         height: STAGE_HEIGHT,
         backgroundColor: "#171518",
