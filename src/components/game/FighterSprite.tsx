@@ -4,6 +4,7 @@ import {
   type FighterActionVisualState,
 } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
+import { fighterCombatFallbackStyle } from "./fighterPresentation";
 
 export type FighterSpriteState = "idle" | FighterActionVisualState;
 
@@ -19,11 +20,13 @@ export function FighterSprite({
   state = "idle",
   label,
   className = "",
+  presentation,
 }: {
   id: FighterId;
   state?: FighterSpriteState;
   label?: string;
   className?: string;
+  presentation?: "combat";
 }) {
   const idleSrc = fighterImage(id);
   const src = state === "idle" ? idleSrc : fighterActionImage(id, state);
@@ -40,6 +43,7 @@ export function FighterSprite({
       data-fighter={id}
       data-state={state}
       data-animated={state === "idle" ? "false" : "true"}
+      style={presentation === "combat" ? fighterCombatFallbackStyle(id) : undefined}
       onError={(event) => {
         const image = event.currentTarget;
         if (image.getAttribute("src") !== idleSrc) {

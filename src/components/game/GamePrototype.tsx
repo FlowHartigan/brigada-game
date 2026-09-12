@@ -482,6 +482,7 @@ export function GamePrototype() {
             state={playerSpriteState}
             label={selected.name}
             className="arena-sprite"
+            presentation="combat"
           />
           <span>{selected.name}</span>
         </div>
@@ -494,6 +495,7 @@ export function GamePrototype() {
             state={opponentSpriteState}
             label={opponent.name}
             className="arena-sprite"
+            presentation="combat"
           />
           <span>{opponent.name}</span>
         </div>

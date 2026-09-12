@@ -117,6 +117,24 @@
   transform: scaleX(-1) !important;
 }
 
+/* React fallback uses the same measured source bounds as the Phaser stage.
+   A single uniform scale preserves the original texture ratio. */
+.arena-shell .arena-left > .fighter-sprite-direct {
+  transform: translate(
+      var(--fighter-combat-offset-x, 0px),
+      calc(var(--fighter-combat-ground-offset, 0%) + var(--fighter-combat-offset-y, 0px))
+    ) scale(var(--fighter-combat-scale, 1)) !important;
+  transform-origin: 50% 100% !important;
+}
+
+.arena-shell .arena-right > .fighter-sprite-direct {
+  transform: translate(
+      var(--fighter-combat-offset-x, 0px),
+      calc(var(--fighter-combat-ground-offset, 0%) + var(--fighter-combat-offset-y, 0px))
+    ) scale(var(--fighter-combat-scale, 1)) scaleX(-1) !important;
+  transform-origin: 50% 100% !important;
+}
+
 /* Once Phaser confirms that every requested fighter texture decoded, the DOM
    sprites become a transparent fallback. The labels stay above the canvas and
    React can instantly take over again if Phaser fails on a future browser. */

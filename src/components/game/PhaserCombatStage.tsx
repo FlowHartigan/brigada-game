@@ -6,13 +6,14 @@ import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
+import { fighterCombatPresentation } from "./fighterPresentation";
 
 const STAGE_WIDTH = 1600;
 const STAGE_HEIGHT = 360;
 const PLAYER_X = 430;
 const OPPONENT_X = 1170;
 const FIGHTER_BASE_Y = 326;
-const FIGHTER_HEIGHT = 258;
+const FIGHTER_VISIBLE_HEIGHT = 154;
 const IMPACT_Y = 220;
 
 const FIGHTER_STATES: FighterSpriteState[] = [
@@ -40,6 +41,11 @@ type PhaserCombatStageProps = {
 type FighterPresentation = {
   player: FighterSpriteState;
   opponent: FighterSpriteState;
+};
+
+type VisibleTextureBounds = {
+  height: number;
+  bottomPadding: number;
 };
 
 function sideX(side?: CombatSide): number {
@@ -109,6 +115,7 @@ export function PhaserCombatStage({
         private opponentSprite?: import("phaser").GameObjects.Image;
         private fightersReady = false;
         private fighterFreezeUntil = 0;
+        private readonly visibleBounds = new Map<string, VisibleTextureBounds>();
 
         constructor() {
           super("brigada-combat-backdrop");
@@ -293,13 +300,13 @@ export function PhaserCombatStage({
           const playerVisual = fighterStateRef.current.player;
           const opponentVisual = fighterStateRef.current.opponent;
 
-          this.syncFighterSprite(
+          const playerMetrics = this.syncFighterSprite(
             this.playerSprite,
             "player",
             playerId,
             playerVisual,
           );
-          this.syncFighterSprite(
+          const opponentMetrics = this.syncFighterSprite(
             this.opponentSprite,
             "opponent",
             opponentId,
@@ -310,6 +317,10 @@ export function PhaserCombatStage({
           stageHost.dataset.opponentState = opponentVisual;
           stageHost.dataset.playerTexture = fighterTextureKey(playerId, playerVisual);
           stageHost.dataset.opponentTexture = fighterTextureKey(opponentId, opponentVisual);
+          stageHost.dataset.playerVisibleHeight = String(playerMetrics.visibleHeight);
+          stageHost.dataset.opponentVisibleHeight = String(opponentMetrics.visibleHeight);
+          stageHost.dataset.playerGroundY = String(playerMetrics.groundY);
+          stageHost.dataset.opponentGroundY = String(opponentMetrics.groundY);
         }
 
         private syncFighterSprite(
@@ -317,7 +328,7 @@ export function PhaserCombatStage({
           side: CombatSide,
           id: FighterId,
           state: FighterSpriteState,
-        ) {
+        ): { visibleHeight: number; groundY: number } {
           const textureKey = fighterTextureKey(id, state);
           if (sprite.texture.key !== textureKey && this.textures.exists(textureKey)) {
             sprite.setTexture(textureKey);
@@ -328,14 +339,14 @@ export function PhaserCombatStage({
           let y = FIGHTER_BASE_Y;
           let alpha = 1;
           let rotation = 0;
-          let targetHeight = FIGHTER_HEIGHT;
+          let targetVisibleHeight = FIGHTER_VISIBLE_HEIGHT;
 
           if (state.startsWith("attack")) x += 18 * direction;
           if (state === "defend") x -= 10 * direction;
           if (state === "dodge") {
             x -= 36 * direction;
             alpha = 0.74;
-            targetHeight *= 0.96;
+            targetVisibleHeight *= 0.96;
           }
           if (state === "hit") {
             x -= 14 * direction;
@@ -345,12 +356,15 @@ export function PhaserCombatStage({
             rotation = Math.sin(this.time.now / 34) * 0.025;
           }
           if (state === "special") {
-            targetHeight *= 1.05;
+            targetVisibleHeight *= 1.05;
             y -= 4;
           }
 
-          const textureHeight = Math.max(1, sprite.height);
-          const scale = targetHeight / textureHeight;
+          const bounds = this.measureVisibleBounds(textureKey);
+          const presentation = fighterCombatPresentation[id];
+          const scale = (targetVisibleHeight / bounds.height) * presentation.scale;
+          x += presentation.offsetX * direction;
+          y += bounds.bottomPadding * scale + presentation.offsetY;
 
           sprite
             .setPosition(x, y)
@@ -358,6 +372,51 @@ export function PhaserCombatStage({
             .setFlipX(side === "opponent")
             .setAlpha(alpha)
             .setRotation(rotation);
+
+          return {
+            visibleHeight: bounds.height * scale,
+            groundY: y - bounds.bottomPadding * scale,
+          };
+        }
+
+        private measureVisibleBounds(textureKey: string): VisibleTextureBounds {
+          const cached = this.visibleBounds.get(textureKey);
+          if (cached) return cached;
+
+          const texture = this.textures.get(textureKey);
+          const source = texture.getSourceImage() as CanvasImageSource & {
+            width?: number;
+            height?: number;
+          };
+          const width = Math.max(1, Number(source.width) || 1);
+          const height = Math.max(1, Number(source.height) || 1);
+          const fallback = { height, bottomPadding: 0 };
+
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const context = canvas.getContext("2d", { willReadFrequently: true });
+            if (!context) return fallback;
+            context.drawImage(source, 0, 0, width, height);
+            const alpha = context.getImageData(0, 0, width, height).data;
+            let minY = height;
+            let maxY = -1;
+            for (let yIndex = 0; yIndex < height; yIndex += 1) {
+              for (let xIndex = 0; xIndex < width; xIndex += 1) {
+                if (alpha[(yIndex * width + xIndex) * 4 + 3] < 8) continue;
+                minY = Math.min(minY, yIndex);
+                maxY = Math.max(maxY, yIndex);
+              }
+            }
+            const measured = maxY >= minY
+              ? { height: maxY - minY + 1, bottomPadding: height - maxY - 1 }
+              : fallback;
+            this.visibleBounds.set(textureKey, measured);
+            return measured;
+          } catch {
+            return fallback;
+          }
         }
 
         private spawnImpactBurst(
