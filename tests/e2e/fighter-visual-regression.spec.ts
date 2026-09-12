@@ -106,17 +106,18 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await expectPhaserFighterState(page, "player", "dodge", fighter.id);
     await saveVisual(page, `anim-${fighter.id}-dodge`);
 
-    // Keep the three attacks inside the real 900ms combo window. Full-page
-    // screenshots are intentionally deferred until attack3 because screenshot
-    // encoding can be slow enough on CI to expire a legitimate combo.
+    // Keep the three attacks inside the real 900ms combo window. The DOM
+    // fallback remains a fast semantic probe for each intermediate action;
+    // Phaser is asserted on the final attack here, while prototype.spec.ts
+    // independently checks attack1/attack2/attack3 through Phaser end-to-end.
     for (const state of actionStates) {
       await expect(attack).toBeEnabled({ timeout: 4_000 });
       await attack.click();
       await expectAnimatedSource(playerImage, state);
       await expectAnimatedSource(opponentImage, "hit");
-      await expectPhaserFighterState(page, "player", state, fighter.id);
-      await expectPhaserFighterState(page, "opponent", "hit", combatOpponentId!);
     }
+    await expectPhaserFighterState(page, "player", "attack3", fighter.id);
+    await expectPhaserFighterState(page, "opponent", "hit", combatOpponentId!);
     await saveVisual(page, `anim-${fighter.id}-attack3-vs-hit`);
 
     await expect(special).toBeEnabled({ timeout: 12_000 });
