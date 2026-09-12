@@ -38,12 +38,11 @@ test("every fighter uses real combat action frames without breaking Select, VS o
   test.setTimeout(240_000);
   await page.setViewportSize({ width: 844, height: 390 });
 
-  // Start deterministic: selection picks a stable opponent and Utility AI
-  // chooses its first legal action so its own animation can be observed.
-  // Keep randomness scoped to combat so Phaser can keep using Math.random for
-  // its own internal identifiers.
+  // Start with Utility AI deterministically choosing WAIT so the initial idle
+  // assertions cannot race an opponent attack. Math.random stays untouched so
+  // Phaser can keep using it for its own internal identifiers.
   await page.addInitScript(() => {
-    window.__BRIGADA_COMBAT_RNG__ = () => 0;
+    window.__BRIGADA_COMBAT_RNG__ = () => 0.999999;
   });
 
   for (const fighter of fighters) {
@@ -72,6 +71,7 @@ test("every fighter uses real combat action frames without breaking Select, VS o
 
     await expectPhaserCombatReady(page, fighter.id, combatOpponentId!);
     await expectPhaserFighterState(page, "player", "idle", fighter.id);
+    await expectPhaserFighterState(page, "opponent", "idle", combatOpponentId!);
     await expect(page.locator(".arena-left")).toHaveAttribute("data-renderer", "react-fallback-hidden");
     await expect(page.locator(".arena-right")).toHaveAttribute("data-renderer", "react-fallback-hidden");
 
@@ -81,7 +81,10 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
-    // First prove the AI itself animates in Phaser when it performs a real attack.
+    // Temporarily make Utility AI choose its first legal action so its own
+    // Phaser attack animation is observed, then put it back in WAIT before
+    // validating player-controlled transient frames.
+    await setDeterministicCombatRandom(page, 0);
     await expect.poll(
       async () => stage.getAttribute("data-opponent-state"),
       { timeout: 4_000, intervals: [50, 50, 100, 100, 150, 200] },
@@ -91,10 +94,15 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await expectPhaserFighterState(page, "opponent", opponentAnimatedState!, combatOpponentId!);
     await saveVisual(page, `anim-${fighter.id}-ai-${opponentAnimatedState}`);
 
-    // Make Utility AI choose WAIT while we validate player frames. This avoids
-    // unrelated enemy hits racing short-lived presentation states.
     await setDeterministicCombatRandom(page, 0.999999);
-    await page.waitForTimeout(700);
+    await expect.poll(
+      async () => stage.getAttribute("data-opponent-state"),
+      { timeout: 4_000, intervals: [50, 100, 150, 200] },
+    ).toBe("idle");
+    await expect.poll(
+      async () => stage.getAttribute("data-player-state"),
+      { timeout: 4_000, intervals: [50, 100, 150, 200] },
+    ).toBe("idle");
 
     await holdDefense(page, defend);
     await expectAnimatedSource(playerImage, "defend");
@@ -108,16 +116,16 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await expectPhaserFighterState(page, "player", "dodge", fighter.id);
     await saveVisual(page, `anim-${fighter.id}-dodge`);
 
-    // Keep the three attacks inside the real 900ms combo window. The DOM
-    // fallback remains a fast semantic probe for each intermediate action;
-    // Phaser is asserted on the final attack here, while prototype.spec.ts
-    // independently checks attack1/attack2/attack3 through Phaser end-to-end.
+    // Keep the three attacks inside the real 900ms combo window. Only probe
+    // the player's short-lived state between hits; opponent hit verification
+    // is deliberately deferred until attack3 so test assertions themselves do
+    // not consume the gameplay combo window.
     for (const state of actionStates) {
       await expect(attack).toBeEnabled({ timeout: 4_000 });
       await attack.click();
       await expectAnimatedSource(playerImage, state);
-      await expectAnimatedSource(opponentImage, "hit");
     }
+    await expectAnimatedSource(opponentImage, "hit");
     await expectPhaserFighterState(page, "player", "attack3", fighter.id);
     await expectPhaserFighterState(page, "opponent", "hit", combatOpponentId!);
     await saveVisual(page, `anim-${fighter.id}-attack3-vs-hit`);
