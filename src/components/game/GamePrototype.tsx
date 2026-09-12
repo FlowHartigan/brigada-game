@@ -21,7 +21,8 @@ import {
 import type { CombatAction, FighterDefinition, FighterId } from "@/game/engine/types";
 
 import { FighterArt } from "./FighterArt";
-import { FighterSprite, type FighterSpriteState } from "./FighterSprite";
+import { FighterSprite } from "./FighterSprite";
+import { resolveFighterSpriteState } from "./fighterSpriteState";
 
 type Scene = "home" | "select" | "versus" | "fight" | "result";
 
@@ -45,11 +46,18 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 const fighterAccents: Record<FighterId, string> = {
-  hartz: "#acd6e7", petoux: "#e9c9a4", nexmos: "#ff493d",
-  kavaleur: "#ff69b2", korsair: "#e7aa54",
+  hartz: "#acd6e7",
+  petoux: "#e9c9a4",
+  nexmos: "#ff493d",
+  kavaleur: "#ff69b2",
+  korsair: "#e7aa54",
 };
 
-function FighterCard({ fighter, active, onSelect }: {
+function FighterCard({
+  fighter,
+  active,
+  onSelect,
+}: {
   fighter: FighterDefinition;
   active: boolean;
   onSelect: (id: FighterId) => void;
@@ -62,9 +70,18 @@ function FighterCard({ fighter, active, onSelect }: {
       aria-label={`${fighter.name} — ${fighter.title}`}
       onClick={() => onSelect(fighter.id)}
     >
-      <div className="fighter-portrait"><FighterArt id={fighter.id} portrait /></div>
-      <div className="fighter-card-label"><strong>{fighter.name}</strong><span>{fighter.title}</span></div>
-      {active && <span className="selection-marker" aria-hidden="true">P1</span>}
+      <div className="fighter-portrait">
+        <FighterArt id={fighter.id} portrait />
+      </div>
+      <div className="fighter-card-label">
+        <strong>{fighter.name}</strong>
+        <span>{fighter.title}</span>
+      </div>
+      {active && (
+        <span className="selection-marker" aria-hidden="true">
+          P1
+        </span>
+      )}
     </button>
   );
 }
@@ -119,7 +136,10 @@ export function GamePrototype() {
   }
 
   function recordPlayerAction(action: CombatAction, at: number) {
-    playerHistoryRef.current = [...playerHistoryRef.current, { action, at }].slice(-8);
+    playerHistoryRef.current = [
+      ...playerHistoryRef.current,
+      { action, at },
+    ].slice(-8);
   }
 
   function playerAction(action: Exclude<CombatAction, "defend">) {
@@ -204,7 +224,9 @@ export function GamePrototype() {
           <h1>BRIGADA FIGHT</h1>
           <span>FIGHTING GAME · MOBILE WEB</span>
         </div>
-        <button className="primary-cta" onClick={() => setScene("select")}>FIGHT</button>
+        <button className="primary-cta" onClick={() => setScene("select")}>
+          FIGHT
+        </button>
         <p className="home-note">4 boutons. 5 combattants. Aucun répit.</p>
       </section>
     );
@@ -213,32 +235,64 @@ export function GamePrototype() {
   if (scene === "select") {
     const preview = getFighter(previewId);
     return (
-      <section className="select-screen screen-panel" style={{ "--fighter-accent": fighterAccents[preview.id] } as React.CSSProperties}>
+      <section
+        className="select-screen screen-panel"
+        style={{ "--fighter-accent": fighterAccents[preview.id] } as React.CSSProperties}
+      >
         <header className="screen-heading">
-          <div><p className="eyebrow">BRIGADA FIGHT</p><h1>CHOISIS TON COMBATTANT</h1></div>
-          <button className="text-button" onClick={() => setScene("home")}>RETOUR</button>
+          <div>
+            <p className="eyebrow">BRIGADA FIGHT</p>
+            <h1>CHOISIS TON COMBATTANT</h1>
+          </div>
+          <button className="text-button" onClick={() => setScene("home")}>
+            RETOUR
+          </button>
         </header>
         <div className="selection-detail" key={preview.id}>
           <div className="selection-showcase" aria-hidden="true">
-            <span className="showcase-number">0{fighters.findIndex(f => f.id === preview.id) + 1}</span>
+            <span className="showcase-number">
+              0{fighters.findIndex((fighter) => fighter.id === preview.id) + 1}
+            </span>
             <FighterArt id={preview.id} />
           </div>
           <div className="selection-info" aria-live="polite" aria-atomic="true">
-            <div className="selection-name"><p>{preview.title}</p><h2>{preview.name}</h2></div>
+            <div className="selection-name">
+              <p>{preview.title}</p>
+              <h2>{preview.name}</h2>
+            </div>
             <div className="selection-stats">
               <Stat label="Force" value={preview.stats.strength} />
               <Stat label="Vitalité" value={preview.stats.vitality} />
               <Stat label="Vitesse" value={preview.stats.speed} />
               <Stat label="Défense" value={preview.stats.defense} />
             </div>
-            <div className="selection-special"><span>SPÉCIALITÉ</span><strong>{preview.special.name}</strong><p>{preview.special.description}</p></div>
-            <button className="primary-cta selection-confirm" onClick={() => selectFighter(preview.id)}>COMBATTRE <span aria-hidden="true">→</span></button>
+            <div className="selection-special">
+              <span>SPÉCIALITÉ</span>
+              <strong>{preview.special.name}</strong>
+              <p>{preview.special.description}</p>
+            </div>
+            <button
+              className="primary-cta selection-confirm"
+              onClick={() => selectFighter(preview.id)}
+            >
+              COMBATTRE <span aria-hidden="true">→</span>
+            </button>
           </div>
         </div>
         <div className="fighter-grid" role="group" aria-label="Les cinq combattants">
-          {fighters.map((fighter) => <FighterCard key={fighter.id} fighter={fighter} active={previewId === fighter.id} onSelect={setPreviewId} />)}
+          {fighters.map((fighter) => (
+            <FighterCard
+              key={fighter.id}
+              fighter={fighter}
+              active={previewId === fighter.id}
+              onSelect={setPreviewId}
+            />
+          ))}
         </div>
-        <div className="selection-footer"><span>LA BRIGADE · SAME CREW. DIFFERENT MOVES.</span><span>0 + 0 = TECHNO</span></div>
+        <div className="selection-footer">
+          <span>LA BRIGADE · SAME CREW. DIFFERENT MOVES.</span>
+          <span>0 + 0 = TECHNO</span>
+        </div>
       </section>
     );
   }
@@ -250,7 +304,11 @@ export function GamePrototype() {
       <section className="versus-screen screen-panel">
         <div className="versus-fighter left">
           <div className={`versus-portrait fighter-${selected.id}`}>
-            <FighterSprite id={selected.id} label={selected.name} className="versus-sprite" />
+            <FighterSprite
+              id={selected.id}
+              label={selected.name}
+              className="versus-sprite"
+            />
           </div>
           <p>{selected.title}</p>
           <h2>{selected.name}</h2>
@@ -258,11 +316,17 @@ export function GamePrototype() {
         <div className="versus-center">
           <span>RANDOM MATCH</span>
           <strong>VS</strong>
-          <button className="primary-cta compact" onClick={startFight}>COMBATTRE</button>
+          <button className="primary-cta compact" onClick={startFight}>
+            COMBATTRE
+          </button>
         </div>
         <div className="versus-fighter right">
           <div className={`versus-portrait fighter-${opponent.id}`}>
-            <FighterSprite id={opponent.id} label={opponent.name} className="versus-sprite" />
+            <FighterSprite
+              id={opponent.id}
+              label={opponent.name}
+              className="versus-sprite"
+            />
           </div>
           <p>{opponent.title}</p>
           <h2>{opponent.name}</h2>
@@ -276,22 +340,39 @@ export function GamePrototype() {
   if (scene === "result") {
     const playerWon = combatState.winner === "player";
     const opponentWon = combatState.winner === "opponent";
-    const winnerName = playerWon ? selected.name : opponentWon ? opponent.name : "ÉGALITÉ";
+    const winnerName = playerWon
+      ? selected.name
+      : opponentWon
+        ? opponent.name
+        : "ÉGALITÉ";
     const winnerId = playerWon ? selected.id : opponent.id;
 
     return (
       <section className="result-screen screen-panel">
-        <p className="eyebrow">{combatState.endReason === "timeout" ? "TIME" : "KO"}</p>
+        <p className="eyebrow">
+          {combatState.endReason === "timeout" ? "TIME" : "KO"}
+        </p>
         <div className={`result-portrait fighter-${winnerId}`}>
-          <FighterSprite id={winnerId} label={winnerName} className="result-sprite" />
+          <FighterSprite
+            id={winnerId}
+            state={combatState.winner === "draw" ? "idle" : "win"}
+            label={winnerName}
+            className="result-sprite"
+          />
         </div>
-        <h1>{combatState.winner === "draw" ? "DRAW" : `${winnerName} WINS`}</h1>
+        <h1>
+          {combatState.winner === "draw" ? "DRAW" : `${winnerName} WINS`}
+        </h1>
         <p className="result-detail">
           {Math.round(combatState.player.hp)} PV · {Math.round(combatState.opponent.hp)} PV
         </p>
         <div className="result-actions">
-          <button className="primary-cta compact" onClick={startFight}>REVANCHE</button>
-          <button className="secondary-cta" onClick={resetToSelect}>CHANGER DE PERSONNAGE</button>
+          <button className="primary-cta compact" onClick={startFight}>
+            REVANCHE
+          </button>
+          <button className="secondary-cta" onClick={resetToSelect}>
+            CHANGER DE PERSONNAGE
+          </button>
         </div>
       </section>
     );
@@ -306,62 +387,65 @@ export function GamePrototype() {
   const attackAvailable = canPerformAction(combatState, "player", "attack");
   const dodgeAvailable = canPerformAction(combatState, "player", "dodge");
   const specialAvailable = canPerformAction(combatState, "player", "special");
-  const defendAvailable = canPerformAction(combatState, "player", "defend") || player.isDefending;
+  const defendAvailable =
+    canPerformAction(combatState, "player", "defend") || player.isDefending;
 
   function fighterVisualState(side: CombatSide): string {
     if (!combatState) return "";
-    const runtime = combatState[side];
-    const recent = Boolean(lastEvent && combatState.now - lastEvent.at < 360);
-    const wasHit = Boolean(
-      recent &&
-      lastEvent?.target === side &&
-      ["hit", "counter", "guard-break"].includes(lastEvent.type),
-    );
-    const usedSpecial = Boolean(
-      recent &&
-      lastEvent?.actor === side &&
-      ["special", "counter-ready", "counter"].includes(lastEvent.type),
-    );
+    const visualState = resolveFighterSpriteState(combatState, side);
 
     return [
-      runtime.isDefending ? "is-defending" : "",
-      runtime.invulnerableUntil > combatState.now ? "is-dodging" : "",
-      runtime.stunnedUntil > combatState.now ? "is-stunned" : "",
-      wasHit ? "is-hit" : "",
-      usedSpecial ? "is-special" : "",
-    ].filter(Boolean).join(" ");
-  }
-
-  function fighterSpriteState(side: CombatSide): FighterSpriteState {
-    if (!combatState) return "idle";
-    const runtime = combatState[side];
-    const recent = Boolean(lastEvent && combatState.now - lastEvent.at < 360);
-    const usedSpecial = Boolean(
-      recent &&
-      lastEvent?.actor === side &&
-      ["special", "counter-ready", "counter"].includes(lastEvent.type),
-    );
-
-    if (runtime.isDefending) return "defend";
-    if (runtime.invulnerableUntil > combatState.now) return "dodge";
-    if (usedSpecial) return "special";
-    return "idle";
+      visualState === "defend" ? "is-defending" : "",
+      visualState === "dodge" ? "is-dodging" : "",
+      visualState === "stunned" ? "is-stunned" : "",
+      visualState === "hit" ? "is-hit" : "",
+      visualState === "special" ? "is-special" : "",
+      visualState.startsWith("attack") ? "is-attacking" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
   }
 
   return (
     <section className="fight-screen screen-panel">
       <header className="fight-hud">
         <div className="hud-fighter">
-          <div className="hud-name"><strong>{selected.name}</strong><span>{Math.ceil(player.hp)} PV</span></div>
-          <div className="health-track"><div className="health-fill" style={{ width: `${getHealthPercent(player)}%` }} /></div>
-          <div className="guard-track"><div className="guard-fill" style={{ width: `${getGuardPercent(player)}%` }} /></div>
+          <div className="hud-name">
+            <strong>{selected.name}</strong>
+            <span>{Math.ceil(player.hp)} PV</span>
+          </div>
+          <div className="health-track">
+            <div
+              className="health-fill"
+              style={{ width: `${getHealthPercent(player)}%` }}
+            />
+          </div>
+          <div className="guard-track">
+            <div
+              className="guard-fill"
+              style={{ width: `${getGuardPercent(player)}%` }}
+            />
+          </div>
           <div className="guard-label">GARDE {Math.ceil(player.guard)}</div>
         </div>
         <div className="round-timer">{remainingSeconds}</div>
         <div className="hud-fighter opponent-hud">
-          <div className="hud-name"><strong>{opponent.name}</strong><span>{Math.ceil(enemy.hp)} PV</span></div>
-          <div className="health-track"><div className="health-fill" style={{ width: `${getHealthPercent(enemy)}%` }} /></div>
-          <div className="guard-track opponent-guard"><div className="guard-fill" style={{ width: `${getGuardPercent(enemy)}%` }} /></div>
+          <div className="hud-name">
+            <strong>{opponent.name}</strong>
+            <span>{Math.ceil(enemy.hp)} PV</span>
+          </div>
+          <div className="health-track">
+            <div
+              className="health-fill"
+              style={{ width: `${getHealthPercent(enemy)}%` }}
+            />
+          </div>
+          <div className="guard-track opponent-guard">
+            <div
+              className="guard-fill"
+              style={{ width: `${getGuardPercent(enemy)}%` }}
+            />
+          </div>
           <div className="guard-label">GARDE {Math.ceil(enemy.guard)}</div>
         </div>
       </header>
@@ -370,16 +454,32 @@ export function GamePrototype() {
         <div className="blackboard">0 + 0 = TECHNO</div>
         <div className="speaker speaker-left" />
         <div className="speaker speaker-right" />
-        <div className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}>
-          <FighterSprite id={selected.id} state={fighterSpriteState("player")} label={selected.name} className="arena-sprite" />
+        <div
+          className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}
+        >
+          <FighterSprite
+            id={selected.id}
+            state={resolveFighterSpriteState(combatState, "player")}
+            label={selected.name}
+            className="arena-sprite"
+          />
           <span>{selected.name}</span>
         </div>
-        <div className={`arena-fighter arena-right fighter-${opponent.id} ${fighterVisualState("opponent")}`}>
-          <FighterSprite id={opponent.id} state={fighterSpriteState("opponent")} label={opponent.name} className="arena-sprite" />
+        <div
+          className={`arena-fighter arena-right fighter-${opponent.id} ${fighterVisualState("opponent")}`}
+        >
+          <FighterSprite
+            id={opponent.id}
+            state={resolveFighterSpriteState(combatState, "opponent")}
+            label={opponent.name}
+            className="arena-sprite"
+          />
           <span>{opponent.name}</span>
         </div>
         <div className="arena-floor" />
-        <div className="combat-callout" key={lastEvent?.id ?? 0}>{lastEvent?.message ?? "FIGHT!"}</div>
+        <div className="combat-callout" key={lastEvent?.id ?? 0}>
+          {lastEvent?.message ?? "FIGHT!"}
+        </div>
       </div>
 
       <div className="fight-controls">
@@ -389,7 +489,7 @@ export function GamePrototype() {
             disabled={!dodgeAvailable}
             onPointerDown={() => playerAction("dodge")}
           >
-            <span>ESQUIVE</span>
+            <span>{actionLabels.dodge}</span>
             <small>{dodgeAvailable ? "PRÊT" : cooldownLabel(dodgeRemaining)}</small>
           </button>
           <button
@@ -404,14 +504,22 @@ export function GamePrototype() {
             onPointerCancel={() => playerDefense(false)}
             onLostPointerCapture={() => playerDefense(false)}
           >
-            <span>DÉFENSE</span>
+            <span>{actionLabels.defend}</span>
             <small>MAINTENIR</small>
           </button>
         </div>
         <div className="combat-status">
-          <span>{player.stunnedUntil > combatState.now ? "GUARD BREAK" : "COMBAT"}</span>
-          <strong>{lastEvent?.type === "unavailable" ? "COOLDOWN" : lastEvent?.message ?? "PRÊT"}</strong>
-          <button className="text-button" onClick={resetToSelect}>QUITTER</button>
+          <span>
+            {player.stunnedUntil > combatState.now ? "GUARD BREAK" : "COMBAT"}
+          </span>
+          <strong>
+            {lastEvent?.type === "unavailable"
+              ? "COOLDOWN"
+              : lastEvent?.message ?? "PRÊT"}
+          </strong>
+          <button className="text-button" onClick={resetToSelect}>
+            QUITTER
+          </button>
         </div>
         <div className="control-cluster primary-controls">
           <button
@@ -419,7 +527,7 @@ export function GamePrototype() {
             disabled={!attackAvailable}
             onPointerDown={() => playerAction("attack")}
           >
-            <span>ATTAQUE</span>
+            <span>{actionLabels.attack}</span>
             <small>COMBO ×3</small>
           </button>
           <button
@@ -427,8 +535,12 @@ export function GamePrototype() {
             disabled={!specialAvailable}
             onPointerDown={() => playerAction("special")}
           >
-            <span>SPÉCIAL</span>
-            <small>{specialAvailable ? selected.special.name : cooldownLabel(specialRemaining)}</small>
+            <span>{actionLabels.special}</span>
+            <small>
+              {specialAvailable
+                ? selected.special.name
+                : cooldownLabel(specialRemaining)}
+            </small>
           </button>
         </div>
       </div>

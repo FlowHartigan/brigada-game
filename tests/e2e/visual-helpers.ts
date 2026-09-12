@@ -43,14 +43,8 @@ async function renderedScreenshotStats(page: Page, image: Locator) {
   }, dataUrl);
 }
 
-/**
- * Validate decoded artwork plus pixels from an actual Chromium screenshot.
- * The bounding box must intersect the viewport, so an image rendered offscreen
- * cannot pass just because Playwright can still address its DOM element.
- */
-export async function expectFighterPixels(page: Page, image: Locator, expectedSrc: string) {
+async function expectVisibleRenderedPixels(page: Page, image: Locator) {
   await expect(image).toBeVisible();
-  await expect(image).toHaveAttribute("src", expectedSrc);
 
   await expect.poll(() => image.evaluate(async (node) => {
     const img = node as HTMLImageElement;
@@ -95,6 +89,36 @@ export async function expectFighterPixels(page: Page, image: Locator, expectedSr
   expect(screenshotStats!.height).toBeGreaterThan(24);
   expect(screenshotStats!.signalRatio).toBeGreaterThan(0.01);
   expect(screenshotStats!.veryDarkRatio).toBeLessThan(0.99);
+}
+
+/**
+ * Validate decoded production artwork plus pixels from an actual Chromium
+ * screenshot. The bounding box must intersect the viewport, so an image
+ * rendered offscreen cannot pass just because Playwright can address its DOM.
+ */
+export async function expectFighterPixels(page: Page, image: Locator, expectedSrc: string) {
+  await expect(image).toHaveAttribute("src", expectedSrc);
+  await expectVisibleRenderedPixels(page, image);
+}
+
+/** Validate an action frame rather than merely checking that the DOM changed. */
+export async function expectAnimatedFighterPixels(
+  page: Page,
+  image: Locator,
+  state: string,
+) {
+  await expect(image).toHaveAttribute("data-state", state, { timeout: 1_000 });
+  await expect(image).toHaveAttribute("data-animated", "true");
+  const source = await image.getAttribute("src");
+  const fighterId = await image.getAttribute("data-fighter");
+
+  if (fighterId === "korsair") {
+    expect(source).toBe(`/fighters/korsair.png#combat-${state}`);
+  } else {
+    expect(source).toMatch(/^data:image\/webp;base64,/);
+  }
+
+  await expectVisibleRenderedPixels(page, image);
 }
 
 const DEFENSE_POINTER_ID = 777;
