@@ -47,11 +47,10 @@ test("KORSAIR keeps the refreshed identity from Select through Result", async ({
   // This drives the real combat engine instead of mutating React or Phaser state.
   for (let attempt = 0; attempt < 80; attempt += 1) {
     if (await page.locator(".result-screen").isVisible()) break;
-    if (await attack.isEnabled()) {
-      await attack.click();
-    } else {
-      await page.waitForTimeout(80);
-    }
+    await expect(page.locator('.attack-button:not([disabled]), .result-screen').first())
+      .toBeVisible({ timeout: 4_000 });
+    if (await page.locator('.result-screen').isVisible()) break;
+    await attack.click();
   }
 
   await expect(page.locator(".result-screen")).toBeVisible({ timeout: 10_000 });
