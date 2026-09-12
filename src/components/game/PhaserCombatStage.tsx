@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { CombatEvent, CombatSide } from "@/game/engine/combat";
 import type { FighterId } from "@/game/engine/types";
+import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
 
@@ -107,6 +108,7 @@ export function PhaserCombatStage({
         private playerSprite?: import("phaser").GameObjects.Image;
         private opponentSprite?: import("phaser").GameObjects.Image;
         private fightersReady = false;
+        private fighterFreezeUntil = 0;
 
         constructor() {
           super("brigada-combat-backdrop");
@@ -129,6 +131,8 @@ export function PhaserCombatStage({
         }
 
         create() {
+          stageHost.dataset.hitStop = "idle";
+
           const background = this.add.graphics();
           background.fillStyle(0x171518, 1);
           background.fillRect(0, 0, STAGE_WIDTH, STAGE_HEIGHT);
@@ -215,6 +219,8 @@ export function PhaserCombatStage({
           if (!event || processedEventIdRef.current === event.id) return;
 
           processedEventIdRef.current = event.id;
+          this.startImpactFreeze(event);
+
           const targetX = sideX(event.target);
           const actorX = sideX(event.actor);
 
@@ -255,8 +261,34 @@ export function PhaserCombatStage({
           }
         }
 
+        private startImpactFreeze(event: CombatEvent) {
+          const duration = impactFreezeDurationMs(event.type);
+          if (duration <= 0) return;
+
+          this.fighterFreezeUntil = Math.max(
+            this.fighterFreezeUntil,
+            this.time.now + duration,
+          );
+
+          const eventId = String(event.id);
+          stageHost.dataset.hitStop = "active";
+          stageHost.dataset.hitStopEvent = eventId;
+          stageHost.dataset.lastHitStopType = event.type;
+          stageHost.dataset.lastHitStopMs = String(duration);
+
+          window.setTimeout(() => {
+            if (
+              !cancelled &&
+              stageHost.dataset.hitStopEvent === eventId
+            ) {
+              stageHost.dataset.hitStop = "idle";
+            }
+          }, duration);
+        }
+
         private syncFighters() {
           if (!this.playerSprite || !this.opponentSprite) return;
+          if (this.time.now < this.fighterFreezeUntil) return;
 
           const playerVisual = fighterStateRef.current.player;
           const opponentVisual = fighterStateRef.current.opponent;
