@@ -24,7 +24,7 @@
    atlas background, border, outline or box shadow may become visible. */
 .arena-shell .arena-fighter {
   position: relative !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   background-image: none !important;
   background-color: transparent !important;
   border: 0 !important;

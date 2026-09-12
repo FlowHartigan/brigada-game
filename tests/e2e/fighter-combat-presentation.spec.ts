@@ -28,6 +28,8 @@ async function openFight(page: Page, playerId: string, opponentId: string) {
   await page.getByRole("button", { name: `${player.name} — ${player.title}`, exact: true }).click();
   await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
   await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
+  // Keep both fighters idle while measuring their baseline, after selecting the pair.
+  await page.evaluate(() => { window.__BRIGADA_COMBAT_RNG__ = () => 0.999999; });
   await expectPhaserCombatReady(page, playerId, opponentId);
 }
 
@@ -49,6 +51,44 @@ async function expectNormalizedPresentation(page: Page) {
     ]);
     return Math.abs(Number(playerGround) - Number(opponentGround));
   }, { timeout: 5_000 }).toBeLessThanOrEqual(1);
+  for (const side of ["player", "opponent"]) {
+    await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-visible-height`)))
+      .toBeCloseTo(200.2, 1);
+    await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-ground-y`)))
+      .toBeCloseTo(326, 1);
+  }
+  // Measure the real DOM fallback's decoded alpha bounds through its CSS matrix.
+  const fallback = await page.locator(".arena-fighter img").evaluateAll(async (nodes) => {
+    return Promise.all(nodes.map(async (node) => {
+      const img = node as HTMLImageElement;
+      await img.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let top = canvas.height, bottom = -1;
+      for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+        if (pixels[(y * canvas.width + x) * 4 + 3] >= 8) {
+          top = Math.min(top, y); bottom = Math.max(bottom, y);
+        }
+      }
+      const style = getComputedStyle(img);
+      const matrix = new DOMMatrix(style.transform);
+      const fittedScale = Math.min(img.clientWidth / canvas.width, img.clientHeight / canvas.height);
+      const height = (bottom - top + 1) * fittedScale * Math.abs(matrix.a);
+      return { ratio: height / img.clientHeight, uniform: Math.abs(matrix.a) - Math.abs(matrix.d) };
+    }));
+  });
+  for (const fighter of fallback) {
+    expect(fighter.ratio).toBeCloseTo(0.72 * 1.3, 2);
+    expect(fighter.uniform).toBeCloseTo(0, 5);
+  }
+  const canvas = await stage.locator("canvas").boundingBox();
+  expect(canvas).not.toBeNull();
+  expect(canvas!.y).toBeGreaterThanOrEqual(0);
+  expect(canvas!.y + canvas!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 }
 
@@ -67,7 +107,7 @@ test.describe("fighter combat presentation", () => {
     test.setTimeout(45_000);
     await page.setViewportSize({ width: 1280, height: 720 });
 
-    for (const [playerId, opponentId] of [pairings[0], pairings[3]]) {
+    for (const [playerId, opponentId] of pairings) {
       await openFight(page, playerId, opponentId);
       await expectNormalizedPresentation(page);
     }

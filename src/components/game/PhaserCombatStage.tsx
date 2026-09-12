@@ -6,14 +6,14 @@ import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
-import { fighterCombatPresentation } from "./fighterPresentation";
+import { fighterCombatPresentation, FIGHTER_COMBAT_SCALE } from "./fighterPresentation";
 
 const STAGE_WIDTH = 1600;
 const STAGE_HEIGHT = 360;
 const PLAYER_X = 430;
 const OPPONENT_X = 1170;
 const FIGHTER_BASE_Y = 326;
-const FIGHTER_VISIBLE_HEIGHT = 154;
+const FIGHTER_VISIBLE_HEIGHT = 154 * FIGHTER_COMBAT_SCALE;
 const IMPACT_Y = 220;
 
 const FIGHTER_STATES: FighterSpriteState[] = [
