@@ -47,6 +47,14 @@ test("mobile landscape player sees real fighter action frames through the full g
   await page.getByRole("button", { name: "COMBATTRE" }).click();
   await expect(page.locator(".fight-screen")).toBeVisible();
 
+  const phaserStage = page.getByTestId("phaser-combat-stage");
+  await expect(phaserStage).toBeVisible();
+  const phaserCanvas = phaserStage.locator("canvas");
+  await expect(phaserCanvas).toHaveCount(1, { timeout: 5_000 });
+  await expect
+    .poll(async () => phaserCanvas.evaluate((canvas) => canvas.width > 0 && canvas.height > 0))
+    .toBe(true);
+
   const playerSprite = page.locator(".arena-left.fighter-hartz");
   const playerImage = playerSprite.locator("img.fighter-sprite-direct");
   await expect(playerImage).toHaveAttribute("data-state", "idle");
