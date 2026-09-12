@@ -6,12 +6,13 @@ const fighterImages: Record<FighterId, string> = {
   petoux: "/fighters/petoux.png",
   nexmos: "/fighters/nexmos.png",
   kavaleur: "/fighters/kavaleur-v2/idle.png",
-  korsair: "/fighters/korsair.png",
+  korsair: "/fighters/korsair-v2/idle.png",
 };
 
 /** Selection artwork can use a more neutral full-body pose without affecting combat. */
 const fighterArtImages: Partial<Record<FighterId, string>> = {
   kavaleur: "/fighters/kavaleur-v2/front.png",
+  korsair: "/fighters/korsair-v2/front.png",
 };
 
 export function fighterImage(id: FighterId): string {

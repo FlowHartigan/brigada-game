@@ -7,7 +7,7 @@ import {
   fighterArtSrc,
   fighterSrc,
   holdDefense,
-  kavaleurActionSrc,
+  refreshedActionSrc,
   releaseDefense,
   saveVisual,
 } from "./visual-helpers";
@@ -26,10 +26,8 @@ async function expectAnimatedSource(image: Locator, state: string) {
   const source = await image.getAttribute("src");
   const fighterId = await image.getAttribute("data-fighter");
 
-  if (fighterId === "korsair") {
-    expect(source).toBe(`/fighters/korsair.png#combat-${state}`);
-  } else if (fighterId === "kavaleur") {
-    expect(source).toBe(kavaleurActionSrc(state));
+  if (fighterId === "kavaleur" || fighterId === "korsair") {
+    expect(source).toBe(refreshedActionSrc(fighterId, state));
   } else {
     expect(source).toMatch(/^data:image\/webp;base64,/);
     expect(source!.length).toBeGreaterThan(300);
