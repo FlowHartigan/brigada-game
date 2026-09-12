@@ -50,6 +50,7 @@ test("mobile landscape player sees real fighter action frames through the full g
   await expectPhaserCombatReady(page, "hartz", opponentId!);
   await expectPhaserFighterState(page, "player", "idle", "hartz");
   await expectPhaserFighterState(page, "opponent", "idle", opponentId!);
+  const phaserStage = page.getByTestId("phaser-combat-stage");
 
   const playerSprite = page.locator(".arena-left.fighter-hartz");
   const playerImage = playerSprite.locator("img.fighter-sprite-direct");
@@ -87,6 +88,10 @@ test("mobile landscape player sees real fighter action frames through the full g
   await expect(attack).toBeEnabled({ timeout: 3_000 });
   await attack.click();
   await expect.poll(async () => enemyHp.textContent()).not.toBe(hpBefore);
+  await expect(phaserStage).toHaveAttribute("data-last-hit-stop-type", "hit", {
+    timeout: 1_000,
+  });
+  await expect(phaserStage).toHaveAttribute("data-last-hit-stop-ms", "52");
   await expectPhaserFighterState(page, "player", "attack1", "hartz");
   await saveVisual(page, "flow-fight-hartz-attack1");
 
