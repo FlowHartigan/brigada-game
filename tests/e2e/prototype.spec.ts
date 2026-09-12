@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import {
-  expectAnimatedFighterPixels,
   expectFighterPixels,
+  expectPhaserCombatReady,
+  expectPhaserFighterState,
   fighterSrc,
   holdDefense,
   releaseDefense,
@@ -46,28 +47,20 @@ test("mobile landscape player sees real fighter action frames through the full g
   await page.getByRole("button", { name: "COMBATTRE" }).click();
   await expect(page.locator(".fight-screen")).toBeVisible();
 
-  const phaserStage = page.getByTestId("phaser-combat-stage");
-  await expect(phaserStage).toBeVisible();
-  const phaserCanvas = phaserStage.locator("canvas");
-  await expect(phaserCanvas).toHaveCount(1, { timeout: 5_000 });
-  await expect
-    .poll(async () =>
-      phaserCanvas.evaluate((node) => {
-        const canvas = node as HTMLCanvasElement;
-        return canvas.width > 0 && canvas.height > 0;
-      }),
-    )
-    .toBe(true);
+  await expectPhaserCombatReady(page, "hartz", opponentId!);
+  await expectPhaserFighterState(page, "player", "idle", "hartz");
+  await expectPhaserFighterState(page, "opponent", "idle", opponentId!);
 
   const playerSprite = page.locator(".arena-left.fighter-hartz");
   const playerImage = playerSprite.locator("img.fighter-sprite-direct");
+  await expect(playerImage).toHaveAttribute("src", fighterSrc("hartz"));
   await expect(playerImage).toHaveAttribute("data-state", "idle");
-  await expectFighterPixels(page, playerImage, fighterSrc("hartz"));
+  await expect(playerSprite).toHaveAttribute("data-renderer", "react-fallback-hidden");
 
   const opponentImage = page.locator(".arena-right img.fighter-sprite-direct");
   const arenaOpponentId = await opponentImage.getAttribute("data-fighter");
-  expect(arenaOpponentId).toBeTruthy();
-  await expectFighterPixels(page, opponentImage, fighterSrc(arenaOpponentId!));
+  expect(arenaOpponentId).toBe(opponentId);
+  await expect(opponentImage).toHaveAttribute("src", fighterSrc(arenaOpponentId!));
   await saveVisual(page, `flow-fight-hartz-${arenaOpponentId}`);
 
   const attack = page.getByRole("button", { name: /ATTAQUE/ });
@@ -76,14 +69,16 @@ test("mobile landscape player sees real fighter action frames through the full g
   const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
   await holdDefense(page, defend);
-  await expectAnimatedFighterPixels(page, playerImage, "defend");
+  await expect(playerImage).toHaveAttribute("data-state", "defend", { timeout: 1_000 });
+  await expectPhaserFighterState(page, "player", "defend", "hartz");
   await saveVisual(page, "flow-fight-hartz-defend");
   await releaseDefense(page, defend);
-  await expect(playerImage).toHaveAttribute("data-state", "idle", { timeout: 1_000 });
+  await expectPhaserFighterState(page, "player", "idle", "hartz");
 
   await expect(dodge).toBeEnabled({ timeout: 2_000 });
   await dodge.click();
-  await expectAnimatedFighterPixels(page, playerImage, "dodge");
+  await expect(playerImage).toHaveAttribute("data-state", "dodge", { timeout: 1_000 });
+  await expectPhaserFighterState(page, "player", "dodge", "hartz");
   await saveVisual(page, "flow-fight-hartz-dodge");
 
   const enemyHp = page.locator(".opponent-hud .hud-name span");
@@ -92,23 +87,23 @@ test("mobile landscape player sees real fighter action frames through the full g
   await expect(attack).toBeEnabled({ timeout: 3_000 });
   await attack.click();
   await expect.poll(async () => enemyHp.textContent()).not.toBe(hpBefore);
-  await expectAnimatedFighterPixels(page, playerImage, "attack1");
+  await expectPhaserFighterState(page, "player", "attack1", "hartz");
   await saveVisual(page, "flow-fight-hartz-attack1");
 
   await expect(attack).toBeEnabled({ timeout: 2_000 });
   await attack.click();
-  await expectAnimatedFighterPixels(page, playerImage, "attack2");
+  await expectPhaserFighterState(page, "player", "attack2", "hartz");
   await saveVisual(page, "flow-fight-hartz-attack2");
 
   await expect(attack).toBeEnabled({ timeout: 2_000 });
   await attack.click();
-  await expectAnimatedFighterPixels(page, playerImage, "attack3");
+  await expectPhaserFighterState(page, "player", "attack3", "hartz");
   await saveVisual(page, "flow-fight-hartz-attack3");
 
   await expect(special).toBeEnabled({ timeout: 12_000 });
   await special.click();
   await expect(special).toBeDisabled();
-  await expectAnimatedFighterPixels(page, playerImage, "special");
+  await expectPhaserFighterState(page, "player", "special", "hartz");
   await saveVisual(page, "flow-fight-hartz-special");
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);

@@ -1,8 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
 import {
-  expectAnimatedFighterPixels,
   expectFighterPixels,
+  expectPhaserCombatReady,
+  expectPhaserFighterState,
   fighterSrc,
   holdDefense,
   releaseDefense,
@@ -62,23 +63,30 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
     const playerImage = page.locator(".arena-left img.fighter-sprite-direct");
     const opponentImage = page.locator(".arena-right img.fighter-sprite-direct");
-    await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
+    await expect(playerImage).toHaveAttribute("src", fighterSrc(fighter.id));
     const combatOpponentId = await opponentImage.getAttribute("data-fighter");
     expect(combatOpponentId).toBeTruthy();
-    await expectFighterPixels(page, opponentImage, fighterSrc(combatOpponentId!));
+    await expect(opponentImage).toHaveAttribute("src", fighterSrc(combatOpponentId!));
 
+    await expectPhaserCombatReady(page, fighter.id, combatOpponentId!);
+    await expectPhaserFighterState(page, "player", "idle", fighter.id);
+    await expect(page.locator(".arena-left")).toHaveAttribute("data-renderer", "react-fallback-hidden");
+    await expect(page.locator(".arena-right")).toHaveAttribute("data-renderer", "react-fallback-hidden");
+
+    const stage = page.getByTestId("phaser-combat-stage");
     const attack = page.getByRole("button", { name: /ATTAQUE/ });
     const dodge = page.getByRole("button", { name: /ESQUIVE/ });
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
-    // First prove the AI itself animates when it performs a real attack.
+    // First prove the AI itself animates in Phaser when it performs a real attack.
     await expect.poll(
-      async () => opponentImage.getAttribute("data-state"),
+      async () => stage.getAttribute("data-opponent-state"),
       { timeout: 4_000, intervals: [50, 50, 100, 100, 150, 200] },
     ).toMatch(/^attack[123]$/);
-    const opponentAnimatedState = await opponentImage.getAttribute("data-state");
-    await expectAnimatedFighterPixels(page, opponentImage, opponentAnimatedState!);
+    const opponentAnimatedState = await stage.getAttribute("data-opponent-state");
+    await expectAnimatedSource(opponentImage, opponentAnimatedState!);
+    await expectPhaserFighterState(page, "opponent", opponentAnimatedState!, combatOpponentId!);
     await saveVisual(page, `anim-${fighter.id}-ai-${opponentAnimatedState}`);
 
     // Make Utility AI choose WAIT while we validate player frames. This avoids
@@ -87,38 +95,42 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await page.waitForTimeout(700);
 
     await holdDefense(page, defend);
-    await expectAnimatedFighterPixels(page, playerImage, "defend");
+    await expectAnimatedSource(playerImage, "defend");
+    await expectPhaserFighterState(page, "player", "defend", fighter.id);
     await saveVisual(page, `anim-${fighter.id}-defend`);
     await releaseDefense(page, defend);
 
     await expect(dodge).toBeEnabled({ timeout: 4_000 });
     await dodge.click();
     await expectAnimatedSource(playerImage, "dodge");
+    await expectPhaserFighterState(page, "player", "dodge", fighter.id);
     await saveVisual(page, `anim-${fighter.id}-dodge`);
 
-    // Keep the three attacks inside the real 900ms combo window. Full-page
-    // screenshots are intentionally deferred until attack3 because screenshot
-    // encoding can be slow enough on CI to expire a legitimate combo.
+    // Keep the three attacks inside the real 900ms combo window. The DOM
+    // fallback remains a fast semantic probe for each intermediate action;
+    // Phaser is asserted on the final attack here, while prototype.spec.ts
+    // independently checks attack1/attack2/attack3 through Phaser end-to-end.
     for (const state of actionStates) {
       await expect(attack).toBeEnabled({ timeout: 4_000 });
       await attack.click();
       await expectAnimatedSource(playerImage, state);
       await expectAnimatedSource(opponentImage, "hit");
     }
+    await expectPhaserFighterState(page, "player", "attack3", fighter.id);
+    await expectPhaserFighterState(page, "opponent", "hit", combatOpponentId!);
     await saveVisual(page, `anim-${fighter.id}-attack3-vs-hit`);
 
     await expect(special).toBeEnabled({ timeout: 12_000 });
     await special.click();
     await expectAnimatedSource(playerImage, "special");
+    await expectPhaserFighterState(page, "player", "special", fighter.id);
     await saveVisual(page, `anim-${fighter.id}-special`);
 
-    // Whatever transient state remains, both fighters must stay rendered.
-    const finalState = await playerImage.getAttribute("data-state");
-    if (!finalState || finalState === "idle") {
-      await expectFighterPixels(page, playerImage, fighterSrc(fighter.id));
-    } else {
-      await expectAnimatedFighterPixels(page, playerImage, finalState);
-    }
+    // Whatever transient state remains, Phaser must keep the fighter texture
+    // synchronized with the deterministic presentation state.
+    const finalState = await stage.getAttribute("data-player-state");
+    expect(finalState).toBeTruthy();
+    await expectPhaserFighterState(page, "player", finalState!, fighter.id);
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   }

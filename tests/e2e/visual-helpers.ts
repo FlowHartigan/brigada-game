@@ -2,8 +2,10 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 export const fighterSrc = (id: string) => `/fighters/${id}.png`;
 
-async function renderedScreenshotStats(page: Page, image: Locator) {
-  const screenshot = await image.screenshot({ animations: "disabled" });
+type CombatRenderSide = "player" | "opponent";
+
+async function renderedScreenshotStats(page: Page, target: Locator) {
+  const screenshot = await target.screenshot({ animations: "disabled" });
   const dataUrl = `data:image/png;base64,${screenshot.toString("base64")}`;
 
   return page.evaluate(async (source) => {
@@ -119,6 +121,62 @@ export async function expectAnimatedFighterPixels(
   }
 
   await expectVisibleRenderedPixels(page, image);
+}
+
+/**
+ * Phaser becomes the visible combat renderer only after every requested idle
+ * and action texture has decoded. The DOM sprites stay mounted as a fallback,
+ * but their pixels are intentionally hidden once this gate is true.
+ */
+export async function expectPhaserCombatReady(
+  page: Page,
+  playerId?: string,
+  opponentId?: string,
+) {
+  const stage = page.getByTestId("phaser-combat-stage");
+  await expect(stage).toBeVisible();
+  await expect(stage).toHaveAttribute("data-fighters-ready", "true", {
+    timeout: 8_000,
+  });
+  await expect(stage).not.toHaveAttribute("data-fighter-load-error", /.+/);
+
+  if (playerId) await expect(stage).toHaveAttribute("data-player-fighter", playerId);
+  if (opponentId) await expect(stage).toHaveAttribute("data-opponent-fighter", opponentId);
+
+  const canvas = stage.locator("canvas");
+  await expect(canvas).toHaveCount(1);
+  await expect(canvas).toBeVisible();
+
+  const stats = await renderedScreenshotStats(page, canvas);
+  expect(stats).not.toBeNull();
+  expect(stats!.width).toBeGreaterThan(200);
+  expect(stats!.height).toBeGreaterThan(100);
+  expect(stats!.signalRatio).toBeGreaterThan(0.02);
+  expect(stats!.veryDarkRatio).toBeLessThan(0.98);
+}
+
+export async function expectPhaserFighterState(
+  page: Page,
+  side: CombatRenderSide,
+  state: string,
+  fighterId?: string,
+) {
+  const stage = page.getByTestId("phaser-combat-stage");
+  const stateAttribute = side === "player" ? "data-player-state" : "data-opponent-state";
+  const fighterAttribute = side === "player" ? "data-player-fighter" : "data-opponent-fighter";
+  const textureAttribute = side === "player" ? "data-player-texture" : "data-opponent-texture";
+
+  await expect(stage).toHaveAttribute("data-fighters-ready", "true", {
+    timeout: 8_000,
+  });
+  await expect(stage).toHaveAttribute(stateAttribute, state, { timeout: 1_500 });
+
+  const resolvedFighterId = fighterId ?? await stage.getAttribute(fighterAttribute);
+  expect(resolvedFighterId).toBeTruthy();
+  await expect(stage).toHaveAttribute(
+    textureAttribute,
+    `brigada-fighter-${resolvedFighterId}-${state}`,
+  );
 }
 
 const DEFENSE_POINTER_ID = 777;
