@@ -196,7 +196,11 @@ A fighter visual package is complete only when:
 - Use clear commit messages.
 - Keep PRs focused.
 - Do not commit secrets, API keys, tokens, local environment files, or generated dependency folders.
-- Preview/test before merging to `main`.
+- Every PR must pass GitHub CI before merge: unit tests, typecheck, production build and Chromium mobile QA.
+- Normal feature/fix/chore branches must **not** create automatic Vercel previews; GitHub CI is the default validation surface.
+- Automatic Vercel deployment is reserved for `main`.
+- When a live preview is materially useful (hosting/runtime-specific risk or explicit visual review), create a one-off branch named `vercel-preview-*` from an already CI-green commit. Do not use preview branches for routine commits.
+- After merge, verify the `main` Vercel production deployment reaches `READY` and smoke-check the production URL.
 
 ## Scope discipline
 
