@@ -133,11 +133,11 @@
   transform: translateY(-2px);
 }
 
-/* Use the approved roster as a temporary pixel-art atlas for VS, result and
-   combat presentation until dedicated transparent sprite sheets are produced. */
+/* VS and result still use the approved roster artwork as a temporary atlas.
+   Combat no longer does: Phaser and the React fallback render the approved
+   standalone transparent fighter assets directly. */
 .versus-portrait,
-.result-portrait,
-.arena-fighter {
+.result-portrait {
   background-image: url("/art/brigada-pixel-rave-roster-v1.webp") !important;
   background-repeat: no-repeat !important;
   image-rendering: pixelated;
@@ -190,35 +190,29 @@
   opacity: 0.12;
 }
 
+/* Combat containers are layout anchors only. The old atlas-era border,
+   shadow, background crop and hit/special outlines created a visible rectangle
+   around transparent fighters and must not participate in combat rendering. */
 .arena-fighter {
   width: clamp(92px, 12vw, 154px) !important;
   height: clamp(175px, 27vw, 280px) !important;
-  border: 2px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 0 !important;
-  background-size: 650% auto !important;
-  background-position-y: 31% !important;
-  box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.55);
-  overflow: hidden;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none;
+  background-image: none !important;
+  background-color: transparent !important;
 }
 
 .arena-fighter > span {
   opacity: 0;
 }
 
-.arena-fighter.fighter-hartz { background-position-x: 3% !important; }
-.arena-fighter.fighter-petoux { background-position-x: 26% !important; }
-.arena-fighter.fighter-nexmos { background-position-x: 49% !important; }
-.arena-fighter.fighter-kavaleur { background-position-x: 73% !important; }
-.arena-fighter.fighter-korsair { background-position-x: 96% !important; }
-
 .arena-fighter.is-hit {
   filter: contrast(1.35) brightness(1.55) saturate(0.7);
-  outline: 4px solid #fff;
 }
 
 .arena-fighter.is-special {
   filter: contrast(1.2) saturate(1.35);
-  outline: 4px solid var(--brigada-red);
 }
 
 .fight-hud,

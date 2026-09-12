@@ -12,12 +12,24 @@
 .select-screen .roster-portrait,
 .select-screen .roster-sprite,
 .versus-screen .versus-portrait,
-.result-screen .result-portrait,
-.arena-shell .arena-fighter {
+.result-screen .result-portrait {
   position: relative !important;
   overflow: hidden !important;
   background-image: none !important;
   background-color: #090707;
+}
+
+/* Combat uses transparent standalone artwork. The container must remain a
+   pure layout anchor in both Phaser mode and React fallback mode: no legacy
+   atlas background, border, outline or box shadow may become visible. */
+.arena-shell .arena-fighter {
+  position: relative !important;
+  overflow: hidden !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
 }
 
 .select-screen .roster-portrait,
@@ -111,6 +123,8 @@
 .arena-shell.has-phaser-fighters .arena-fighter {
   overflow: visible !important;
   background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
   box-shadow: none !important;
 }
 
