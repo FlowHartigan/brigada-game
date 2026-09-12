@@ -12,11 +12,10 @@ test("mobile landscape player sees real fighter action frames through the full g
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
 
-  // The app still uses the real Utility AI. This deterministic browser-only RNG
-  // makes its weighted choice land on WAIT so visual assertions are not raced
-  // by an unrelated AI hit while the test captures a specific player action.
+  // Keep Utility AI deterministic without replacing Math.random globally.
+  // Phaser uses global randomness for internal texture/UUID keys.
   await page.addInitScript(() => {
-    Math.random = () => 0.999999;
+    window.__BRIGADA_COMBAT_RNG__ = () => 0.999999;
   });
 
   page.on("console", (message) => {
