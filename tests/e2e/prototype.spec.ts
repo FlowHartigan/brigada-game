@@ -52,7 +52,12 @@ test("mobile landscape player sees real fighter action frames through the full g
   const phaserCanvas = phaserStage.locator("canvas");
   await expect(phaserCanvas).toHaveCount(1, { timeout: 5_000 });
   await expect
-    .poll(async () => phaserCanvas.evaluate((canvas) => canvas.width > 0 && canvas.height > 0))
+    .poll(async () =>
+      phaserCanvas.evaluate((node) => {
+        const canvas = node as HTMLCanvasElement;
+        return canvas.width > 0 && canvas.height > 0;
+      }),
+    )
     .toBe(true);
 
   const playerSprite = page.locator(".arena-left.fighter-hartz");
