@@ -36,6 +36,7 @@ const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
   korsair: { frameHeight: 75, visibleHeight: 75, bottomPadding: 0 },
 };
 
+export const FIGHTER_COMBAT_SCALE = 1.3;
 const FALLBACK_VISIBLE_HEIGHT_RATIO = 0.72;
 
 /**
@@ -56,7 +57,7 @@ export function fighterCombatFallbackStyle(id: FighterId): CSSProperties {
   const bounds = fighterSourceBounds[id];
   const scale =
     ((FALLBACK_VISIBLE_HEIGHT_RATIO * bounds.frameHeight) / bounds.visibleHeight) *
-    presentation.scale;
+    presentation.scale * FIGHTER_COMBAT_SCALE;
   const groundOffset = (bounds.bottomPadding / bounds.frameHeight) * scale * 100;
 
   return {
