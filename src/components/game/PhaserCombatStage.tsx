@@ -2,15 +2,43 @@
 
 import { useEffect, useRef } from "react";
 import type { CombatEvent, CombatSide } from "@/game/engine/combat";
+import type { FighterId } from "@/game/engine/types";
+import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
+import { fighterImage } from "./fighterImages";
 
 const STAGE_WIDTH = 1600;
 const STAGE_HEIGHT = 360;
 const PLAYER_X = 430;
 const OPPONENT_X = 1170;
+const FIGHTER_BASE_Y = 326;
+const FIGHTER_HEIGHT = 258;
 const IMPACT_Y = 220;
+
+const FIGHTER_STATES: FighterSpriteState[] = [
+  "idle",
+  "attack1",
+  "attack2",
+  "attack3",
+  "defend",
+  "dodge",
+  "special",
+  "hit",
+  "stunned",
+  "win",
+];
 
 type PhaserCombatStageProps = {
   lastEvent?: CombatEvent;
+  playerId: FighterId;
+  opponentId: FighterId;
+  playerState: FighterSpriteState;
+  opponentState: FighterSpriteState;
+  onFightersReady?: (ready: boolean) => void;
+};
+
+type FighterPresentation = {
+  player: FighterSpriteState;
+  opponent: FighterSpriteState;
 };
 
 function sideX(side?: CombatSide): number {
@@ -19,14 +47,45 @@ function sideX(side?: CombatSide): number {
   return STAGE_WIDTH / 2;
 }
 
-export function PhaserCombatStage({ lastEvent }: PhaserCombatStageProps) {
+function fighterTextureKey(id: FighterId, state: FighterSpriteState): string {
+  return `brigada-fighter-${id}-${state}`;
+}
+
+function fighterTextureSource(id: FighterId, state: FighterSpriteState): string {
+  return state === "idle" ? fighterImage(id) : fighterActionImage(id, state);
+}
+
+export function PhaserCombatStage({
+  lastEvent,
+  playerId,
+  opponentId,
+  playerState,
+  opponentState,
+  onFightersReady,
+}: PhaserCombatStageProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const latestEventRef = useRef<CombatEvent | undefined>(lastEvent);
   const processedEventIdRef = useRef<number | null>(null);
+  const fighterStateRef = useRef<FighterPresentation>({
+    player: playerState,
+    opponent: opponentState,
+  });
+  const readyCallbackRef = useRef(onFightersReady);
 
   useEffect(() => {
     latestEventRef.current = lastEvent;
   }, [lastEvent]);
+
+  useEffect(() => {
+    fighterStateRef.current = {
+      player: playerState,
+      opponent: opponentState,
+    };
+  }, [playerState, opponentState]);
+
+  useEffect(() => {
+    readyCallbackRef.current = onFightersReady;
+  }, [onFightersReady]);
 
   useEffect(() => {
     let game: import("phaser").Game | null = null;
@@ -38,9 +97,34 @@ export function PhaserCombatStage({ lastEvent }: PhaserCombatStageProps) {
 
       if (cancelled || !parent) return;
 
+      const fighterIds = [playerId, opponentId] as const;
+      const requiredTextureKeys = fighterIds.flatMap((id) =>
+        FIGHTER_STATES.map((state) => fighterTextureKey(id, state)),
+      );
+
       class CombatBackdropScene extends Phaser.Scene {
+        private playerSprite?: import("phaser").GameObjects.Image;
+        private opponentSprite?: import("phaser").GameObjects.Image;
+        private fightersReady = false;
+
         constructor() {
           super("brigada-combat-backdrop");
+        }
+
+        preload() {
+          for (const id of fighterIds) {
+            for (const state of FIGHTER_STATES) {
+              this.load.image(
+                fighterTextureKey(id, state),
+                fighterTextureSource(id, state),
+              );
+            }
+          }
+
+          this.load.on("loaderror", (file: { key?: string }) => {
+            if (!file.key?.startsWith("brigada-fighter-")) return;
+            parent.dataset.fighterLoadError = file.key;
+          });
         }
 
         create() {
@@ -88,9 +172,44 @@ export function PhaserCombatStage({ lastEvent }: PhaserCombatStageProps) {
           light.fillTriangle(280, 0, 520, 0, 690, 300);
           light.fillStyle(0xff3f4f, 0.025);
           light.fillTriangle(1080, 0, 1320, 0, 910, 300);
+
+          this.fightersReady = requiredTextureKeys.every((key) =>
+            this.textures.exists(key),
+          );
+
+          if (this.fightersReady) {
+            this.playerSprite = this.add
+              .image(
+                PLAYER_X,
+                FIGHTER_BASE_Y,
+                fighterTextureKey(playerId, fighterStateRef.current.player),
+              )
+              .setOrigin(0.5, 1)
+              .setDepth(10);
+
+            this.opponentSprite = this.add
+              .image(
+                OPPONENT_X,
+                FIGHTER_BASE_Y,
+                fighterTextureKey(opponentId, fighterStateRef.current.opponent),
+              )
+              .setOrigin(0.5, 1)
+              .setDepth(10);
+
+            parent.dataset.fightersReady = "true";
+            parent.dataset.playerFighter = playerId;
+            parent.dataset.opponentFighter = opponentId;
+            readyCallbackRef.current?.(true);
+            this.syncFighters();
+          } else {
+            parent.dataset.fightersReady = "false";
+            readyCallbackRef.current?.(false);
+          }
         }
 
         update() {
+          if (this.fightersReady) this.syncFighters();
+
           const event = latestEventRef.current;
           if (!event || processedEventIdRef.current === event.id) return;
 
@@ -133,6 +252,79 @@ export function PhaserCombatStage({ lastEvent }: PhaserCombatStageProps) {
             default:
               break;
           }
+        }
+
+        private syncFighters() {
+          if (!this.playerSprite || !this.opponentSprite) return;
+
+          const playerVisual = fighterStateRef.current.player;
+          const opponentVisual = fighterStateRef.current.opponent;
+
+          this.syncFighterSprite(
+            this.playerSprite,
+            "player",
+            playerId,
+            playerVisual,
+          );
+          this.syncFighterSprite(
+            this.opponentSprite,
+            "opponent",
+            opponentId,
+            opponentVisual,
+          );
+
+          parent.dataset.playerState = playerVisual;
+          parent.dataset.opponentState = opponentVisual;
+          parent.dataset.playerTexture = fighterTextureKey(playerId, playerVisual);
+          parent.dataset.opponentTexture = fighterTextureKey(opponentId, opponentVisual);
+        }
+
+        private syncFighterSprite(
+          sprite: import("phaser").GameObjects.Image,
+          side: CombatSide,
+          id: FighterId,
+          state: FighterSpriteState,
+        ) {
+          const textureKey = fighterTextureKey(id, state);
+          if (sprite.texture.key !== textureKey && this.textures.exists(textureKey)) {
+            sprite.setTexture(textureKey);
+          }
+
+          const direction = side === "player" ? 1 : -1;
+          let x = sideX(side);
+          let y = FIGHTER_BASE_Y;
+          let alpha = 1;
+          let rotation = 0;
+          let targetHeight = FIGHTER_HEIGHT;
+
+          if (state.startsWith("attack")) x += 18 * direction;
+          if (state === "defend") x -= 10 * direction;
+          if (state === "dodge") {
+            x -= 36 * direction;
+            alpha = 0.74;
+            targetHeight *= 0.96;
+          }
+          if (state === "hit") {
+            x -= 14 * direction;
+            alpha = 0.84;
+          }
+          if (state === "stunned") {
+            rotation = Math.sin(this.time.now / 34) * 0.025;
+          }
+          if (state === "special") {
+            targetHeight *= 1.05;
+            y -= 4;
+          }
+
+          const textureHeight = Math.max(1, sprite.height);
+          const scale = targetHeight / textureHeight;
+
+          sprite
+            .setPosition(x, y)
+            .setScale(scale)
+            .setFlipX(side === "opponent")
+            .setAlpha(alpha)
+            .setRotation(rotation);
         }
 
         private spawnImpactBurst(
@@ -282,16 +474,21 @@ export function PhaserCombatStage({ lastEvent }: PhaserCombatStageProps) {
 
     return () => {
       cancelled = true;
+      readyCallbackRef.current?.(false);
       game?.destroy(true);
     };
-  }, []);
+  }, [opponentId, playerId]);
 
   return (
     <div
       ref={hostRef}
       className="phaser-combat-stage"
       data-testid="phaser-combat-stage"
-      data-presentation="impact-effects-v1"
+      data-presentation="fighter-rendering-v1"
+      data-player-fighter={playerId}
+      data-opponent-fighter={opponentId}
+      data-player-state={playerState}
+      data-opponent-state={opponentState}
       aria-hidden="true"
     />
   );
