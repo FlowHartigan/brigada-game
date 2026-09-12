@@ -33,7 +33,7 @@ const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
   petoux: { frameHeight: 74, visibleHeight: 74, bottomPadding: 0 },
   nexmos: { frameHeight: 128, visibleHeight: 73, bottomPadding: 4 },
   kavaleur: { frameHeight: 150, visibleHeight: 145, bottomPadding: 0 },
-  korsair: { frameHeight: 75, visibleHeight: 75, bottomPadding: 0 },
+  korsair: { frameHeight: 128, visibleHeight: 124, bottomPadding: 2 },
 };
 
 export const FIGHTER_COMBAT_SCALE = 1.3;
