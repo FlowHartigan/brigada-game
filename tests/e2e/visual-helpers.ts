@@ -174,6 +174,34 @@ export async function expectPhaserCombatReady(
   await expect(canvas).toHaveCount(1);
   await expect(canvas).toBeVisible();
 
+  if (await stage.getAttribute("data-background-layer") === "css-arena") {
+    const alphaStats = await canvas.evaluate((node) => {
+      const combatCanvas = node as HTMLCanvasElement;
+      const context = combatCanvas.getContext("2d", { willReadFrequently: true });
+      if (!context) return null;
+
+      const pixels = context.getImageData(0, 0, combatCanvas.width, combatCanvas.height).data;
+      let visible = 0;
+      for (let index = 3; index < pixels.length; index += 4) {
+        if (pixels[index] >= 8) visible += 1;
+      }
+
+      return {
+        width: combatCanvas.width,
+        height: combatCanvas.height,
+        visibleRatio: visible / Math.max(1, combatCanvas.width * combatCanvas.height),
+        cornerAlpha: context.getImageData(8, 8, 1, 1).data[3],
+      };
+    });
+
+    expect(alphaStats).not.toBeNull();
+    expect(alphaStats!.width).toBeGreaterThan(200);
+    expect(alphaStats!.height).toBeGreaterThan(100);
+    expect(alphaStats!.visibleRatio).toBeGreaterThan(0.005);
+    expect(alphaStats!.cornerAlpha).toBe(0);
+    return;
+  }
+
   const stats = await renderedScreenshotStats(page, canvas);
   expect(stats).not.toBeNull();
   expect(stats!.width).toBeGreaterThan(200);
