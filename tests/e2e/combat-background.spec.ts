@@ -12,7 +12,7 @@ async function openFight(page: Page) {
 
   await page.goto("/");
   await page.getByRole("button", { name: "FIGHT", exact: true }).click();
-  await page.getByRole("button", { name: "HARTZ — CONTRE-TEMPS", exact: true }).click();
+  await page.getByRole("button", { name: "HARTZ — HIGH VOLTAGE", exact: true }).click();
   await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
   await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();
   await expectPhaserCombatReady(page, "hartz", "korsair");
