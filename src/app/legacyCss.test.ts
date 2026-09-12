@@ -1,0 +1,23 @@
+import { existsSync, readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+function appFile(name: string): URL {
+  return new URL(`./${name}`, import.meta.url);
+}
+
+describe("legacy fighter CSS cleanup", () => {
+  it("keeps VS portrait layout independent from the retired background atlas", () => {
+    const css = readFileSync(appFile("vs-portrait-layout.css"), "utf8");
+
+    expect(css).not.toContain("brigada-fighters-atlas-v1");
+    expect(css).not.toMatch(/background-(?:image|position|size)/);
+    expect(existsSync(appFile("vs-atlas.css"))).toBe(false);
+  });
+
+  it("imports the layout-only VS stylesheet", () => {
+    const layout = readFileSync(appFile("layout.tsx"), "utf8");
+
+    expect(layout).toContain('import "./vs-portrait-layout.css";');
+    expect(layout).not.toContain('import "./vs-atlas.css";');
+  });
+});
