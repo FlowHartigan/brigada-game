@@ -11,9 +11,9 @@ import {
 
 const actionStates = ["attack1", "attack2", "attack3"] as const;
 
-async function setDeterministicRandom(page: Page, value: number) {
+async function setDeterministicCombatRandom(page: Page, value: number) {
   await page.evaluate((nextValue: number) => {
-    Math.random = () => nextValue;
+    window.__BRIGADA_COMBAT_RNG__ = () => nextValue;
   }, value);
 }
 
@@ -37,8 +37,10 @@ test("every fighter uses real combat action frames without breaking Select, VS o
 
   // Start deterministic: selection picks a stable opponent and Utility AI
   // chooses its first legal action so its own animation can be observed.
+  // Keep randomness scoped to combat so Phaser can keep using Math.random for
+  // its own internal identifiers.
   await page.addInitScript(() => {
-    Math.random = () => 0;
+    window.__BRIGADA_COMBAT_RNG__ = () => 0;
   });
 
   for (const fighter of fighters) {
@@ -81,7 +83,7 @@ test("every fighter uses real combat action frames without breaking Select, VS o
 
     // Make Utility AI choose WAIT while we validate player frames. This avoids
     // unrelated enemy hits racing short-lived presentation states.
-    await setDeterministicRandom(page, 0.999999);
+    await setDeterministicCombatRandom(page, 0.999999);
     await page.waitForTimeout(700);
 
     await holdDefense(page, defend);
@@ -94,17 +96,16 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     await expectAnimatedSource(playerImage, "dodge");
     await saveVisual(page, `anim-${fighter.id}-dodge`);
 
-    // Both state attributes are asserted before doing any expensive pixel
-    // analysis. One real Chromium screenshot then captures attack + hit at the
-    // same instant, preventing one transient frame from expiring while the
-    // other is being analyzed.
+    // Keep the three attacks inside the real 900ms combo window. Full-page
+    // screenshots are intentionally deferred until attack3 because screenshot
+    // encoding can be slow enough on CI to expire a legitimate combo.
     for (const state of actionStates) {
       await expect(attack).toBeEnabled({ timeout: 4_000 });
       await attack.click();
       await expectAnimatedSource(playerImage, state);
       await expectAnimatedSource(opponentImage, "hit");
-      await saveVisual(page, `anim-${fighter.id}-${state}-vs-hit`);
     }
+    await saveVisual(page, `anim-${fighter.id}-attack3-vs-hit`);
 
     await expect(special).toBeEnabled({ timeout: 12_000 });
     await special.click();
