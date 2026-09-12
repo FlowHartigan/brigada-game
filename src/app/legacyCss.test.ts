@@ -5,12 +5,17 @@ function appFile(name: string): URL {
   return new URL(`./${name}`, import.meta.url);
 }
 
+function withoutCssComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
 describe("legacy fighter CSS cleanup", () => {
   it("keeps VS portrait layout independent from the retired background atlas", () => {
     const css = readFileSync(appFile("vs-portrait-layout.css"), "utf8");
+    const declarations = withoutCssComments(css);
 
-    expect(css).not.toContain("brigada-fighters-atlas-v1");
-    expect(css).not.toMatch(/background-(?:image|position|size)/);
+    expect(declarations).not.toContain("brigada-fighters-atlas-v1");
+    expect(declarations).not.toMatch(/background-(?:image|position|size)/);
     expect(existsSync(appFile("vs-atlas.css"))).toBe(false);
   });
 
