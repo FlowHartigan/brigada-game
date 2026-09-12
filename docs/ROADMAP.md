@@ -67,17 +67,18 @@ Goal: make solo combat readable and responsive.
 Goal: the fight feels like a game rather than a UI demo.
 
 - [ ] Replace DOM placeholders with a Phaser 4 scene
-- [ ] La Salle de Retenue arena
-- [ ] Five distinguishable placeholder fighters
-- [ ] Idle presentation
-- [ ] Attack presentation
-- [ ] Block presentation
-- [ ] Dodge presentation
-- [ ] Hit reactions
-- [ ] Guard-break feedback
-- [ ] KO presentation
-- [ ] Special attack presentation
-- [ ] Camera impact / hit-stop feedback
+- [x] La Salle de Retenue arena backdrop in Phaser
+- [ ] Five approved fighters rendered by Phaser
+- [ ] Idle presentation in Phaser
+- [ ] Attack presentation in Phaser
+- [ ] Block presentation in Phaser
+- [ ] Dodge presentation in Phaser
+- [ ] Hit reactions in Phaser
+- [x] Guard-break feedback
+- [x] KO presentation effects
+- [x] Special attack presentation effects
+- [x] Camera impact feedback
+- [ ] Hit-stop / impact-freeze feedback
 
 **Acceptance:** Every engine state has a readable on-screen presentation and Phaser owns no combat truth.
 
@@ -127,7 +128,7 @@ Goal: replace generic placeholders with approved Brigade identity.
 - [ ] Android Chrome check
 - [ ] Performance pass
 - [ ] Asset optimization
-- [ ] Production deployment
+- [x] Production deployment pipeline
 
 ## Quality gate for gameplay changes
 
@@ -138,7 +139,10 @@ Every gameplay PR must pass:
 3. Next.js production build.
 4. Playwright Chromium mobile-landscape flow.
 5. No browser/page errors in the tested flow.
-6. Vercel Preview reaches READY.
+6. A live Vercel preview only when hosting/runtime-specific validation or explicit visual review materially requires it; use a one-off `vercel-preview-*` branch from a CI-green commit.
+7. After merge, the `main` Vercel production deployment must reach `READY` and receive a production smoke-check.
+
+Normal development branches are intentionally not deployed to Vercel. This keeps deployment quota focused on release validation without reducing automated test coverage.
 
 ## Explicitly later
 
