@@ -22,6 +22,7 @@ import type { CombatAction, FighterDefinition, FighterId } from "@/game/engine/t
 
 import { FighterArt } from "./FighterArt";
 import { FighterSprite } from "./FighterSprite";
+import { PhaserCombatStage } from "./PhaserCombatStage";
 import { resolveFighterSpriteState } from "./fighterSpriteState";
 
 type Scene = "home" | "select" | "versus" | "fight" | "result";
@@ -451,9 +452,7 @@ export function GamePrototype() {
       </header>
 
       <div className="arena-shell">
-        <div className="blackboard">0 + 0 = TECHNO</div>
-        <div className="speaker speaker-left" />
-        <div className="speaker speaker-right" />
+        <PhaserCombatStage lastEvent={lastEvent} />
         <div
           className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}
         >
@@ -476,7 +475,6 @@ export function GamePrototype() {
           />
           <span>{opponent.name}</span>
         </div>
-        <div className="arena-floor" />
         <div className="combat-callout" key={lastEvent?.id ?? 0}>
           {lastEvent?.message ?? "FIGHT!"}
         </div>
