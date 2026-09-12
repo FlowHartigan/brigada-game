@@ -1,9 +1,5 @@
 import type { FighterId } from "@/game/engine/types";
-import { hartzActionFrames } from "./animationFrames/hartzActionFrames";
-import { petouxActionFrames } from "./animationFrames/petouxActionFrames";
-import { nexmosActionFrames } from "./animationFrames/nexmosActionFrames";
-import { kavaleurActionFrames } from "./animationFrames/kavaleurActionFrames";
-import { korsairActionFrames } from "./animationFrames/korsairActionFrames";
+import { fighterAssetManifest } from "./fighterAssetManifest";
 
 export type FighterActionVisualState =
   | "attack1"
@@ -18,17 +14,9 @@ export type FighterActionVisualState =
 
 export type FighterSpriteState = "idle" | FighterActionVisualState;
 
-const actionFrames = {
-  hartz: hartzActionFrames,
-  petoux: petouxActionFrames,
-  nexmos: nexmosActionFrames,
-  kavaleur: kavaleurActionFrames,
-  korsair: korsairActionFrames,
-} satisfies Record<FighterId, Record<FighterActionVisualState, string>>;
-
 export function fighterActionImage(
   id: FighterId,
   state: FighterActionVisualState,
 ): string {
-  return actionFrames[id][state];
+  return fighterAssetManifest[id].actions[state];
 }
