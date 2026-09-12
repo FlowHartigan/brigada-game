@@ -99,6 +99,7 @@ export function GamePrototype() {
   const [selectedId, setSelectedId] = useState<FighterId | null>(null);
   const [opponentId, setOpponentId] = useState<FighterId | null>(null);
   const [combatState, setCombatState] = useState<CombatState | null>(null);
+  const [phaserFightersReady, setPhaserFightersReady] = useState(false);
   const playerHistoryRef = useRef<RecentPlayerAction[]>([]);
 
   const selected = useMemo(
@@ -118,6 +119,7 @@ export function GamePrototype() {
     setSelectedId(id);
     setOpponentId(randomOpponent.id);
     setCombatState(null);
+    setPhaserFightersReady(false);
     playerHistoryRef.current = [];
     setScene("versus");
   }
@@ -126,6 +128,7 @@ export function GamePrototype() {
     if (!selectedId || !opponentId) return;
     const now = Date.now();
     playerHistoryRef.current = [];
+    setPhaserFightersReady(false);
     setCombatState(createCombatState(selectedId, opponentId, now));
     setScene("fight");
   }
@@ -134,6 +137,7 @@ export function GamePrototype() {
     setSelectedId(null);
     setOpponentId(null);
     setCombatState(null);
+    setPhaserFightersReady(false);
     playerHistoryRef.current = [];
     setScene("select");
   }
@@ -398,10 +402,11 @@ export function GamePrototype() {
   const specialAvailable = canPerformAction(combatState, "player", "special");
   const defendAvailable =
     canPerformAction(combatState, "player", "defend") || player.isDefending;
+  const playerSpriteState = resolveFighterSpriteState(combatState, "player");
+  const opponentSpriteState = resolveFighterSpriteState(combatState, "opponent");
 
   function fighterVisualState(side: CombatSide): string {
-    if (!combatState) return "";
-    const visualState = resolveFighterSpriteState(combatState, side);
+    const visualState = side === "player" ? playerSpriteState : opponentSpriteState;
 
     return [
       visualState === "defend" ? "is-defending" : "",
@@ -459,14 +464,22 @@ export function GamePrototype() {
         </div>
       </header>
 
-      <div className="arena-shell">
-        <PhaserCombatStage lastEvent={lastEvent} />
+      <div className={`arena-shell${phaserFightersReady ? " has-phaser-fighters" : ""}`}>
+        <PhaserCombatStage
+          lastEvent={lastEvent}
+          playerId={selected.id}
+          opponentId={opponent.id}
+          playerState={playerSpriteState}
+          opponentState={opponentSpriteState}
+          onFightersReady={setPhaserFightersReady}
+        />
         <div
           className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}
+          data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
         >
           <FighterSprite
             id={selected.id}
-            state={resolveFighterSpriteState(combatState, "player")}
+            state={playerSpriteState}
             label={selected.name}
             className="arena-sprite"
           />
@@ -474,10 +487,11 @@ export function GamePrototype() {
         </div>
         <div
           className={`arena-fighter arena-right fighter-${opponent.id} ${fighterVisualState("opponent")}`}
+          data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
         >
           <FighterSprite
             id={opponent.id}
-            state={resolveFighterSpriteState(combatState, "opponent")}
+            state={opponentSpriteState}
             label={opponent.name}
             className="arena-sprite"
           />
