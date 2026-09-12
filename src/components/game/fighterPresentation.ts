@@ -32,7 +32,7 @@ const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
   hartz: { frameHeight: 128, visibleHeight: 75, bottomPadding: 4 },
   petoux: { frameHeight: 74, visibleHeight: 74, bottomPadding: 0 },
   nexmos: { frameHeight: 128, visibleHeight: 73, bottomPadding: 4 },
-  kavaleur: { frameHeight: 128, visibleHeight: 74, bottomPadding: 4 },
+  kavaleur: { frameHeight: 150, visibleHeight: 145, bottomPadding: 0 },
   korsair: { frameHeight: 75, visibleHeight: 75, bottomPadding: 0 },
 };
 
@@ -107,8 +107,8 @@ export const fighterPresentation: Record<
     result: { scale: 1, y: 0 },
   },
   kavaleur: {
-    card: { scale: 1.28, y: 0 },
-    showcase: { scale: 1.22, y: 0 },
+    card: { scale: 0.9, y: 0 },
+    showcase: { scale: 0.92, y: 0 },
     vs: { scale: 1, y: 0 },
     combat: { scale: 1, y: 0 },
     result: { scale: 1, y: 0 },
