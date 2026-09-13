@@ -11,7 +11,6 @@ const outputPath = resolve(
   "backgrounds",
   "brigada-combat-arena.webp",
 );
-const expectedPartCount = 11;
 const expectedWidth = 1672;
 const expectedHeight = 941;
 
@@ -24,20 +23,15 @@ const partFiles = (await readdir(sourceDir))
     return leftIndex - rightIndex;
   });
 
-if (partFiles.length !== expectedPartCount) {
-  throw new Error(
-    `Combat background staging is incomplete: expected ${expectedPartCount} parts, found ${partFiles.length}`,
-  );
+if (partFiles.length === 0) {
+  throw new Error("Combat background staging is empty");
 }
 
-const expectedNames = Array.from({ length: expectedPartCount }, (_, index) =>
-  `part-${String(index).padStart(2, "0")}.b64`,
-);
-
-for (let index = 0; index < expectedNames.length; index += 1) {
-  if (partFiles[index] !== expectedNames[index]) {
+for (let index = 0; index < partFiles.length; index += 1) {
+  const expectedName = `part-${String(index).padStart(2, "0")}.b64`;
+  if (partFiles[index] !== expectedName) {
     throw new Error(
-      `Combat background staging is incomplete: expected ${expectedNames[index]}, found ${partFiles[index] ?? "nothing"}`,
+      `Combat background staging is incomplete: expected ${expectedName}, found ${partFiles[index] ?? "nothing"}`,
     );
   }
 }
@@ -61,51 +55,102 @@ function webpDimensions(buffer) {
     return null;
   }
 
-  const chunkType = buffer.toString("ascii", 12, 16);
+  let offset = 12;
+  while (offset + 8 <= buffer.length) {
+    const chunkType = buffer.toString("ascii", offset, offset + 4);
+    const chunkSize = buffer.readUInt32LE(offset + 4);
+    const dataOffset = offset + 8;
 
-  if (chunkType === "VP8X") {
-    return {
-      width: readUint24LE(buffer, 24) + 1,
-      height: readUint24LE(buffer, 27) + 1,
-    };
-  }
-
-  if (chunkType === "VP8L") {
-    if (buffer[20] !== 0x2f || buffer.length < 25) return null;
-    const b0 = buffer[21];
-    const b1 = buffer[22];
-    const b2 = buffer[23];
-    const b3 = buffer[24];
-    return {
-      width: 1 + b0 + ((b1 & 0x3f) << 8),
-      height: 1 + (b1 >> 6) + (b2 << 2) + ((b3 & 0x0f) << 10),
-    };
-  }
-
-  if (chunkType === "VP8 ") {
-    if (
-      buffer.length < 30 ||
-      buffer[23] !== 0x9d ||
-      buffer[24] !== 0x01 ||
-      buffer[25] !== 0x2a
-    ) {
-      return null;
+    if (chunkType === "VP8X" && chunkSize >= 10 && dataOffset + 10 <= buffer.length) {
+      return {
+        width: readUint24LE(buffer, dataOffset + 4) + 1,
+        height: readUint24LE(buffer, dataOffset + 7) + 1,
+      };
     }
-    return {
-      width: buffer.readUInt16LE(26) & 0x3fff,
-      height: buffer.readUInt16LE(28) & 0x3fff,
-    };
+
+    if (chunkType === "VP8L" && chunkSize >= 5 && dataOffset + 5 <= buffer.length) {
+      if (buffer[dataOffset] !== 0x2f) return null;
+      const b0 = buffer[dataOffset + 1];
+      const b1 = buffer[dataOffset + 2];
+      const b2 = buffer[dataOffset + 3];
+      const b3 = buffer[dataOffset + 4];
+      return {
+        width: 1 + b0 + ((b1 & 0x3f) << 8),
+        height: 1 + (b1 >> 6) + (b2 << 2) + ((b3 & 0x0f) << 10),
+      };
+    }
+
+    if (chunkType === "VP8 " && chunkSize >= 10 && dataOffset + 10 <= buffer.length) {
+      if (
+        buffer[dataOffset + 3] !== 0x9d ||
+        buffer[dataOffset + 4] !== 0x01 ||
+        buffer[dataOffset + 5] !== 0x2a
+      ) {
+        return null;
+      }
+      return {
+        width: buffer.readUInt16LE(dataOffset + 6) & 0x3fff,
+        height: buffer.readUInt16LE(dataOffset + 8) & 0x3fff,
+      };
+    }
+
+    offset = dataOffset + chunkSize + (chunkSize % 2);
   }
 
   return null;
 }
 
-function isExpectedWebp(buffer) {
+function inspectWebp(buffer) {
+  if (
+    buffer.length < 20 ||
+    buffer.toString("ascii", 0, 4) !== "RIFF" ||
+    buffer.toString("ascii", 8, 12) !== "WEBP"
+  ) {
+    return { valid: false, reason: "missing RIFF/WEBP signature" };
+  }
+
+  const declaredLength = buffer.readUInt32LE(4) + 8;
+  if (declaredLength !== buffer.length) {
+    return {
+      valid: false,
+      reason: `truncated RIFF: header declares ${declaredLength} bytes, decoded ${buffer.length}`,
+    };
+  }
+
+  let offset = 12;
+  while (offset < buffer.length) {
+    if (offset + 8 > buffer.length) {
+      return { valid: false, reason: `truncated chunk header at byte ${offset}` };
+    }
+
+    const chunkType = buffer.toString("ascii", offset, offset + 4);
+    const chunkSize = buffer.readUInt32LE(offset + 4);
+    const dataEnd = offset + 8 + chunkSize;
+    const paddedEnd = dataEnd + (chunkSize % 2);
+
+    if (dataEnd > buffer.length || paddedEnd > buffer.length) {
+      return {
+        valid: false,
+        reason: `truncated ${chunkType.trim() || "unknown"} chunk: needs ${paddedEnd} bytes, decoded ${buffer.length}`,
+      };
+    }
+
+    offset = paddedEnd;
+  }
+
   const dimensions = webpDimensions(buffer);
-  return (
-    dimensions?.width === expectedWidth &&
-    dimensions?.height === expectedHeight
-  );
+  if (!dimensions) {
+    return { valid: false, reason: "missing decodable VP8/VP8L/VP8X dimensions" };
+  }
+
+  if (dimensions.width !== expectedWidth || dimensions.height !== expectedHeight) {
+    return {
+      valid: false,
+      reason: `unexpected dimensions ${dimensions.width}x${dimensions.height}`,
+    };
+  }
+
+  return { valid: true, dimensions };
 }
 
 const joinedDecode = Buffer.from(encodedParts.join(""), "base64");
@@ -113,19 +158,19 @@ const independentlyDecoded = Buffer.concat(
   encodedParts.map((part) => Buffer.from(part, "base64")),
 );
 
-const webp = isExpectedWebp(joinedDecode)
+const joinedInspection = inspectWebp(joinedDecode);
+const independentInspection = inspectWebp(independentlyDecoded);
+
+const webp = joinedInspection.valid
   ? joinedDecode
-  : isExpectedWebp(independentlyDecoded)
+  : independentInspection.valid
     ? independentlyDecoded
     : null;
 
 if (!webp) {
-  const joinedDimensions = webpDimensions(joinedDecode);
-  const independentDimensions = webpDimensions(independentlyDecoded);
   throw new Error(
-    `Combat background staging did not decode to the expected ${expectedWidth}x${expectedHeight} WebP ` +
-      `(joined=${joinedDimensions ? `${joinedDimensions.width}x${joinedDimensions.height}` : "invalid"}, ` +
-      `per-part=${independentDimensions ? `${independentDimensions.width}x${independentDimensions.height}` : "invalid"})`,
+    "Combat background staging is not a complete WebP: " +
+      `joined=${joinedInspection.reason}; per-part=${independentInspection.reason}`,
   );
 }
 
