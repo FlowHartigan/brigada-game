@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { expectPhaserCombatReady, saveVisual } from "./visual-helpers";
 
-const ARENA_BACKGROUND = "/backgrounds/brigada-combat-arena.png";
+const ARENA_BACKGROUND = "/backgrounds/brigada-combat-arena.webp";
 const OLD_COMBAT_BACKGROUND = "brigada-pixel-rave-roster-v1.webp";
 
 async function openFight(page: Page) {
@@ -31,9 +31,7 @@ async function expectArenaBackground(page: Page) {
     await image.decode();
     return { width: image.naturalWidth, height: image.naturalHeight };
   }, ARENA_BACKGROUND);
-  expect(decoded.width).toBeGreaterThanOrEqual(180);
-  expect(decoded.height).toBeGreaterThanOrEqual(100);
-  expect(decoded.width / decoded.height).toBeCloseTo(16 / 9, 1);
+  expect(decoded).toEqual({ width: 1672, height: 941 });
 
   const background = await arena.evaluate((element) => {
     const style = getComputedStyle(element);
@@ -50,11 +48,11 @@ async function expectArenaBackground(page: Page) {
   expect(background.image).not.toContain(OLD_COMBAT_BACKGROUND);
   expect(background.position).toContain("50%");
   expect(background.size).toBe("cover");
-  expect(background.rendering).toBe("pixelated");
+  expect(background.rendering).toBe("auto");
   expect(background.text).not.toMatch(/0\s*\+\s*0\s*=\s*TECHNO/i);
 
   // The Phaser canvas must stay transparent away from fighters/effects so the
-  // dedicated CSS arena is the only background layer.
+  // supplied HD arena remains the only combat background layer.
   const cornerAlpha = await stage.locator("canvas").evaluate((canvas) => {
     const context = (canvas as HTMLCanvasElement).getContext("2d");
     if (!context) throw new Error("2D canvas context unavailable");
