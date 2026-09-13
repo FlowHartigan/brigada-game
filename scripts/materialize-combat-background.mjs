@@ -11,6 +11,7 @@ const outputPath = resolve(
   "backgrounds",
   "brigada-combat-arena.png",
 );
+const expectedPartCount = 11;
 
 const partPattern = /^part-(\d+)\.b64$/;
 const partFiles = (await readdir(sourceDir))
@@ -21,18 +22,20 @@ const partFiles = (await readdir(sourceDir))
     return leftIndex - rightIndex;
   });
 
-if (partFiles.length === 0) {
-  throw new Error(`No combat background parts found in ${sourceDir}`);
+if (partFiles.length !== expectedPartCount) {
+  throw new Error(
+    `Combat background staging is incomplete: expected ${expectedPartCount} parts, found ${partFiles.length}`,
+  );
 }
 
-const expectedNames = partFiles.map((_, index) =>
+const expectedNames = Array.from({ length: expectedPartCount }, (_, index) =>
   `part-${String(index).padStart(2, "0")}.b64`,
 );
 
 for (let index = 0; index < expectedNames.length; index += 1) {
   if (partFiles[index] !== expectedNames[index]) {
     throw new Error(
-      `Combat background parts are incomplete: expected ${expectedNames[index]}, found ${partFiles[index] ?? "nothing"}`,
+      `Combat background staging is incomplete: expected ${expectedNames[index]}, found ${partFiles[index] ?? "nothing"}`,
     );
   }
 }
@@ -47,9 +50,18 @@ const encoded = (
 
 const png = Buffer.from(encoded, "base64");
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const pngEndChunk = Buffer.from([
+  0x00, 0x00, 0x00, 0x00,
+  0x49, 0x45, 0x4e, 0x44,
+  0xae, 0x42, 0x60, 0x82,
+]);
 
-if (png.length < 24 || !png.subarray(0, 8).equals(pngSignature)) {
-  throw new Error("Combat background staging data did not decode to a valid PNG");
+if (
+  png.length < 36 ||
+  !png.subarray(0, 8).equals(pngSignature) ||
+  !png.subarray(-12).equals(pngEndChunk)
+) {
+  throw new Error("Combat background staging data did not decode to a complete PNG");
 }
 
 const width = png.readUInt32BE(16);
