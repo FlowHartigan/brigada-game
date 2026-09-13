@@ -9,9 +9,11 @@ const outputPath = resolve(
   projectRoot,
   "public",
   "backgrounds",
-  "brigada-combat-arena.png",
+  "brigada-combat-arena.webp",
 );
 const expectedPartCount = 11;
+const expectedWidth = 1672;
+const expectedHeight = 941;
 
 const partPattern = /^part-(\d+)\.b64$/;
 const partFiles = (await readdir(sourceDir))
@@ -40,40 +42,96 @@ for (let index = 0; index < expectedNames.length; index += 1) {
   }
 }
 
-const encoded = (
-  await Promise.all(
-    partFiles.map((name) => readFile(resolve(sourceDir, name), "utf8")),
-  )
-)
-  .join("")
-  .replace(/\s+/g, "");
+const encodedParts = await Promise.all(
+  partFiles.map(async (name) =>
+    (await readFile(resolve(sourceDir, name), "utf8")).replace(/\s+/g, ""),
+  ),
+);
 
-const png = Buffer.from(encoded, "base64");
-const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-const pngEndChunk = Buffer.from([
-  0x00, 0x00, 0x00, 0x00,
-  0x49, 0x45, 0x4e, 0x44,
-  0xae, 0x42, 0x60, 0x82,
-]);
-
-if (
-  png.length < 36 ||
-  !png.subarray(0, 8).equals(pngSignature) ||
-  !png.subarray(-12).equals(pngEndChunk)
-) {
-  throw new Error("Combat background staging data did not decode to a complete PNG");
+function readUint24LE(buffer, offset) {
+  return buffer[offset] | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16);
 }
 
-const width = png.readUInt32BE(16);
-const height = png.readUInt32BE(20);
+function webpDimensions(buffer) {
+  if (
+    buffer.length < 30 ||
+    buffer.toString("ascii", 0, 4) !== "RIFF" ||
+    buffer.toString("ascii", 8, 12) !== "WEBP"
+  ) {
+    return null;
+  }
 
-if (width <= 0 || height <= 0) {
-  throw new Error(`Combat background PNG has invalid dimensions: ${width}x${height}`);
+  const chunkType = buffer.toString("ascii", 12, 16);
+
+  if (chunkType === "VP8X") {
+    return {
+      width: readUint24LE(buffer, 24) + 1,
+      height: readUint24LE(buffer, 27) + 1,
+    };
+  }
+
+  if (chunkType === "VP8L") {
+    if (buffer[20] !== 0x2f || buffer.length < 25) return null;
+    const b0 = buffer[21];
+    const b1 = buffer[22];
+    const b2 = buffer[23];
+    const b3 = buffer[24];
+    return {
+      width: 1 + b0 + ((b1 & 0x3f) << 8),
+      height: 1 + (b1 >> 6) + (b2 << 2) + ((b3 & 0x0f) << 10),
+    };
+  }
+
+  if (chunkType === "VP8 ") {
+    if (
+      buffer.length < 30 ||
+      buffer[23] !== 0x9d ||
+      buffer[24] !== 0x01 ||
+      buffer[25] !== 0x2a
+    ) {
+      return null;
+    }
+    return {
+      width: buffer.readUInt16LE(26) & 0x3fff,
+      height: buffer.readUInt16LE(28) & 0x3fff,
+    };
+  }
+
+  return null;
+}
+
+function isExpectedWebp(buffer) {
+  const dimensions = webpDimensions(buffer);
+  return (
+    dimensions?.width === expectedWidth &&
+    dimensions?.height === expectedHeight
+  );
+}
+
+const joinedDecode = Buffer.from(encodedParts.join(""), "base64");
+const independentlyDecoded = Buffer.concat(
+  encodedParts.map((part) => Buffer.from(part, "base64")),
+);
+
+const webp = isExpectedWebp(joinedDecode)
+  ? joinedDecode
+  : isExpectedWebp(independentlyDecoded)
+    ? independentlyDecoded
+    : null;
+
+if (!webp) {
+  const joinedDimensions = webpDimensions(joinedDecode);
+  const independentDimensions = webpDimensions(independentlyDecoded);
+  throw new Error(
+    `Combat background staging did not decode to the expected ${expectedWidth}x${expectedHeight} WebP ` +
+      `(joined=${joinedDimensions ? `${joinedDimensions.width}x${joinedDimensions.height}` : "invalid"}, ` +
+      `per-part=${independentDimensions ? `${independentDimensions.width}x${independentDimensions.height}` : "invalid"})`,
+  );
 }
 
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, png);
+await writeFile(outputPath, webp);
 
 console.log(
-  `Materialized combat background: ${width}x${height}, ${png.length} bytes -> ${outputPath}`,
+  `Materialized combat background: ${expectedWidth}x${expectedHeight}, ${webp.length} bytes -> ${outputPath}`,
 );
