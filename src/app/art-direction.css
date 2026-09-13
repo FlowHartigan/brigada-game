@@ -181,8 +181,8 @@
 /* The combat arena background lives below the transparent Phaser canvas.
    The canvas remains responsible only for fighters and combat effects. */
 .arena-shell {
-  background: #09090b url("/backgrounds/brigada-combat-arena.png") center / cover no-repeat !important;
-  image-rendering: pixelated;
+  background: #09090b url("/backgrounds/brigada-combat-arena-final.jpeg") center / cover no-repeat !important;
+  image-rendering: auto;
 }
 
 .arena-shell .blackboard,

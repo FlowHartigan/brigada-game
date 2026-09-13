@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { expectPhaserCombatReady, saveVisual } from "./visual-helpers";
 
-const ARENA_BACKGROUND = "/backgrounds/brigada-combat-arena.png";
+const ARENA_BACKGROUND = "/backgrounds/brigada-combat-arena-final.jpeg";
 const RETIRED_COMBAT_BACKGROUND = "brigada-pixel-rave-roster-v1.webp";
 
 async function openFight(page: Page) {
@@ -26,6 +26,15 @@ async function expectArenaBackground(page: Page) {
   await expect(stage).toHaveAttribute("data-background-layer", "css-arena");
 
   const decoded = await page.evaluate(async (src) => {
+    const response = await fetch(src);
+    if (!response.ok) throw new Error(`Background HTTP ${response.status}`);
+    const bytes = await response.arrayBuffer();
+    if (bytes.byteLength !== 816172) throw new Error(`Unexpected JPEG size: ${bytes.byteLength}`);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const sha = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+    if (sha !== "8e63b7516863956defa3b8ad2b0012b2d44894651d97df626a6c8e8a212d1739") {
+      throw new Error(`Unexpected JPEG SHA-256: ${sha}`);
+    }
     const image = new Image();
     image.src = src;
     await image.decode();
@@ -59,8 +68,8 @@ async function expectArenaBackground(page: Page) {
     };
   }, ARENA_BACKGROUND);
 
-  expect(decoded.width).toBe(192);
-  expect(decoded.height).toBe(108);
+  expect(decoded.width).toBe(1672);
+  expect(decoded.height).toBe(941);
   expect(decoded.brightnessRange).toBeGreaterThan(25);
   expect(decoded.nonBlackRatio).toBeGreaterThan(0.2);
 
@@ -79,7 +88,7 @@ async function expectArenaBackground(page: Page) {
   expect(background.image).not.toContain(RETIRED_COMBAT_BACKGROUND);
   expect(background.position).toContain("50%");
   expect(background.size).toBe("cover");
-  expect(background.rendering).toBe("pixelated");
+  expect(background.rendering).toBe("auto");
   expect(background.text).not.toMatch(/0\s*\+\s*0\s*=\s*TECHNO/i);
 
   // The Phaser canvas must stay transparent away from fighters/effects so the
@@ -104,7 +113,7 @@ async function expectArenaBackground(page: Page) {
 
 for (const viewport of [
   { width: 844, height: 390, screenshot: "visual-combat-background-844.png" },
-  { width: 667, height: 375, screenshot: null },
+  { width: 667, height: 375, screenshot: "visual-combat-background-667.png" },
   { width: 1280, height: 720, screenshot: "visual-combat-background-1280.png" },
 ] as const) {
   test(`Brigada arena background stays behind Phaser fighters at ${viewport.width}x${viewport.height}`, async ({ page }) => {
