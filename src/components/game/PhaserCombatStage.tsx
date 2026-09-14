@@ -6,7 +6,7 @@ import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
-import { fighterCombatPresentation, FIGHTER_COMBAT_SCALE } from "./fighterPresentation";
+import { fighterCombatPresentation, fighterSourceBounds, FIGHTER_COMBAT_SCALE } from "./fighterPresentation";
 
 const STAGE_WIDTH = 1600;
 const STAGE_HEIGHT = 360;
@@ -317,7 +317,9 @@ export function PhaserCombatStage({
 
           const bounds = this.measureVisibleBounds(textureKey);
           const presentation = fighterCombatPresentation[id];
-          const scale = (targetVisibleHeight / bounds.height) * presentation.scale;
+          // HARTZ poses share one anatomical scale, including crouches and raised arms.
+          const referenceHeight = id === "hartz" ? fighterSourceBounds.hartz.visibleHeight : bounds.height;
+          const scale = (targetVisibleHeight / referenceHeight) * presentation.scale;
           x += presentation.offsetX * direction;
           y += bounds.bottomPadding * scale + presentation.offsetY;
 

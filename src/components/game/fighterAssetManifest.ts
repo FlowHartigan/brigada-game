@@ -8,7 +8,8 @@ import { korsairActionFrames } from "./animationFrames/korsairActionFrames";
 type FighterAssetEntry = {
   selection: string;
   idle: string;
-  actions: typeof hartzActionFrames;
+  portrait?: string;
+  actions: Record<keyof typeof hartzActionFrames, string>;
 };
 
 /**
@@ -23,8 +24,9 @@ type FighterAssetEntry = {
  */
 export const fighterAssetManifest = {
   hartz: {
-    selection: "/fighters/hartz.png",
-    idle: "/fighters/hartz.png",
+    selection: "/fighters/hartz-v2/front.png",
+    portrait: "/fighters/hartz-v2/portrait.png",
+    idle: "/fighters/hartz-v2/idle.png",
     actions: hartzActionFrames,
   },
   petoux: {

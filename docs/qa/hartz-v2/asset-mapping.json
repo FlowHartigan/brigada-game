@@ -1,0 +1,267 @@
+{
+  "source_sha256": "140b6d45eed1637b9d4eb41c19fbff4d103bff2103eb09fd055eaedd7f00b987",
+  "canvas": [
+    448,
+    416
+  ],
+  "origin": [
+    0.5,
+    1
+  ],
+  "groundY": 396,
+  "globalScaleAlreadyInGame": 1.3,
+  "frames": {
+    "front": {
+      "file": "front.png",
+      "sourceRect": [
+        85,
+        8,
+        161,
+        359
+      ],
+      "bounds": [
+        143,
+        37,
+        161,
+        359
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "60753e967547de0f19cd010f100bb6ed77be72d69e0b3abc16ca9b383db956a0"
+    },
+    "idle": {
+      "file": "idle.png",
+      "sourceRect": [
+        400,
+        28,
+        212,
+        340
+      ],
+      "bounds": [
+        118,
+        56,
+        212,
+        340
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "77249fa04187aed0cffa3d4e7b20ba9015fb5069e252925c90966908190a9d44"
+    },
+    "attack1": {
+      "file": "attack1.png",
+      "sourceRect": [
+        741,
+        37,
+        303,
+        331
+      ],
+      "bounds": [
+        72,
+        65,
+        303,
+        331
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "3dae8520f6fde54afc0acfa50ad291561cb0b29b7ae8769ece97cd7202daf694"
+    },
+    "attack2": {
+      "file": "attack2.png",
+      "sourceRect": [
+        1115,
+        38,
+        307,
+        329
+      ],
+      "bounds": [
+        70,
+        67,
+        307,
+        329
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "11c21fa73b9da6a571b3bbb2f3bc910ec06baee169e13435b40eb8157364ca53"
+    },
+    "attack3": {
+      "file": "attack3.png",
+      "sourceRect": [
+        26,
+        391,
+        328,
+        309
+      ],
+      "bounds": [
+        60,
+        87,
+        328,
+        309
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "761842d50c7b6d8b5a6bef23dd1fbae10856334647878570c80909246750522e"
+    },
+    "defend": {
+      "file": "defend.png",
+      "sourceRect": [
+        415,
+        390,
+        209,
+        312
+      ],
+      "bounds": [
+        119,
+        84,
+        209,
+        312
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "ad5d5453cc6c0d6e415bb51a58f53509ba2917c131d38565040ed0c7ea1bb371"
+    },
+    "dodge": {
+      "file": "dodge.png",
+      "sourceRect": [
+        744,
+        452,
+        318,
+        250
+      ],
+      "bounds": [
+        65,
+        146,
+        318,
+        250
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "0235ed81964bb24e883e2f63358e976563aee449dc46dd49f1165c4381937550"
+    },
+    "hit": {
+      "file": "hit.png",
+      "sourceRect": [
+        1156,
+        396,
+        256,
+        306
+      ],
+      "bounds": [
+        96,
+        90,
+        256,
+        306
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "1d67fb3f09703c0163b04583f696b7a5cef205bde749dd2b79d46258787a9e53"
+    },
+    "stunned": {
+      "file": "stunned.png",
+      "sourceRect": [
+        68,
+        712,
+        209,
+        356
+      ],
+      "bounds": [
+        119,
+        40,
+        209,
+        356
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "3060dd91b1f8af0c7b9830358cb818181e2851cb6fb381de55996a405dd9cf24"
+    },
+    "special": {
+      "file": "special.png",
+      "sourceRect": [
+        368,
+        761,
+        356,
+        301
+      ],
+      "bounds": [
+        46,
+        95,
+        356,
+        301
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "99e62cd967a7f547d91b98e884e51a0b71dd9781ad9da40af8403d2fb0ab1359"
+    },
+    "win": {
+      "file": "win.png",
+      "sourceRect": [
+        815,
+        710,
+        188,
+        363
+      ],
+      "bounds": [
+        130,
+        33,
+        188,
+        363
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "d135922e16f89f273b5c913d1effd2d2ef9bb194f33b583e1fbb0aefe3309fef"
+    },
+    "portrait": {
+      "file": "portrait.png",
+      "sourceRect": [
+        1094,
+        732,
+        337,
+        342
+      ],
+      "bounds": [
+        55,
+        54,
+        337,
+        342
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "9bce88387cabeb3a6516ca6a329fa6296c3db1128944e972ee72934646dae677"
+    }
+  }
+}

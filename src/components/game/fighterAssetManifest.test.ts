@@ -21,8 +21,8 @@ const actionStates: readonly FighterActionVisualState[] = [
 
 const expectedNeutralSources = {
   hartz: {
-    selection: "/fighters/hartz.png",
-    idle: "/fighters/hartz.png",
+    selection: "/fighters/hartz-v2/front.png",
+    idle: "/fighters/hartz-v2/idle.png",
   },
   petoux: {
     selection: "/fighters/petoux.png",

@@ -10,3 +10,8 @@ export function fighterImage(id: FighterId): string {
 export function fighterArtImage(id: FighterId): string {
   return fighterAssetManifest[id].selection;
 }
+
+export function fighterPortraitImage(id: FighterId): string {
+  const entry = fighterAssetManifest[id];
+  return "portrait" in entry ? entry.portrait : entry.selection;
+}

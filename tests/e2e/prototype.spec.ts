@@ -4,6 +4,7 @@ import {
   expectPhaserCombatReady,
   expectPhaserFighterState,
   fighterSrc,
+  fighterArtSrc,
   holdDefense,
   releaseDefense,
   saveVisual,
@@ -30,7 +31,7 @@ test("mobile landscape player sees real fighter action frames through the full g
   await page.getByRole("button", { name: "HARTZ — HIGH VOLTAGE" }).click();
 
   const showcase = page.locator('.selection-showcase img.fighter-art-image[data-fighter="hartz"]');
-  await expectFighterPixels(page, showcase, fighterSrc("hartz"));
+  await expectFighterPixels(page, showcase, fighterArtSrc("hartz"));
   await saveVisual(page, "flow-selection-hartz");
 
   await page.getByRole("button", { name: "COMBATTRE", exact: true }).click();

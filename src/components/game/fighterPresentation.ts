@@ -25,11 +25,11 @@ type FighterSourceBounds = {
 
 /**
  * These bounds were measured from the alpha channel of the approved idle PNGs.
- * They are only used by the React fallback; Phaser measures its loaded texture
- * at runtime so it also stays correct for action frames.
+ * React uses these for its fallback. HARTZ also uses its idle height in Phaser
+ * to preserve anatomical scale across the approved fixed-pose canvases.
  */
-const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
-  hartz: { frameHeight: 128, visibleHeight: 75, bottomPadding: 4 },
+export const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
+  hartz: { frameHeight: 416, visibleHeight: 340, bottomPadding: 20 },
   petoux: { frameHeight: 74, visibleHeight: 74, bottomPadding: 0 },
   nexmos: { frameHeight: 128, visibleHeight: 73, bottomPadding: 4 },
   kavaleur: { frameHeight: 150, visibleHeight: 145, bottomPadding: 0 },
@@ -86,8 +86,8 @@ export const fighterPresentation: Record<
   Record<FighterArtContext, FighterArtAdjustment>
 > = {
   hartz: {
-    card: { scale: 1.26, y: 0 },
-    showcase: { scale: 1.2, y: 0 },
+    card: { scale: 1, y: 0 },
+    showcase: { scale: 1, y: 0 },
     vs: { scale: 1, y: 0 },
     combat: { scale: 1, y: 0 },
     result: { scale: 1, y: 0 },
