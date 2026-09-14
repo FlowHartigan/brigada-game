@@ -198,6 +198,17 @@
 
 /* KORSAIR's VS uses the standalone PNG, not the retired background atlas.
    Match the specificity of vs-atlas.css so its extra image cannot bleed through. */
+.versus-screen .versus-portrait.fighter-hartz,
 .versus-screen .versus-portrait.fighter-korsair {
   background-image: none !important;
+}
+
+/* HARTZ's wide action canvases must fit by height, not by the narrow anchor width.
+   The image keeps its intrinsic ratio and remains centered on the same anchor. */
+.arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="hartz"] {
+  width: auto !important;
+  aspect-ratio: 448 / 416;
+  left: 50% !important;
+  right: auto !important;
+  translate: -50% 0;
 }

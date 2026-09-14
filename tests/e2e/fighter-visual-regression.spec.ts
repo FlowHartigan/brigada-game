@@ -26,7 +26,9 @@ async function expectAnimatedSource(image: Locator, state: string) {
   const source = await image.getAttribute("src");
   const fighterId = await image.getAttribute("data-fighter");
 
-  if (fighterId === "kavaleur" || fighterId === "korsair") {
+  if (fighterId === "hartz") {
+    expect(source).toBe(`/fighters/hartz-v2/${state}.png`);
+  } else if (fighterId === "kavaleur" || fighterId === "korsair") {
     expect(source).toBe(refreshedActionSrc(fighterId, state));
   } else {
     expect(source).toMatch(/^data:image\/webp;base64,/);

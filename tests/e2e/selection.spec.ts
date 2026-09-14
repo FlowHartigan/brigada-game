@@ -20,7 +20,7 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
 
       for (const candidate of fighters) {
         const cardImage = page.locator(`.fighter-card img.fighter-art-image[data-fighter="${candidate.id}"]`);
-        await expectFighterPixels(page, cardImage, fighterArtSrc(candidate.id));
+        await expectFighterPixels(page, cardImage, candidate.id === "hartz" ? "/fighters/hartz-v2/portrait.png" : fighterArtSrc(candidate.id));
       }
 
       await page.getByRole("button", { name: `${fighter.name} — ${fighter.title}`, exact: true }).click();
