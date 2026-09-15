@@ -1,6 +1,13 @@
 /* VS portrait container layout only.
    Fighter artwork is rendered by the real <FighterSprite> image, never by a
    CSS background atlas. Keep this file free of background-image/position rules. */
+
+/* Reserve identical label tracks on both sides so title/name length can never
+   change the portrait row or the square frame dimensions. */
+.versus-screen .versus-fighter {
+  grid-template-rows: minmax(0, 1fr) 16px clamp(48px, 8dvh, 72px);
+}
+
 .versus-screen .versus-portrait {
   justify-self: center;
   align-self: end;
@@ -13,6 +20,10 @@
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
+  .versus-screen .versus-fighter {
+    grid-template-rows: minmax(0, 1fr) 12px 44px;
+  }
+
   .versus-screen .versus-portrait {
     width: min(100%, 50dvh, 250px);
     min-height: 0;
@@ -20,6 +31,10 @@
 }
 
 @media (orientation: portrait) {
+  .versus-screen .versus-fighter {
+    grid-template-rows: minmax(0, 1fr) 14px clamp(42px, 8dvh, 64px);
+  }
+
   .versus-screen .versus-portrait {
     width: min(100%, 42dvh, 220px);
     min-height: 0;
