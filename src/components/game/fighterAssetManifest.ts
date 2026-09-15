@@ -25,7 +25,7 @@ type FighterAssetEntry = {
 export const fighterAssetManifest = {
   hartz: {
     selection: "/fighters/hartz-v2/front.png",
-    portrait: "/fighters/hartz-v2/portrait.png",
+    portrait: "/fighters/hartz-v2/front.png",
     idle: "/fighters/hartz-v2/idle.png",
     actions: hartzActionFrames,
   },
