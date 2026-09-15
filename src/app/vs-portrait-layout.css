@@ -4,22 +4,24 @@
 .versus-screen .versus-portrait {
   justify-self: center;
   align-self: end;
-  width: min(100%, 340px);
-  aspect-ratio: 1;
+  width: min(100%, 50dvh, 360px);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
   min-height: 0;
   image-rendering: pixelated;
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
   .versus-screen .versus-portrait {
-    width: min(100%, 250px);
-    min-height: auto;
+    width: min(100%, 50dvh, 250px);
+    min-height: 0;
   }
 }
 
 @media (orientation: portrait) {
   .versus-screen .versus-portrait {
-    width: min(100%, 220px);
-    min-height: auto;
+    width: min(100%, 42dvh, 220px);
+    min-height: 0;
   }
 }
