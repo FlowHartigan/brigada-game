@@ -91,14 +91,29 @@
   filter: drop-shadow(0 18px 10px rgba(0, 0, 0, .5));
 }
 
-/* VS images use alpha-height calibration from fighterPresentation.ts. */
+/*
+ * VS uses one global alpha-normalization formula from fighterPresentation.ts.
+ * The source image is sized by height only, so its intrinsic aspect ratio stays
+ * untouched. Transparent canvas may extend outside the square frame, but the
+ * complete opaque silhouette is centered and contained by construction.
+ */
 .versus-screen .versus-sprite {
-  transform: translateY(var(--fighter-art-y, 0%)) scale(var(--fighter-art-scale, 1)) !important;
-  transform-origin: 50% 100% !important;
+  inset: auto !important;
+  top: var(--vs-image-top) !important;
+  left: var(--vs-image-left) !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  height: var(--vs-image-height) !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+  transform: none !important;
+  transform-origin: 0 0 !important;
 }
 
 .versus-screen .versus-portrait {
-  scale: var(--fighter-frame-scale, 1);
   transform-origin: 50% 100% !important;
 }
 
@@ -165,8 +180,7 @@
   opacity: 0 !important;
 }
 
-/* VS keeps the existing mirrored composition, which is already visually
-   validated and does not affect absolute arena positioning. */
+/* Mirror the complete normalized square for the right-side VS composition. */
 .versus-screen .versus-fighter.right .versus-portrait {
   transform: scaleX(-1) !important;
 }
@@ -207,9 +221,12 @@
   }
 }
 
-/* KORSAIR's VS uses the standalone PNG, not the retired background atlas.
-   Match the specificity of vs-atlas.css so its extra image cannot bleed through. */
+/* Standalone VS images are authoritative for every fighter. Match the higher
+   specificity legacy rules so no retired background copy can bleed through. */
 .versus-screen .versus-portrait.fighter-hartz,
+.versus-screen .versus-portrait.fighter-petoux,
+.versus-screen .versus-portrait.fighter-nexmos,
+.versus-screen .versus-portrait.fighter-kavaleur,
 .versus-screen .versus-portrait.fighter-korsair {
   background-image: none !important;
 }

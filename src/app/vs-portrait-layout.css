@@ -1,25 +1,46 @@
 /* VS portrait container layout only.
    Fighter artwork is rendered by the real <FighterSprite> image, never by a
    CSS background atlas. Keep this file free of background-image/position rules. */
+
+/* One viewport-derived size token is shared by both sides. It deliberately does
+   not depend on fighter labels, intrinsic PNG dimensions or the available width
+   of either grid item. */
+.versus-screen {
+  --vs-frame-size: min(50dvh, 25dvw, 360px);
+}
+
+/* Reserve identical label tracks on both sides so title/name length can never
+   change the portrait row or the square frame dimensions. */
+.versus-screen .versus-fighter {
+  grid-template-rows: minmax(0, 1fr) 16px clamp(48px, 8dvh, 72px);
+}
+
 .versus-screen .versus-portrait {
   justify-self: center;
   align-self: end;
-  width: min(100%, 340px);
-  aspect-ratio: 1;
-  min-height: 0;
+  box-sizing: border-box;
+  width: var(--vs-frame-size) !important;
+  height: var(--vs-frame-size) !important;
+  min-width: var(--vs-frame-size) !important;
+  max-width: var(--vs-frame-size) !important;
+  min-height: var(--vs-frame-size) !important;
+  max-height: var(--vs-frame-size) !important;
+  aspect-ratio: 1 / 1;
   image-rendering: pixelated;
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
-  .versus-screen .versus-portrait {
-    width: min(100%, 250px);
-    min-height: auto;
+  .versus-screen .versus-fighter {
+    grid-template-rows: minmax(0, 1fr) 12px 44px;
   }
 }
 
 @media (orientation: portrait) {
-  .versus-screen .versus-portrait {
-    width: min(100%, 220px);
-    min-height: auto;
+  .versus-screen {
+    --vs-frame-size: min(42dvh, 42dvw, 220px);
+  }
+
+  .versus-screen .versus-fighter {
+    grid-template-rows: minmax(0, 1fr) 14px clamp(42px, 8dvh, 64px);
   }
 }
