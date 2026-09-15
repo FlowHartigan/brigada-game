@@ -6,6 +6,8 @@ export type FighterArtContext = "card" | "showcase" | "vs" | "combat" | "result"
 type FighterArtAdjustment = {
   scale: number;
   y: number;
+  /** Optional uniform frame enlargement used only by the VS composition. */
+  frameScale?: number;
 };
 
 export type FighterCombatPresentation = {
@@ -88,7 +90,9 @@ export const fighterPresentation: Record<
   hartz: {
     card: { scale: 1, y: 6 },
     showcase: { scale: 1, y: 0 },
-    vs: { scale: 1, y: 0 },
+    // HARTZ's 448px-wide canvas makes its 340px alpha silhouette render at
+    // roughly 78% of KORSAIR's height in the shared square VS frame.
+    vs: { scale: 1.276, y: 8.5, frameScale: 1.32 },
     combat: { scale: 1, y: 0 },
     result: { scale: 1, y: 0 },
   },
@@ -131,5 +135,6 @@ export function fighterPresentationStyle(
   return {
     "--fighter-art-scale": adjustment.scale,
     "--fighter-art-y": `${adjustment.y}%`,
+    "--fighter-frame-scale": adjustment.frameScale ?? 1,
   } as CSSProperties;
 }
