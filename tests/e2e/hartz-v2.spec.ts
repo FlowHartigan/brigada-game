@@ -12,7 +12,7 @@ async function open(page:Page,player:string,opponent:string){
  await page.getByRole('button',{name:`${f.name} — ${f.title}`,exact:true}).click();
  if(player==='hartz'){
   await expect(page.locator('.selection-showcase img')).toHaveAttribute('src','/fighters/hartz-v2/front.png');
-  await expect(page.locator('.fighter-card img[data-fighter="hartz"]')).toHaveAttribute('src','/fighters/hartz-v2/portrait.png');
+  await expect(page.locator('.fighter-card img[data-fighter="hartz"]')).toHaveAttribute('src','/fighters/hartz-v2/front.png');
  }
  await page.getByRole('button',{name:'COMBATTRE',exact:true}).click();
  await expect(page.locator('.versus-screen img[data-fighter="hartz"]')).toHaveAttribute('src','/fighters/hartz-v2/idle.png');

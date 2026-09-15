@@ -86,7 +86,7 @@ export const fighterPresentation: Record<
   Record<FighterArtContext, FighterArtAdjustment>
 > = {
   hartz: {
-    card: { scale: 1, y: 0 },
+    card: { scale: 1, y: 6 },
     showcase: { scale: 1, y: 0 },
     vs: { scale: 1, y: 0 },
     combat: { scale: 1, y: 0 },
