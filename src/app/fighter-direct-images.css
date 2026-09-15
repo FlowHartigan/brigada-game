@@ -221,9 +221,12 @@
   }
 }
 
-/* KORSAIR's VS uses the standalone PNG, not the retired background atlas.
-   Match the specificity of vs-atlas.css so its extra image cannot bleed through. */
+/* Standalone VS images are authoritative for every fighter. Match the higher
+   specificity legacy rules so no retired background copy can bleed through. */
 .versus-screen .versus-portrait.fighter-hartz,
+.versus-screen .versus-portrait.fighter-petoux,
+.versus-screen .versus-portrait.fighter-nexmos,
+.versus-screen .versus-portrait.fighter-kavaleur,
 .versus-screen .versus-portrait.fighter-korsair {
   background-image: none !important;
 }
