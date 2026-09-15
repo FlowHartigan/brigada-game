@@ -5,6 +5,7 @@ import { expectFighterPixels, fighterSrc, saveVisual } from "./visual-helpers";
 const landscapeViewports = [
   { width: 844, height: 390 },
   { width: 667, height: 375 },
+  { width: 1280, height: 720 },
 ];
 
 for (const viewport of landscapeViewports) {

@@ -25,6 +25,7 @@ import { FighterArt } from "./FighterArt";
 import { FighterSprite } from "./FighterSprite";
 import { PhaserCombatStage } from "./PhaserCombatStage";
 import { resolveFighterSpriteState } from "./fighterSpriteState";
+import { fighterPresentationStyle } from "./fighterPresentation";
 
 type Scene = "home" | "select" | "versus" | "fight" | "result";
 
@@ -316,7 +317,10 @@ export function GamePrototype() {
     return (
       <section className="versus-screen screen-panel">
         <div className="versus-fighter left">
-          <div className={`versus-portrait fighter-${selected.id}`}>
+          <div
+            className={`versus-portrait fighter-${selected.id}`}
+            style={fighterPresentationStyle(selected.id, "vs")}
+          >
             <FighterSprite
               id={selected.id}
               label={selected.name}
@@ -334,7 +338,10 @@ export function GamePrototype() {
           </button>
         </div>
         <div className="versus-fighter right">
-          <div className={`versus-portrait fighter-${opponent.id}`}>
+          <div
+            className={`versus-portrait fighter-${opponent.id}`}
+            style={fighterPresentationStyle(opponent.id, "vs")}
+          >
             <FighterSprite
               id={opponent.id}
               label={opponent.name}
