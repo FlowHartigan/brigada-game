@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
-import { expectFighterPixels, fighterArtSrc, saveVisual } from "./visual-helpers";
+import { expectFighterPixels, fighterArtSrc, fighterCardSrc, saveVisual } from "./visual-helpers";
 
 for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }, { width: 390, height: 844 }, { width: 1280, height: 720 }]) {
   test(`all five standalone fighters are visibly rendered at ${viewport.width}x${viewport.height}`, async ({ page }) => {
@@ -20,7 +20,7 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 667, height: 375 }
 
       for (const candidate of fighters) {
         const cardImage = page.locator(`.fighter-card img.fighter-art-image[data-fighter="${candidate.id}"]`);
-        await expectFighterPixels(page, cardImage, fighterArtSrc(candidate.id));
+        await expectFighterPixels(page, cardImage, fighterCardSrc(candidate.id));
       }
 
       await page.getByRole("button", { name: `${fighter.name} — ${fighter.title}`, exact: true }).click();
