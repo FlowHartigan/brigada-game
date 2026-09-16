@@ -36,11 +36,9 @@ async function openFight(page: Page, playerId: string, opponentId: string) {
 async function expectNormalizedPresentation(page: Page) {
   const stage = page.getByTestId("phaser-combat-stage");
   await expect.poll(async () => {
-    const [playerHeight, opponentHeight, playerGround, opponentGround] = await Promise.all([
+    const [playerHeight, opponentHeight] = await Promise.all([
       stage.getAttribute("data-player-visible-height"),
       stage.getAttribute("data-opponent-visible-height"),
-      stage.getAttribute("data-player-ground-y"),
-      stage.getAttribute("data-opponent-ground-y"),
     ]);
     return Math.abs(Number(playerHeight) - Number(opponentHeight));
   }, { timeout: 5_000 }).toBeLessThanOrEqual(2);
@@ -57,7 +55,11 @@ async function expectNormalizedPresentation(page: Page) {
     await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-ground-y`)))
       .toBeCloseTo(326, 1);
   }
+
   // Measure the real DOM fallback's decoded alpha bounds through its CSS matrix.
+  // The fallback can be width- or height-constrained depending on the source
+  // aspect ratio, so compare the actual rendered opaque heights rather than a
+  // hard-coded ratio against the element box.
   const fallback = await page.locator(".arena-fighter img").evaluateAll(async (nodes) => {
     return Promise.all(nodes.map(async (node) => {
       const img = node as HTMLImageElement;
@@ -78,13 +80,19 @@ async function expectNormalizedPresentation(page: Page) {
       const matrix = new DOMMatrix(style.transform);
       const fittedScale = Math.min(img.clientWidth / canvas.width, img.clientHeight / canvas.height);
       const height = (bottom - top + 1) * fittedScale * Math.abs(matrix.a);
-      return { ratio: height / img.clientHeight, uniform: Math.abs(matrix.a) - Math.abs(matrix.d) };
+      return { height, uniform: Math.abs(matrix.a) - Math.abs(matrix.d) };
     }));
   });
+
+  expect(fallback).toHaveLength(2);
   for (const fighter of fallback) {
-    expect(fighter.ratio).toBeCloseTo(0.72 * 1.3, 2);
+    expect(fighter.height).toBeGreaterThan(100);
     expect(fighter.uniform).toBeCloseTo(0, 5);
   }
+  const fallbackHeights = fallback.map((fighter) => fighter.height);
+  const fallbackRatio = Math.max(...fallbackHeights) / Math.min(...fallbackHeights);
+  expect(fallbackRatio).toBeLessThanOrEqual(1.02);
+
   const canvas = await stage.locator("canvas").boundingBox();
   expect(canvas).not.toBeNull();
   expect(canvas!.y).toBeGreaterThanOrEqual(0);
