@@ -39,8 +39,16 @@ describe("fighter animation assets", () => {
         fighterActionImage(fighter.id, state),
       );
 
-      if (fighter.id === "hartz") {
-        expect(frames).toEqual(actionStates.map(state => `/fighters/hartz-v2/${state}.png`));
+      if (fighter.id === "hartz" || fighter.id === "petoux") {
+        expect(frames).toEqual(
+          actionStates.map((state) => `/fighters/${fighter.id}-v2/${state}.png`),
+        );
+        for (const frame of frames) {
+          expect(frame).toMatch(
+            new RegExp(`^/fighters/${fighter.id}-v2/.+\\.png$`),
+          );
+        }
+        expect(new Set(frames).size).toBe(actionStates.length);
         continue;
       }
 

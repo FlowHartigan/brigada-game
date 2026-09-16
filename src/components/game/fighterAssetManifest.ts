@@ -30,8 +30,9 @@ export const fighterAssetManifest = {
     actions: hartzActionFrames,
   },
   petoux: {
-    selection: "/fighters/petoux.png",
-    idle: "/fighters/petoux.png",
+    selection: "/fighters/petoux-v2/front.png",
+    portrait: "/fighters/petoux-v2/portrait.png",
+    idle: "/fighters/petoux-v2/idle.png",
     actions: petouxActionFrames,
   },
   nexmos: {
