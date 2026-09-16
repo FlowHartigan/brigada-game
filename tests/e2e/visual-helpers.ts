@@ -1,12 +1,15 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-const refreshedFighterIds = new Set(["hartz", "kavaleur", "korsair"]);
+const refreshedFighterIds = new Set(["hartz", "petoux", "kavaleur", "korsair"]);
 
 export const fighterSrc = (id: string) =>
   refreshedFighterIds.has(id) ? `/fighters/${id}-v2/idle.png` : `/fighters/${id}.png`;
 
 export const fighterArtSrc = (id: string) =>
   refreshedFighterIds.has(id) ? `/fighters/${id}-v2/front.png` : fighterSrc(id);
+
+export const fighterCardSrc = (id: string) =>
+  id === "petoux" ? "/fighters/petoux-v2/idle.png" : fighterArtSrc(id);
 
 const refreshedActionFile: Record<string, string> = {
   attack1: "attack.png",
@@ -141,8 +144,8 @@ export async function expectAnimatedFighterPixels(
   const source = await image.getAttribute("src");
   const fighterId = await image.getAttribute("data-fighter");
 
-  if (fighterId === "hartz") {
-    expect(source).toBe(`/fighters/hartz-v2/${state}.png`);
+  if (fighterId === "hartz" || fighterId === "petoux") {
+    expect(source).toBe(`/fighters/${fighterId}-v2/${state}.png`);
   } else if (fighterId === "kavaleur" || fighterId === "korsair") {
     expect(source).toBe(refreshedActionSrc(fighterId, state));
   } else {
