@@ -231,9 +231,11 @@
   background-image: none !important;
 }
 
-/* HARTZ's wide action canvases must fit by height, not by the narrow anchor width.
-   The image keeps its intrinsic ratio and remains centered on the same anchor. */
-.arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="hartz"] {
+/* HARTZ and PETOUX use wide 448x416 canvases. Fit them by height rather than
+   the narrow combat anchor width so their opaque-height normalization remains
+   identical to the Phaser renderer while preserving intrinsic aspect ratio. */
+.arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="hartz"],
+.arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="petoux"] {
   width: auto !important;
   aspect-ratio: 448 / 416;
   left: 50% !important;
