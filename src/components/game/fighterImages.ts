@@ -15,3 +15,10 @@ export function fighterPortraitImage(id: FighterId): string {
   const entry = fighterAssetManifest[id];
   return "portrait" in entry ? entry.portrait : entry.selection;
 }
+
+/** Artwork used only by the small fighter cards in the character-select roster. */
+export function fighterCardImage(id: FighterId): string {
+  // PETOUX reads better in the compact card with his side/3-quarter guard pose.
+  if (id === "petoux") return fighterAssetManifest.petoux.idle;
+  return fighterPortraitImage(id);
+}
