@@ -5,7 +5,7 @@ import {
   type FighterActionVisualState,
 } from "./fighterAnimationAssets";
 import { fighterAssetManifest } from "./fighterAssetManifest";
-import { fighterArtImage, fighterImage } from "./fighterImages";
+import { fighterArtImage, fighterImage, fighterPortraitImage } from "./fighterImages";
 
 const actionStates: readonly FighterActionVisualState[] = [
   "attack1",
@@ -25,8 +25,8 @@ const expectedNeutralSources = {
     idle: "/fighters/hartz-v2/idle.png",
   },
   petoux: {
-    selection: "/fighters/petoux.png",
-    idle: "/fighters/petoux.png",
+    selection: "/fighters/petoux-v2/front.png",
+    idle: "/fighters/petoux-v2/idle.png",
   },
   nexmos: {
     selection: "/fighters/nexmos.png",
@@ -51,6 +51,12 @@ describe("fighter asset manifest", () => {
       expect(fighterArtImage(fighter.id)).toBe(expected.selection);
       expect(fighterImage(fighter.id)).toBe(expected.idle);
     }
+  });
+
+  it("routes PETOUX selection, idle and portrait through the v2 pack", () => {
+    expect(fighterArtImage("petoux")).toBe("/fighters/petoux-v2/front.png");
+    expect(fighterImage("petoux")).toBe("/fighters/petoux-v2/idle.png");
+    expect(fighterPortraitImage("petoux")).toBe("/fighters/petoux-v2/portrait.png");
   });
 
   it("provides every combat action through the same manifest", () => {
