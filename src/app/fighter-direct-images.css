@@ -231,11 +231,12 @@
   background-image: none !important;
 }
 
-/* HARTZ and PETOUX use wide 448x416 canvases. Fit them by height rather than
-   the narrow combat anchor width so their opaque-height normalization remains
-   identical to the Phaser renderer while preserving intrinsic aspect ratio. */
+/* HARTZ, PETOUX and NEXMOS use wide 448x416 canvases. Fit them by height rather
+   than the narrow combat anchor width so their opaque-height normalization
+   remains identical to the Phaser renderer while preserving aspect ratio. */
 .arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="hartz"],
-.arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="petoux"] {
+.arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="petoux"],
+.arena-shell .arena-fighter > .fighter-sprite-direct[data-fighter="nexmos"] {
   width: auto !important;
   aspect-ratio: 448 / 416;
   left: 50% !important;

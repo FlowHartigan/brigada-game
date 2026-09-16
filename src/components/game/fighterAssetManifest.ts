@@ -9,6 +9,7 @@ type FighterAssetEntry = {
   selection: string;
   idle: string;
   portrait?: string;
+  card?: string;
   actions: Record<keyof typeof hartzActionFrames, string>;
 };
 
@@ -17,6 +18,8 @@ type FighterAssetEntry = {
  *
  * `selection` is the neutral artwork used by character-select screens.
  * `idle` is the runtime neutral artwork used by VS/combat/result.
+ * `portrait` is the dedicated close-up when a screen explicitly needs one.
+ * `card` optionally overrides the compact character-select roster image.
  * `actions` contains the complete combat-state artwork set.
  *
  * Keep presentation/sizing out of this manifest: those values intentionally
@@ -32,12 +35,15 @@ export const fighterAssetManifest = {
   petoux: {
     selection: "/fighters/petoux-v2/front.png",
     portrait: "/fighters/petoux-v2/portrait.png",
+    card: "/fighters/petoux-v2/idle.png",
     idle: "/fighters/petoux-v2/idle.png",
     actions: petouxActionFrames,
   },
   nexmos: {
-    selection: "/fighters/nexmos.png",
-    idle: "/fighters/nexmos.png",
+    selection: "/fighters/nexmos-v2/front.png",
+    portrait: "/fighters/nexmos-v2/portrait.png",
+    card: "/fighters/nexmos-v2/idle.png",
+    idle: "/fighters/nexmos-v2/idle.png",
     actions: nexmosActionFrames,
   },
   kavaleur: {
