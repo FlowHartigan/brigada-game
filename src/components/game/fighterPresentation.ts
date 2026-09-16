@@ -59,7 +59,7 @@ type FighterPresentationEntry = {
 export const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
   hartz: { frameHeight: 416, visibleHeight: 340, bottomPadding: 20 },
   petoux: { frameHeight: 416, visibleHeight: 340, bottomPadding: 20 },
-  nexmos: { frameHeight: 128, visibleHeight: 73, bottomPadding: 4 },
+  nexmos: { frameHeight: 416, visibleHeight: 340, bottomPadding: 20 },
   kavaleur: { frameHeight: 150, visibleHeight: 145, bottomPadding: 0 },
   korsair: { frameHeight: 128, visibleHeight: 124, bottomPadding: 2 },
 };
@@ -152,16 +152,16 @@ export const fighterPresentation: Record<FighterId, FighterPresentationEntry> = 
     result: { scale: 1, y: 0 },
   },
   nexmos: {
-    card: { scale: 1.34, y: 0 },
-    showcase: { scale: 1.28, y: 0 },
+    card: { scale: 1, y: 6 },
+    showcase: { scale: 1, y: 0 },
     vs: {
       visibleBounds: {
-        sourceWidth: 128,
-        sourceHeight: 128,
-        x: 45,
-        y: 51,
-        width: 53,
-        height: 73,
+        sourceWidth: 448,
+        sourceHeight: 416,
+        x: 117,
+        y: 56,
+        width: 213,
+        height: 340,
       },
       scale: 1,
       offsetX: 0,

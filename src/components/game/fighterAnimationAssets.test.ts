@@ -39,7 +39,11 @@ describe("fighter animation assets", () => {
         fighterActionImage(fighter.id, state),
       );
 
-      if (fighter.id === "hartz" || fighter.id === "petoux") {
+      if (
+        fighter.id === "hartz" ||
+        fighter.id === "petoux" ||
+        fighter.id === "nexmos"
+      ) {
         expect(frames).toEqual(
           actionStates.map((state) => `/fighters/${fighter.id}-v2/${state}.png`),
         );
@@ -63,11 +67,7 @@ describe("fighter animation assets", () => {
         continue;
       }
 
-      for (const frame of frames) {
-        expect(frame).toMatch(/^data:image\/webp;base64,/);
-        expect(frame.length).toBeGreaterThan(300);
-      }
-      expect(new Set(frames).size).toBe(actionStates.length);
+      expect.unreachable(`Unhandled fighter ${fighter.id}`);
     }
   });
 });

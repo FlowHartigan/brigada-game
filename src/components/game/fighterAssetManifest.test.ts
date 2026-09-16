@@ -5,7 +5,12 @@ import {
   type FighterActionVisualState,
 } from "./fighterAnimationAssets";
 import { fighterAssetManifest } from "./fighterAssetManifest";
-import { fighterArtImage, fighterImage, fighterPortraitImage } from "./fighterImages";
+import {
+  fighterArtImage,
+  fighterCardImage,
+  fighterImage,
+  fighterPortraitImage,
+} from "./fighterImages";
 
 const actionStates: readonly FighterActionVisualState[] = [
   "attack1",
@@ -29,8 +34,8 @@ const expectedNeutralSources = {
     idle: "/fighters/petoux-v2/idle.png",
   },
   nexmos: {
-    selection: "/fighters/nexmos.png",
-    idle: "/fighters/nexmos.png",
+    selection: "/fighters/nexmos-v2/front.png",
+    idle: "/fighters/nexmos-v2/idle.png",
   },
   kavaleur: {
     selection: "/fighters/kavaleur-v2/front.png",
@@ -53,10 +58,18 @@ describe("fighter asset manifest", () => {
     }
   });
 
-  it("routes PETOUX selection, idle and portrait through the v2 pack", () => {
+  it("routes PETOUX compact card through the side-profile v2 sprite", () => {
     expect(fighterArtImage("petoux")).toBe("/fighters/petoux-v2/front.png");
     expect(fighterImage("petoux")).toBe("/fighters/petoux-v2/idle.png");
     expect(fighterPortraitImage("petoux")).toBe("/fighters/petoux-v2/portrait.png");
+    expect(fighterCardImage("petoux")).toBe("/fighters/petoux-v2/idle.png");
+  });
+
+  it("routes NEXMOS selection, card, portrait and idle through the v2 pack", () => {
+    expect(fighterArtImage("nexmos")).toBe("/fighters/nexmos-v2/front.png");
+    expect(fighterCardImage("nexmos")).toBe("/fighters/nexmos-v2/idle.png");
+    expect(fighterPortraitImage("nexmos")).toBe("/fighters/nexmos-v2/portrait.png");
+    expect(fighterImage("nexmos")).toBe("/fighters/nexmos-v2/idle.png");
   });
 
   it("provides every combat action through the same manifest", () => {
