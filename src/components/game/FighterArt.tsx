@@ -1,5 +1,5 @@
 import type { FighterId } from "@/game/engine/types";
-import { fighterArtImage, fighterPortraitImage } from "./fighterImages";
+import { fighterArtImage } from "./fighterImages";
 import { fighterPresentationStyle } from "./fighterPresentation";
 
 /** Character-select artwork rendered from a standalone transparent PNG. */
@@ -15,7 +15,7 @@ export function FighterArt({ id, portrait = false }: { id: FighterId; portrait?:
     >
       <img
         className="fighter-art-image"
-        src={portrait ? fighterPortraitImage(id) : fighterArtImage(id)}
+        src={fighterArtImage(id)}
         alt=""
         draggable={false}
         loading="eager"
