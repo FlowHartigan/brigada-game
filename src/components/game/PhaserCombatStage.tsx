@@ -37,6 +37,8 @@ type PhaserCombatStageProps = {
   opponentState: FighterSpriteState;
   playerX: number;
   opponentX: number;
+  playerY: number;
+  opponentY: number;
   onFightersReady?: (ready: boolean) => void;
 };
 
@@ -72,6 +74,8 @@ export function PhaserCombatStage({
   opponentState,
   playerX,
   opponentX,
+  playerY,
+  opponentY,
   onFightersReady,
 }: PhaserCombatStageProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -82,7 +86,10 @@ export function PhaserCombatStage({
     opponent: opponentState,
   });
   const readyCallbackRef = useRef(onFightersReady);
-  const fighterPositionRef = useRef({ player: playerX, opponent: opponentX });
+  const fighterPositionRef = useRef({
+    player: { x: playerX, y: playerY },
+    opponent: { x: opponentX, y: opponentY },
+  });
 
   useEffect(() => {
     latestEventRef.current = lastEvent;
@@ -100,8 +107,11 @@ export function PhaserCombatStage({
   }, [onFightersReady]);
 
   useEffect(() => {
-    fighterPositionRef.current = { player: playerX, opponent: opponentX };
-  }, [playerX, opponentX]);
+    fighterPositionRef.current = {
+      player: { x: playerX, y: playerY },
+      opponent: { x: opponentX, y: opponentY },
+    };
+  }, [playerX, opponentX, playerY, opponentY]);
 
   useEffect(() => {
     let game: import("phaser").Game | null = null;
@@ -194,14 +204,14 @@ export function PhaserCombatStage({
 
           const targetX =
             event.target === "player"
-              ? fighterPositionRef.current.player * STAGE_WIDTH
+              ? fighterPositionRef.current.player.x * STAGE_WIDTH
               : event.target === "opponent"
-                ? fighterPositionRef.current.opponent * STAGE_WIDTH
+                ? fighterPositionRef.current.opponent.x * STAGE_WIDTH
                 : STAGE_WIDTH / 2;
           const actorX =
             event.actor === "player"
-              ? fighterPositionRef.current.player * STAGE_WIDTH
-              : fighterPositionRef.current.opponent * STAGE_WIDTH;
+              ? fighterPositionRef.current.player.x * STAGE_WIDTH
+              : fighterPositionRef.current.opponent.x * STAGE_WIDTH;
 
           switch (event.type) {
             case "hit":
@@ -307,8 +317,8 @@ export function PhaserCombatStage({
           }
 
           const direction = side === "player" ? 1 : -1;
-          let x = fighterPositionRef.current[side] * STAGE_WIDTH;
-          let y = FIGHTER_BASE_Y;
+          let x = fighterPositionRef.current[side].x * STAGE_WIDTH;
+          let y = FIGHTER_BASE_Y - fighterPositionRef.current[side].y * STAGE_HEIGHT;
           let alpha = 1;
           let rotation = 0;
           let targetVisibleHeight = FIGHTER_VISIBLE_HEIGHT;
@@ -544,6 +554,8 @@ export function PhaserCombatStage({
       data-opponent-state={opponentState}
       data-player-x={playerX.toFixed(4)}
       data-opponent-x={opponentX.toFixed(4)}
+      data-player-y={playerY.toFixed(4)}
+      data-opponent-y={opponentY.toFixed(4)}
       aria-hidden="true"
     />
   );
