@@ -7,6 +7,7 @@ import {
   fighterArtSrc,
   fighterSrc,
   holdDefense,
+  movePlayerIntoRange,
   refreshedActionSrc,
   releaseDefense,
   saveVisual,
@@ -83,9 +84,9 @@ test("every fighter uses real combat action frames without breaking Select, VS o
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const special = page.getByRole("button", { name: /SPÉCIAL/ });
 
-    // Temporarily make Utility AI choose its first legal action so its own
-    // Phaser attack animation is observed, then put it back in WAIT before
-    // validating player-controlled transient frames.
+    // V2 requires physical range before an attack can connect. Move into
+    // combat distance first, then make Utility AI choose its first legal action.
+    await movePlayerIntoRange(page);
     await setDeterministicCombatRandom(page, 0);
     await expect.poll(
       async () => stage.getAttribute("data-opponent-state"),
