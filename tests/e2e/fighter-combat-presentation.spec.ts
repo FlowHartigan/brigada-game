@@ -49,9 +49,12 @@ async function expectNormalizedPresentation(page: Page) {
     ]);
     return Math.abs(Number(playerGround) - Number(opponentGround));
   }, { timeout: 5_000 }).toBeLessThanOrEqual(1);
+  const targetVisibleHeight = Number(
+    await stage.getAttribute("data-target-fighter-visible-height"),
+  );
   for (const side of ["player", "opponent"]) {
     await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-visible-height`)))
-      .toBeCloseTo(200.2, 1);
+      .toBeCloseTo(targetVisibleHeight, 1);
     await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-ground-y`)))
       .toBeCloseTo(326, 1);
   }
