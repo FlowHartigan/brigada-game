@@ -7,14 +7,21 @@ import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
-import { fighterCombatPresentation, fighterSourceBounds, FIGHTER_COMBAT_SCALE } from "./fighterPresentation";
+import {
+  COMBAT_FIGHTER_SCALE_MULTIPLIER,
+  fighterCombatPresentation,
+  fighterSourceBounds,
+  FIGHTER_COMBAT_SCALE,
+} from "./fighterPresentation";
 
 const STAGE_WIDTH = 1600;
 const STAGE_HEIGHT = 360;
 const PLAYER_X = 430;
 const OPPONENT_X = 1170;
 const FIGHTER_BASE_Y = 326;
-const FIGHTER_VISIBLE_HEIGHT = 154 * FIGHTER_COMBAT_SCALE;
+const BASE_FIGHTER_VISIBLE_HEIGHT = 154 * FIGHTER_COMBAT_SCALE;
+const FIGHTER_VISIBLE_HEIGHT =
+  BASE_FIGHTER_VISIBLE_HEIGHT * COMBAT_FIGHTER_SCALE_MULTIPLIER;
 const IMPACT_Y = 220;
 
 const FIGHTER_STATES: FighterSpriteState[] = [
@@ -563,6 +570,9 @@ export function PhaserCombatStage({
       data-opponent-y={opponentY.toFixed(4)}
       data-player-facing={String(playerFacing)}
       data-opponent-facing={String(opponentFacing)}
+      data-combat-scale-multiplier={String(COMBAT_FIGHTER_SCALE_MULTIPLIER)}
+      data-base-fighter-visible-height={BASE_FIGHTER_VISIBLE_HEIGHT.toFixed(4)}
+      data-target-fighter-visible-height={FIGHTER_VISIBLE_HEIGHT.toFixed(4)}
       aria-hidden="true"
     />
   );
