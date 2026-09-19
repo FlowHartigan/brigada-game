@@ -65,6 +65,8 @@ export const fighterSourceBounds: Record<FighterId, FighterSourceBounds> = {
 };
 
 export const FIGHTER_COMBAT_SCALE = 1.3;
+/** Presentation-only V2 enlargement relative to the current combat size. */
+export const COMBAT_FIGHTER_SCALE_MULTIPLIER = 1.3;
 const FALLBACK_VISIBLE_HEIGHT_RATIO = 0.72;
 
 /**
@@ -93,7 +95,7 @@ export function fighterCombatFallbackStyle(id: FighterId): CSSProperties {
   const bounds = fighterSourceBounds[id];
   const scale =
     ((FALLBACK_VISIBLE_HEIGHT_RATIO * bounds.frameHeight) / bounds.visibleHeight) *
-    presentation.scale * FIGHTER_COMBAT_SCALE;
+    presentation.scale * FIGHTER_COMBAT_SCALE * COMBAT_FIGHTER_SCALE_MULTIPLIER;
   const groundOffset = (bounds.bottomPadding / bounds.frameHeight) * scale * 100;
 
   return {
