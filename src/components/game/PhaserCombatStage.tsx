@@ -35,6 +35,8 @@ type PhaserCombatStageProps = {
   opponentId: FighterId;
   playerState: FighterSpriteState;
   opponentState: FighterSpriteState;
+  playerX: number;
+  opponentX: number;
   onFightersReady?: (ready: boolean) => void;
 };
 
@@ -68,6 +70,8 @@ export function PhaserCombatStage({
   opponentId,
   playerState,
   opponentState,
+  playerX,
+  opponentX,
   onFightersReady,
 }: PhaserCombatStageProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -78,6 +82,7 @@ export function PhaserCombatStage({
     opponent: opponentState,
   });
   const readyCallbackRef = useRef(onFightersReady);
+  const fighterPositionRef = useRef({ player: playerX, opponent: opponentX });
 
   useEffect(() => {
     latestEventRef.current = lastEvent;
@@ -93,6 +98,10 @@ export function PhaserCombatStage({
   useEffect(() => {
     readyCallbackRef.current = onFightersReady;
   }, [onFightersReady]);
+
+  useEffect(() => {
+    fighterPositionRef.current = { player: playerX, opponent: opponentX };
+  }, [playerX, opponentX]);
 
   useEffect(() => {
     let game: import("phaser").Game | null = null;
@@ -183,8 +192,16 @@ export function PhaserCombatStage({
           processedEventIdRef.current = event.id;
           this.startImpactFreeze(event);
 
-          const targetX = sideX(event.target);
-          const actorX = sideX(event.actor);
+          const targetX =
+            event.target === "player"
+              ? fighterPositionRef.current.player * STAGE_WIDTH
+              : event.target === "opponent"
+                ? fighterPositionRef.current.opponent * STAGE_WIDTH
+                : STAGE_WIDTH / 2;
+          const actorX =
+            event.actor === "player"
+              ? fighterPositionRef.current.player * STAGE_WIDTH
+              : fighterPositionRef.current.opponent * STAGE_WIDTH;
 
           switch (event.type) {
             case "hit":
@@ -290,7 +307,7 @@ export function PhaserCombatStage({
           }
 
           const direction = side === "player" ? 1 : -1;
-          let x = sideX(side);
+          let x = fighterPositionRef.current[side] * STAGE_WIDTH;
           let y = FIGHTER_BASE_Y;
           let alpha = 1;
           let rotation = 0;
@@ -525,6 +542,8 @@ export function PhaserCombatStage({
       data-opponent-fighter={opponentId}
       data-player-state={playerState}
       data-opponent-state={opponentState}
+      data-player-x={playerX.toFixed(4)}
+      data-opponent-x={opponentX.toFixed(4)}
       aria-hidden="true"
     />
   );
