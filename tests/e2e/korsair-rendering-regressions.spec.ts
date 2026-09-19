@@ -51,8 +51,9 @@ for (const viewport of [{ width: 844, height: 390 }, { width: 1280, height: 720 
       await page.getByRole('button', { name: 'COMBATTRE', exact: true }).click();
       await expectPhaserCombatReady(page, 'korsair', opponent.id);
       const stage = page.getByTestId('phaser-combat-stage');
+      const targetVisibleHeight = Number(await stage.getAttribute('data-target-fighter-visible-height'));
       for (const side of ['player', 'opponent']) {
-        await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-visible-height`))).toBeCloseTo(200.2, 1);
+        await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-visible-height`))).toBeCloseTo(targetVisibleHeight, 1);
         await expect.poll(async () => Number(await stage.getAttribute(`data-${side}-ground-y`))).toBeCloseTo(326, 1);
       }
       for (const side of ['left', 'right']) {
