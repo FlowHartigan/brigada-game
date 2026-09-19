@@ -32,6 +32,16 @@ describe("opponent utility AI", () => {
     expect(chooseOpponentAction(state, [], 2_000, () => 0.5)).toBe("approach");
   });
 
+  it("does not select ground attacks when the player is vertically out of range", () => {
+    const state = closeRange(createCombatState("hartz", "nexmos", 0));
+    state.player.y = 0.22;
+    state.player.isGrounded = false;
+
+    const scores = scoreOpponentActions(state, [], 2_000);
+    expect(scoreOf(scores, "attack")).toBe(0);
+    expect(scoreOf(scores, "special")).toBe(0);
+  });
+
   it("leans more defensive/evasive after repeated player attacks", () => {
     const state = closeRange(createCombatState("hartz", "nexmos", 0));
     const calm = scoreOpponentActions(state, [], 2_000);
