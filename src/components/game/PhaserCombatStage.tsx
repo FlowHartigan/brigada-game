@@ -333,8 +333,10 @@ export function PhaserCombatStage({
             if (state.startsWith("attack")) x += 18 * direction;
             if (state === "defend") x -= 10 * direction;
             if (state === "dodge") {
+              // Keep the DOM fallback frame at the historical anatomical scale.
+              // The dodge PNG itself carries the crouched silhouette; shrinking
+              // the whole fallback frame here would double-apply that reduction.
               x -= 36 * direction;
-              targetVisibleHeight *= 0.96;
             }
             if (state === "hit") x -= 14 * direction;
             if (state === "special") {
