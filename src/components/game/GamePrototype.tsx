@@ -11,6 +11,7 @@ import {
   getRemainingTimeMs,
   moveCombatant,
   performCombatAction,
+  startJump,
   setDefense,
   type CombatState,
   type CombatSide,
@@ -183,8 +184,26 @@ export function GamePrototype() {
     if (scene !== "fight") return;
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      if (
+        event.key !== "ArrowLeft" &&
+        event.key !== "ArrowRight" &&
+        event.key !== "ArrowUp"
+      ) {
+        return;
+      }
+
       event.preventDefault();
+
+      if (event.key === "ArrowUp") {
+        if (event.repeat) return;
+        const now = Date.now();
+        setCombatState((current) => {
+          if (!current || current.status !== "active") return current;
+          return startJump(current, "player", now).state;
+        });
+        return;
+      }
+
       if (event.key === "ArrowLeft") movementKeysRef.current.left = true;
       if (event.key === "ArrowRight") movementKeysRef.current.right = true;
     }
@@ -527,12 +546,17 @@ export function GamePrototype() {
           opponentState={opponentSpriteState}
           playerX={player.x}
           opponentX={enemy.x}
+          playerY={player.y}
+          opponentY={enemy.y}
           onFightersReady={setPhaserFightersReady}
         />
         <div
           className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}
           data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
-          style={{ "--fighter-x": `${player.x * 100}%` } as React.CSSProperties}
+          style={{
+            "--fighter-x": `${player.x * 100}%`,
+            "--fighter-y": `${player.y}`,
+          } as React.CSSProperties}
         >
           <FighterSprite
             id={selected.id}
@@ -546,7 +570,10 @@ export function GamePrototype() {
         <div
           className={`arena-fighter arena-right fighter-${opponent.id} ${fighterVisualState("opponent")}`}
           data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
-          style={{ "--fighter-x": `${enemy.x * 100}%` } as React.CSSProperties}
+          style={{
+            "--fighter-x": `${enemy.x * 100}%`,
+            "--fighter-y": `${enemy.y}`,
+          } as React.CSSProperties}
         >
           <FighterSprite
             id={opponent.id}
