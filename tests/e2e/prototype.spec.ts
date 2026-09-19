@@ -6,6 +6,7 @@ import {
   fighterSrc,
   fighterArtSrc,
   holdDefense,
+  movePlayerIntoRange,
   releaseDefense,
   saveVisual,
 } from "./visual-helpers";
@@ -82,6 +83,8 @@ test("mobile landscape player sees real fighter action frames through the full g
   await expect(playerImage).toHaveAttribute("data-state", "dodge", { timeout: 1_000 });
   await expectPhaserFighterState(page, "player", "dodge", "hartz");
   await saveVisual(page, "flow-fight-hartz-dodge");
+
+  await movePlayerIntoRange(page);
 
   const enemyHp = page.locator(".opponent-hud .hud-name span");
   const hpBefore = await enemyHp.textContent();
