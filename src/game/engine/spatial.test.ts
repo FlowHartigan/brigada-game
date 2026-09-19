@@ -48,6 +48,21 @@ describe("spatial combat", () => {
     expect(velocityY).toBe(0);
   });
 
+  it("does not accumulate ground drift across repeated jumps", () => {
+    for (let jump = 0; jump < 40; jump += 1) {
+      let y = GROUND_Y;
+      let velocityY = JUMP_VELOCITY;
+      for (let step = 0; step < 100; step += 1) {
+        const next = advanceJump(y, velocityY, 16);
+        y = next.y;
+        velocityY = next.velocityY;
+        if (next.isGrounded) break;
+      }
+      expect(y).toBe(GROUND_Y);
+      expect(velocityY).toBe(0);
+    }
+  });
+
   it("allows horizontal crossing only when fighters no longer overlap vertically", () => {
     const blocked = resolveMovement({
       selfX: 0.4,
