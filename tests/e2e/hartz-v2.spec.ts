@@ -40,8 +40,8 @@ for(const viewport of [{width:844,height:390},{width:667,height:375},{width:1280
  test.setTimeout(120000);await page.setViewportSize(viewport);
  for(const other of fighters.filter(f=>f.id!=='hartz'))for(const reverse of [false,true]){
  await open(page,reverse?other.id:'hartz',reverse?'hartz':other.id);await expectPhaserCombatReady(page);
- const stage=page.getByTestId('phaser-combat-stage');for(const side of ['player','opponent']){
- await expect.poll(async()=>Number(await stage.getAttribute(`data-${side}-visible-height`))).toBeCloseTo(200.2,1);
+ const stage=page.getByTestId('phaser-combat-stage');const targetHeight=Number(await stage.getAttribute('data-target-fighter-visible-height'));for(const side of ['player','opponent']){
+ await expect.poll(async()=>Number(await stage.getAttribute(`data-${side}-visible-height`))).toBeCloseTo(targetHeight,1);
  await expect.poll(async()=>Number(await stage.getAttribute(`data-${side}-ground-y`))).toBeCloseTo(326,1);
  }
  await expect(page.locator('.arena-left')).toHaveAttribute('data-renderer','react-fallback-hidden');
@@ -53,7 +53,8 @@ for(const viewport of [{width:844,height:390},{width:667,height:375},{width:1280
  await page.setViewportSize(viewport);await open(page,'hartz','korsair');await expectPhaserCombatReady(page);
  const stage=page.getByTestId('phaser-combat-stage');await page.getByRole('button',{name:/ESQUIVE/}).click();
  await expect(stage).toHaveAttribute('data-player-state','dodge');
- await expect.poll(async()=>Number(await stage.getAttribute('data-player-visible-height'))).toBeCloseTo(200.2*.96*250/340,1);
+ const targetHeight=Number(await stage.getAttribute('data-target-fighter-visible-height'));
+ await expect.poll(async()=>Number(await stage.getAttribute('data-player-visible-height'))).toBeCloseTo(targetHeight*.96*250/340,1);
  await expect.poll(async()=>Number(await stage.getAttribute('data-player-ground-y'))).toBeCloseTo(326,1);
  await page.screenshot({path:`test-results/visual-hartz-dodge-${viewport.width}.png`,fullPage:true});
  // A failed opponent texture prevents Phaser readiness while leaving every HARTZ source available.
