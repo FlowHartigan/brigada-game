@@ -48,12 +48,16 @@ export function scoreOpponentActions(
 
   const inAttackRange = isWithinAttackRange({
     attackerX: opponent.x,
+    attackerY: opponent.y,
     defenderX: player.x,
+    defenderY: player.y,
     action: "attack",
   });
   const inSpecialRange = isWithinAttackRange({
     attackerX: opponent.x,
+    attackerY: opponent.y,
     defenderX: player.x,
+    defenderY: player.y,
     action: "special",
   });
 
