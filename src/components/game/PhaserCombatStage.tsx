@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { CombatEvent, CombatSide } from "@/game/engine/combat";
+import type { Facing } from "@/game/engine/spatial";
 import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
@@ -39,6 +40,8 @@ type PhaserCombatStageProps = {
   opponentX: number;
   playerY: number;
   opponentY: number;
+  playerFacing: Facing;
+  opponentFacing: Facing;
   onFightersReady?: (ready: boolean) => void;
 };
 
@@ -76,6 +79,8 @@ export function PhaserCombatStage({
   opponentX,
   playerY,
   opponentY,
+  playerFacing,
+  opponentFacing,
   onFightersReady,
 }: PhaserCombatStageProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -87,8 +92,8 @@ export function PhaserCombatStage({
   });
   const readyCallbackRef = useRef(onFightersReady);
   const fighterPositionRef = useRef({
-    player: { x: playerX, y: playerY },
-    opponent: { x: opponentX, y: opponentY },
+    player: { x: playerX, y: playerY, facing: playerFacing },
+    opponent: { x: opponentX, y: opponentY, facing: opponentFacing },
   });
 
   useEffect(() => {
@@ -108,10 +113,10 @@ export function PhaserCombatStage({
 
   useEffect(() => {
     fighterPositionRef.current = {
-      player: { x: playerX, y: playerY },
-      opponent: { x: opponentX, y: opponentY },
+      player: { x: playerX, y: playerY, facing: playerFacing },
+      opponent: { x: opponentX, y: opponentY, facing: opponentFacing },
     };
-  }, [playerX, opponentX, playerY, opponentY]);
+  }, [playerX, opponentX, playerY, opponentY, playerFacing, opponentFacing]);
 
   useEffect(() => {
     let game: import("phaser").Game | null = null;
@@ -316,7 +321,7 @@ export function PhaserCombatStage({
             sprite.setTexture(textureKey);
           }
 
-          const direction = side === "player" ? 1 : -1;
+          const direction = fighterPositionRef.current[side].facing;
           let x = fighterPositionRef.current[side].x * STAGE_WIDTH;
           let y = FIGHTER_BASE_Y - fighterPositionRef.current[side].y * STAGE_HEIGHT;
           let alpha = 1;
@@ -353,7 +358,7 @@ export function PhaserCombatStage({
           sprite
             .setPosition(x, y)
             .setScale(scale)
-            .setFlipX(side === "opponent")
+            .setFlipX(direction === -1)
             .setAlpha(alpha)
             .setRotation(rotation);
 
@@ -556,6 +561,8 @@ export function PhaserCombatStage({
       data-opponent-x={opponentX.toFixed(4)}
       data-player-y={playerY.toFixed(4)}
       data-opponent-y={opponentY.toFixed(4)}
+      data-player-facing={String(playerFacing)}
+      data-opponent-facing={String(opponentFacing)}
       aria-hidden="true"
     />
   );

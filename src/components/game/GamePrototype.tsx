@@ -548,6 +548,8 @@ export function GamePrototype() {
           opponentX={enemy.x}
           playerY={player.y}
           opponentY={enemy.y}
+          playerFacing={player.facing}
+          opponentFacing={enemy.facing}
           onFightersReady={setPhaserFightersReady}
         />
         <div
@@ -556,6 +558,7 @@ export function GamePrototype() {
           style={{
             "--fighter-x": `${player.x * 100}%`,
             "--fighter-y-percent": `${player.y * 100}%`,
+            "--fighter-facing-scale": player.facing,
           } as React.CSSProperties}
         >
           <FighterSprite
@@ -573,6 +576,7 @@ export function GamePrototype() {
           style={{
             "--fighter-x": `${enemy.x * 100}%`,
             "--fighter-y-percent": `${enemy.y * 100}%`,
+            "--fighter-facing-scale": enemy.facing,
           } as React.CSSProperties}
         >
           <FighterSprite

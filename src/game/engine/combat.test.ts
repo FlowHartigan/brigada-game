@@ -96,6 +96,37 @@ describe("combat state machine", () => {
     expect(grounded.opponent.hp).toBeLessThan(groundedHp);
   });
 
+  it("recalculates both facings when fighters cross", () => {
+    let state = createCombatState("hartz", "korsair", 0);
+    state.player.x = 0.4;
+    state.opponent.x = 0.6;
+    state = advanceCombat(state, 16).state;
+
+    expect(state.player.facing).toBe(1);
+    expect(state.opponent.facing).toBe(-1);
+
+    state.player.x = 0.7;
+    state.opponent.x = 0.5;
+    state = advanceCombat(state, 32).state;
+
+    expect(state.player.facing).toBe(-1);
+    expect(state.opponent.facing).toBe(1);
+  });
+
+  it("keeps dynamic facing correct while fighters are airborne", () => {
+    let state = createCombatState("hartz", "korsair", 0);
+    state.player.y = 0.24;
+    state.player.isGrounded = false;
+    state.player.velocityY = 0;
+    state.player.x = 0.74;
+    state.opponent.x = 0.62;
+
+    state = advanceCombat(state, 16).state;
+
+    expect(state.player.facing).toBe(-1);
+    expect(state.opponent.facing).toBe(1);
+  });
+
   it("plays an attack but deals no damage outside hitbox range", () => {
     const state = createCombatState("hartz", "korsair", 0);
     const hpBefore = state.opponent.hp;
