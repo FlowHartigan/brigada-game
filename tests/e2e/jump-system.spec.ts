@@ -1,4 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  BASE_GRAVITY,
+  BASE_JUMP_VELOCITY,
+} from "../../src/game/engine/spatial";
 
 async function enterFight(page: Page) {
   await page.addInitScript(() => {
@@ -14,7 +18,11 @@ async function enterFight(page: Page) {
   return page.getByTestId("phaser-combat-stage");
 }
 
+const previousJumpPeak =
+  (BASE_JUMP_VELOCITY * BASE_JUMP_VELOCITY) / (2 * BASE_GRAVITY);
+
 for (const viewport of [
+  { width: 844, height: 390 },
   { width: 1280, height: 720 },
   { width: 1920, height: 1080 },
 ]) {
@@ -57,11 +65,13 @@ for (const viewport of [
     await expect(special).toBeDisabled();
 
     const peakSamples: number[] = [];
-    for (let index = 0; index < 14; index += 1) {
+    for (let index = 0; index < 26; index += 1) {
       peakSamples.push(await playerY());
-      await page.waitForTimeout(40);
+      await page.waitForTimeout(20);
     }
-    expect(Math.max(...peakSamples)).toBeGreaterThan(0.18);
+    const measuredPeak = Math.max(...peakSamples);
+    expect(measuredPeak / previousJumpPeak).toBeGreaterThanOrEqual(1.27);
+    expect(measuredPeak / previousJumpPeak).toBeLessThanOrEqual(1.33);
 
     await expect.poll(playerY, {
       timeout: 2_500,

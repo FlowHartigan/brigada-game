@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   ARENA_MAX_X,
   ARENA_MIN_X,
+  BASE_GRAVITY,
+  BASE_JUMP_VELOCITY,
+  GRAVITY,
   GROUND_Y,
+  JUMP_HEIGHT_MULTIPLIER,
   JUMP_VELOCITY,
   MIN_FIGHTER_DISTANCE,
   advanceJump,
@@ -23,6 +27,45 @@ describe("spatial combat", () => {
   it("prevents fighters from crossing", () => {
     const next = resolveMovement({ selfX: 0.4, otherX: 0.5, direction: 1, elapsedMs: 1_000 });
     expect(next).toBeCloseTo(0.5 - MIN_FIGHTER_DISTANCE);
+  });
+
+  it("raises the jump apex by 30 percent while preserving theoretical airtime", () => {
+    const previousPeak =
+      (BASE_JUMP_VELOCITY * BASE_JUMP_VELOCITY) / (2 * BASE_GRAVITY);
+    const newPeak = (JUMP_VELOCITY * JUMP_VELOCITY) / (2 * GRAVITY);
+    const previousDuration = (2 * BASE_JUMP_VELOCITY) / BASE_GRAVITY;
+    const newDuration = (2 * JUMP_VELOCITY) / GRAVITY;
+
+    expect(JUMP_HEIGHT_MULTIPLIER).toBe(1.3);
+    expect(newPeak / previousPeak).toBeCloseTo(1.3, 10);
+    expect(newDuration / previousDuration).toBeCloseTo(1, 10);
+  });
+
+  it("reaches the scaled apex in the real integrator without becoming floaty", () => {
+    const previousPeak =
+      (BASE_JUMP_VELOCITY * BASE_JUMP_VELOCITY) / (2 * BASE_GRAVITY);
+    const previousDurationMs = (2 * BASE_JUMP_VELOCITY * 1000) / BASE_GRAVITY;
+
+    let y = GROUND_Y;
+    let velocityY = JUMP_VELOCITY;
+    let peak = y;
+    let elapsedMs = 0;
+
+    for (let step = 0; step < 2_000; step += 1) {
+      const next = advanceJump(y, velocityY, 1);
+      elapsedMs += 1;
+      y = next.y;
+      velocityY = next.velocityY;
+      peak = Math.max(peak, y);
+      if (next.isGrounded) break;
+    }
+
+    expect(peak / previousPeak).toBeGreaterThanOrEqual(1.27);
+    expect(peak / previousPeak).toBeLessThanOrEqual(1.33);
+    expect(elapsedMs / previousDurationMs).toBeGreaterThanOrEqual(0.95);
+    expect(elapsedMs / previousDurationMs).toBeLessThanOrEqual(1.05);
+    expect(y).toBe(GROUND_Y);
+    expect(velocityY).toBe(0);
   });
 
   it("follows a gravity-driven jump arc and lands exactly on ground", () => {

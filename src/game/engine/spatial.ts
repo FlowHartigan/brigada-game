@@ -13,8 +13,11 @@ export const FIGHTER_BODY_HALF_WIDTH = 0.045;
 export const FIGHTER_BODY_HEIGHT = 0.22;
 export const MIN_FIGHTER_DISTANCE = FIGHTER_BODY_HALF_WIDTH * 2;
 export const MOVE_SPEED_PER_SECOND = 0.34;
-export const JUMP_VELOCITY = 1.2;
-export const GRAVITY = 2.85;
+export const BASE_JUMP_VELOCITY = 1.2;
+export const BASE_GRAVITY = 2.85;
+export const JUMP_HEIGHT_MULTIPLIER = 1.3;
+export const JUMP_VELOCITY = BASE_JUMP_VELOCITY * JUMP_HEIGHT_MULTIPLIER;
+export const GRAVITY = BASE_GRAVITY * JUMP_HEIGHT_MULTIPLIER;
 
 export type AttackProfile = {
   width: number;
