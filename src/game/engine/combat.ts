@@ -10,8 +10,11 @@ import {
 } from "@/game/engine/formulas";
 import type { CombatAction, FighterId } from "@/game/engine/types";
 import {
+  GROUND_Y,
+  JUMP_VELOCITY,
   OPPONENT_START_X,
   PLAYER_START_X,
+  advanceJump,
   attackOverlapsTarget,
   attackProfileFor,
   facingToward,
@@ -31,6 +34,8 @@ export type CombatEventType =
   | "block"
   | "miss"
   | "dodge"
+  | "jump"
+  | "land"
   | "defend"
   | "guard-break"
   | "counter-ready"
@@ -70,6 +75,9 @@ export type FighterCombatState = {
   comboStep: 0 | 1 | 2;
   comboExpiresAt: number;
   x: number;
+  y: number;
+  velocityY: number;
+  isGrounded: boolean;
   facing: Facing;
 };
 
@@ -150,6 +158,9 @@ function createRuntime(
     comboStep: 0,
     comboExpiresAt: 0,
     x: side === "player" ? PLAYER_START_X : OPPONENT_START_X,
+    y: GROUND_Y,
+    velocityY: 0,
+    isGrounded: true,
     facing: side === "player" ? 1 : -1,
   };
 }
@@ -450,6 +461,24 @@ export function advanceCombat(state: CombatState, now: number): CombatTransition
   regenerateGuard(next.player, elapsedMs, now);
   regenerateGuard(next.opponent, elapsedMs, now);
 
+  for (const side of ["player", "opponent"] as const) {
+    const runtime = getRuntime(next, side);
+    if (!runtime.isGrounded || runtime.y > GROUND_Y || runtime.velocityY !== 0) {
+      const vertical = advanceJump(runtime.y, runtime.velocityY, elapsedMs);
+      runtime.y = vertical.y;
+      runtime.velocityY = vertical.velocityY;
+      runtime.isGrounded = vertical.isGrounded;
+      if (vertical.landed) {
+        pushEvent(next, events, {
+          at: now,
+          type: "land",
+          actor: side,
+          message: `${getFighter(runtime.fighterId).name} atterrit`,
+        });
+      }
+    }
+  }
+
   resolveCounterFallback(next, "player", now, events);
   resolveCounterFallback(next, "opponent", now, events);
 
@@ -473,6 +502,7 @@ export function canPerformAction(
   if (state.status !== "active") return false;
   const runtime = getRuntime(state, side);
   if (now < runtime.stunnedUntil || now < runtime.recoveryUntil) return false;
+  if (!runtime.isGrounded) return false;
 
   if (action === "dodge") return now >= runtime.dodgeReadyAt;
   if (action === "special") return now >= runtime.specialReadyAt;
@@ -534,6 +564,8 @@ export function moveCombatant(
   actor.x = resolveMovement({
     selfX: actor.x,
     otherX: other.x,
+    selfY: actor.y,
+    otherY: other.y,
     direction,
     elapsedMs,
   });
@@ -541,6 +573,41 @@ export function moveCombatant(
   other.facing = facingToward(other.x, actor.x);
 
   return { state: next, events: advanced.events, accepted: true };
+}
+
+export function startJump(
+  state: CombatState,
+  side: CombatSide,
+  now: number,
+): CombatTransition {
+  const advanced = advanceCombat(state, now);
+  const next = advanced.state;
+  const events = [...advanced.events];
+  const runtime = getRuntime(next, side);
+
+  if (
+    next.status !== "active" ||
+    !runtime.isGrounded ||
+    now < runtime.stunnedUntil ||
+    now < runtime.recoveryUntil
+  ) {
+    return { state: next, events, accepted: false };
+  }
+
+  runtime.isDefending = false;
+  runtime.comboStep = 0;
+  runtime.comboExpiresAt = 0;
+  runtime.y = GROUND_Y;
+  runtime.velocityY = JUMP_VELOCITY;
+  runtime.isGrounded = false;
+  pushEvent(next, events, {
+    at: now,
+    type: "jump",
+    actor: side,
+    message: `${getFighter(runtime.fighterId).name} saute`,
+  });
+
+  return { state: next, events, accepted: true };
 }
 
 function attackIsInRange(
@@ -555,7 +622,9 @@ function attackIsInRange(
   return profile
     ? attackOverlapsTarget({
         attackerX: actor.x,
+        attackerY: actor.y,
         defenderX: target.x,
+        defenderY: target.y,
         facing: actor.facing,
         profile,
       })
