@@ -216,7 +216,11 @@ export function PhaserCombatStage({
         }
 
         update() {
-          if (this.fightersReady) this.syncFighters();
+          if (this.fightersReady) {
+            this.syncFighters();
+          } else {
+            this.syncFallbackAnchors();
+          }
 
           const event = latestEventRef.current;
           if (!event || processedEventIdRef.current === event.id) return;
@@ -295,6 +299,43 @@ export function PhaserCombatStage({
               stageHost.dataset.hitStop = "idle";
             }
           }, duration);
+        }
+
+        private syncFallbackAnchors() {
+          const arena = stageHost.parentElement;
+          const canvas = this.game.canvas;
+          if (!arena || !canvas) return;
+
+          const arenaRect = arena.getBoundingClientRect();
+          const canvasRect = canvas.getBoundingClientRect();
+          if (canvasRect.width <= 0 || arenaRect.height <= 0) return;
+
+          const displayScale = canvasRect.width / STAGE_WIDTH;
+          const canvasLeft = canvasRect.left - arenaRect.left;
+          const canvasTop = canvasRect.top - arenaRect.top;
+
+          for (const side of ["player", "opponent"] as const) {
+            const position = fighterPositionRef.current[side];
+            const anchor = arena.querySelector<HTMLElement>(
+              side === "player" ? ".arena-left" : ".arena-right",
+            );
+            if (!anchor) continue;
+
+            const renderX =
+              canvasLeft + position.x * STAGE_WIDTH * displayScale;
+            const renderGroundY =
+              canvasTop +
+              (
+                FIGHTER_BASE_Y -
+                position.y * GAMEPLAY_VERTICAL_SCALE +
+                RENDER_VERTICAL_PADDING
+              ) *
+                displayScale;
+            const renderBottom = arenaRect.height - renderGroundY;
+
+            anchor.style.setProperty("--fighter-render-left", `${renderX}px`);
+            anchor.style.setProperty("--fighter-render-bottom", `${renderBottom}px`);
+          }
         }
 
         private syncFighters() {
