@@ -417,6 +417,18 @@ function resolveCounterFallback(
     return;
   }
 
+  if (!attackIsInRange(state, side, "special")) {
+    pushEvent(state, events, {
+      at: fallbackAt,
+      type: "miss",
+      actor: side,
+      target: targetSide,
+      action: "special",
+      message: `${getFighter(runtime.fighterId).special.name} · hors portée`,
+    });
+    return;
+  }
+
   applyDamage(state, side, targetSide, 1.1, fallbackAt, () => 0.5, events, {
     special: true,
     fallback: true,
