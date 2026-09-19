@@ -555,7 +555,7 @@ export function GamePrototype() {
           data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
           style={{
             "--fighter-x": `${player.x * 100}%`,
-            "--fighter-y": `${player.y}`,
+            "--fighter-y-percent": `${player.y * 100}%`,
           } as React.CSSProperties}
         >
           <FighterSprite
@@ -572,7 +572,7 @@ export function GamePrototype() {
           data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
           style={{
             "--fighter-x": `${enemy.x * 100}%`,
-            "--fighter-y": `${enemy.y}`,
+            "--fighter-y-percent": `${enemy.y * 100}%`,
           } as React.CSSProperties}
         >
           <FighterSprite
