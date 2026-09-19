@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 async function enterFight(page: import("@playwright/test").Page) {
+  await page.addInitScript(() => {
+    window.__BRIGADA_COMBAT_RNG__ = () => 0.999999;
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "FIGHT" }).click();
   await page.getByRole("button", { name: "HARTZ — HIGH VOLTAGE" }).click();
@@ -42,7 +45,7 @@ for (const viewport of [
 
     await expect(attack).toBeEnabled({ timeout: 3_000 });
     await page.keyboard.down("ArrowRight");
-    await expect.poll(async () => (await opponentX()) - (await playerX()), { timeout: 4_000 }).toBeLessThan(0.2);
+    await expect.poll(async () => (await opponentX()) - (await playerX()), { timeout: 4_000 }).toBeLessThan(0.16);
     await page.keyboard.up("ArrowRight");
 
     const hpNear = await enemyHp.textContent();
