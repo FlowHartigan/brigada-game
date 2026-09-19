@@ -129,9 +129,12 @@
 
 .arena-shell .arena-left,
 .arena-shell .arena-right {
-  left: var(--fighter-x, 50%) !important;
+  left: var(--fighter-render-left, var(--fighter-x, 50%)) !important;
   right: auto !important;
-  bottom: calc(14% + var(--fighter-y-percent, 0%)) !important;
+  bottom: var(
+    --fighter-render-bottom,
+    calc(14% + var(--fighter-y-percent, 0%))
+  ) !important;
   transform: translateX(-50%) !important;
 }
 
@@ -220,4 +223,25 @@
   left: 50% !important;
   right: auto !important;
   translate: -50% 0;
+}
+
+
+/* When Phaser cannot use every fighter texture, keep the DOM fallback on the
+   exact fitted-canvas geometry instead of scaling from the generic arena box.
+   Width/height are supplied by Phaser from the same source image and alpha
+   normalization used by the real combat sprite. */
+.arena-shell .arena-fighter.is-phaser-fallback-aligned > .fighter-sprite-direct {
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: 0 !important;
+  left: 50% !important;
+  width: var(--fighter-render-frame-width) !important;
+  height: var(--fighter-render-frame-height) !important;
+  aspect-ratio: auto !important;
+  object-fit: fill !important;
+  object-position: 50% 50% !important;
+  translate: -50% 0 !important;
+  transform: scaleX(var(--fighter-facing-scale, 1)) !important;
+  transform-origin: 50% 100% !important;
 }

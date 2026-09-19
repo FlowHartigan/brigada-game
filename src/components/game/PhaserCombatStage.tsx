@@ -15,7 +15,16 @@ import {
 } from "./fighterPresentation";
 
 const STAGE_WIDTH = 1600;
-const STAGE_HEIGHT = 360;
+/**
+ * Keep gameplay-to-pixel geometry on the historical 360px stage, but give
+ * Phaser extra transparent render space above/below it. The camera scroll
+ * compensates for Phaser's vertical centering so the arena ground stays at
+ * exactly the same on-screen position.
+ */
+const GAMEPLAY_VERTICAL_SCALE = 360;
+const RENDER_STAGE_HEIGHT = 480;
+const RENDER_VERTICAL_PADDING = (RENDER_STAGE_HEIGHT - GAMEPLAY_VERTICAL_SCALE) / 2;
+const FIGHTER_TOP_SAFE_MARGIN = 6;
 const PLAYER_X = 430;
 const OPPONENT_X = 1170;
 const FIGHTER_BASE_Y = 326;
@@ -170,6 +179,7 @@ export function PhaserCombatStage({
 
         create() {
           stageHost.dataset.hitStop = "idle";
+          this.cameras.main.setScroll(0, -RENDER_VERTICAL_PADDING);
 
           this.fightersReady = requiredTextureKeys.every((key) =>
             this.textures.exists(key),
@@ -206,7 +216,11 @@ export function PhaserCombatStage({
         }
 
         update() {
-          if (this.fightersReady) this.syncFighters();
+          if (this.fightersReady) {
+            this.syncFighters();
+          } else {
+            this.syncFallbackAnchors();
+          }
 
           const event = latestEventRef.current;
           if (!event || processedEventIdRef.current === event.id) return;
@@ -287,6 +301,96 @@ export function PhaserCombatStage({
           }, duration);
         }
 
+        private syncFallbackAnchors() {
+          const arena = stageHost.parentElement;
+          const canvas = this.game.canvas;
+          if (!arena || !canvas) return;
+
+          const arenaRect = arena.getBoundingClientRect();
+          const canvasRect = canvas.getBoundingClientRect();
+          if (canvasRect.width <= 0 || arenaRect.height <= 0) return;
+
+          const displayScale = canvasRect.width / STAGE_WIDTH;
+          const canvasLeft = canvasRect.left - arenaRect.left;
+          const canvasTop = canvasRect.top - arenaRect.top;
+
+          for (const side of ["player", "opponent"] as const) {
+            const id = side === "player" ? playerId : opponentId;
+            const state = fighterStateRef.current[side];
+            const position = fighterPositionRef.current[side];
+            const anchor = arena.querySelector<HTMLElement>(
+              side === "player" ? ".arena-left" : ".arena-right",
+            );
+            if (!anchor) continue;
+
+            const direction = position.facing;
+            let x = position.x * STAGE_WIDTH;
+            let y =
+              FIGHTER_BASE_Y -
+              position.y * GAMEPLAY_VERTICAL_SCALE;
+            let targetVisibleHeight = FIGHTER_VISIBLE_HEIGHT;
+
+            if (state.startsWith("attack")) x += 18 * direction;
+            if (state === "defend") x -= 10 * direction;
+            if (state === "dodge") {
+              // Keep the DOM fallback frame at the historical anatomical scale.
+              // The dodge PNG itself carries the crouched silhouette; shrinking
+              // the whole fallback frame here would double-apply that reduction.
+              x -= 36 * direction;
+            }
+            if (state === "hit") x -= 14 * direction;
+            if (state === "special") {
+              targetVisibleHeight *= 1.05;
+              y -= 4;
+            }
+
+            const requestedTextureKey = fighterTextureKey(id, state);
+            const textureKey = this.textures.exists(requestedTextureKey)
+              ? requestedTextureKey
+              : fighterTextureKey(id, "idle");
+            if (!this.textures.exists(textureKey)) continue;
+
+            const bounds = this.measureVisibleBounds(textureKey);
+            const presentation = fighterCombatPresentation[id];
+            const referenceHeight =
+              id === "hartz"
+                ? fighterSourceBounds.hartz.visibleHeight
+                : bounds.height;
+            const scale =
+              (targetVisibleHeight / referenceHeight) * presentation.scale;
+
+            x += presentation.offsetX * direction;
+            y += bounds.bottomPadding * scale + presentation.offsetY;
+
+            const texture = this.textures.get(textureKey);
+            const source = texture.getSourceImage() as CanvasImageSource & {
+              width?: number;
+              height?: number;
+            };
+            const sourceWidth = Math.max(1, Number(source.width) || 1);
+            const sourceHeight = Math.max(1, Number(source.height) || 1);
+
+            const renderX =
+              canvasLeft + x * displayScale;
+            const renderFrameBottomY =
+              canvasTop +
+              (y + RENDER_VERTICAL_PADDING) * displayScale;
+            const renderBottom = arenaRect.height - renderFrameBottomY;
+
+            anchor.style.setProperty("--fighter-render-left", `${renderX}px`);
+            anchor.style.setProperty("--fighter-render-bottom", `${renderBottom}px`);
+            anchor.style.setProperty(
+              "--fighter-render-frame-width",
+              `${sourceWidth * scale * displayScale}px`,
+            );
+            anchor.style.setProperty(
+              "--fighter-render-frame-height",
+              `${sourceHeight * scale * displayScale}px`,
+            );
+            anchor.classList.add("is-phaser-fallback-aligned");
+          }
+        }
+
         private syncFighters() {
           if (!this.playerSprite || !this.opponentSprite) return;
           if (this.time.now < this.fighterFreezeUntil) return;
@@ -315,6 +419,10 @@ export function PhaserCombatStage({
           stageHost.dataset.opponentVisibleHeight = String(opponentMetrics.visibleHeight);
           stageHost.dataset.playerGroundY = String(playerMetrics.groundY);
           stageHost.dataset.opponentGroundY = String(opponentMetrics.groundY);
+          stageHost.dataset.playerVisibleTop = String(playerMetrics.visibleTop);
+          stageHost.dataset.playerVisibleBottom = String(playerMetrics.visibleBottom);
+          stageHost.dataset.opponentVisibleTop = String(opponentMetrics.visibleTop);
+          stageHost.dataset.opponentVisibleBottom = String(opponentMetrics.visibleBottom);
         }
 
         private syncFighterSprite(
@@ -322,7 +430,12 @@ export function PhaserCombatStage({
           side: CombatSide,
           id: FighterId,
           state: FighterSpriteState,
-        ): { visibleHeight: number; groundY: number } {
+        ): {
+          visibleHeight: number;
+          groundY: number;
+          visibleTop: number;
+          visibleBottom: number;
+        } {
           const textureKey = fighterTextureKey(id, state);
           if (sprite.texture.key !== textureKey && this.textures.exists(textureKey)) {
             sprite.setTexture(textureKey);
@@ -330,7 +443,9 @@ export function PhaserCombatStage({
 
           const direction = fighterPositionRef.current[side].facing;
           let x = fighterPositionRef.current[side].x * STAGE_WIDTH;
-          let y = FIGHTER_BASE_Y - fighterPositionRef.current[side].y * STAGE_HEIGHT;
+          let y =
+            FIGHTER_BASE_Y -
+            fighterPositionRef.current[side].y * GAMEPLAY_VERTICAL_SCALE;
           let alpha = 1;
           let rotation = 0;
           let targetVisibleHeight = FIGHTER_VISIBLE_HEIGHT;
@@ -369,9 +484,19 @@ export function PhaserCombatStage({
             .setAlpha(alpha)
             .setRotation(rotation);
 
+          const visibleHeight = bounds.height * scale;
+          const groundY = y - bounds.bottomPadding * scale;
+          // Phaser world coordinates can now go slightly negative. Camera scroll
+          // maps them into the transparent render padding without changing the
+          // historical gameplay geometry or the on-screen ground line.
+          const visibleTop = groundY - visibleHeight + RENDER_VERTICAL_PADDING;
+          const visibleBottom = groundY + RENDER_VERTICAL_PADDING;
+
           return {
-            visibleHeight: bounds.height * scale,
-            groundY: y - bounds.bottomPadding * scale,
+            visibleHeight,
+            groundY,
+            visibleTop,
+            visibleBottom,
           };
         }
 
@@ -532,7 +657,7 @@ export function PhaserCombatStage({
         type: Phaser.CANVAS,
         parent: stageHost,
         width: STAGE_WIDTH,
-        height: STAGE_HEIGHT,
+        height: RENDER_STAGE_HEIGHT,
         transparent: true,
         pixelArt: true,
         audio: { noAudio: true },
@@ -573,6 +698,10 @@ export function PhaserCombatStage({
       data-combat-scale-multiplier={String(COMBAT_FIGHTER_SCALE_MULTIPLIER)}
       data-base-fighter-visible-height={BASE_FIGHTER_VISIBLE_HEIGHT.toFixed(4)}
       data-target-fighter-visible-height={FIGHTER_VISIBLE_HEIGHT.toFixed(4)}
+      data-stage-height={String(RENDER_STAGE_HEIGHT)}
+      data-gameplay-vertical-scale={String(GAMEPLAY_VERTICAL_SCALE)}
+      data-render-vertical-padding={String(RENDER_VERTICAL_PADDING)}
+      data-fighter-top-safe-margin={String(FIGHTER_TOP_SAFE_MARGIN)}
       aria-hidden="true"
     />
   );
