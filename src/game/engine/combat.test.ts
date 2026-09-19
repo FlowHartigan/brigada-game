@@ -7,6 +7,7 @@ import {
   moveCombatant,
   performCombatAction,
   setDefense,
+  startJump,
 } from "@/game/engine/combat";
 
 const fixedRng = () => 0.5;
@@ -31,6 +32,68 @@ describe("combat state machine", () => {
 
   it("rejects mirror matches", () => {
     expect(() => createCombatState("hartz", "hartz")).toThrow();
+  });
+
+  it("starts one jump, rejects double jump, and lands exactly on ground", () => {
+    let state = createCombatState("hartz", "korsair", 0);
+    const first = startJump(state, "player", 0);
+
+    expect(first.accepted).toBe(true);
+    expect(first.state.player.isGrounded).toBe(false);
+    expect(first.state.player.velocityY).toBeGreaterThan(0);
+    expect(first.events.some((event) => event.type === "jump")).toBe(true);
+
+    const second = startJump(first.state, "player", 100);
+    expect(second.accepted).toBe(false);
+
+    state = second.state;
+    let landed = false;
+    for (let now = 116; now <= 2_000; now += 16) {
+      const transition = advanceCombat(state, now);
+      state = transition.state;
+      if (transition.events.some((event) => event.type === "land")) {
+        landed = true;
+        break;
+      }
+    }
+
+    expect(landed).toBe(true);
+    expect(state.player.isGrounded).toBe(true);
+    expect(state.player.y).toBe(0);
+    expect(state.player.velocityY).toBe(0);
+  });
+
+  it("allows horizontal movement in the air but rejects ground actions", () => {
+    let state = createCombatState("hartz", "korsair", 0);
+    state = startJump(state, "player", 0).state;
+    state = advanceCombat(state, 160).state;
+    const xBefore = state.player.x;
+
+    expect(state.player.y).toBeGreaterThan(0);
+    expect(canPerformAction(state, "player", "attack", 160)).toBe(false);
+    expect(canPerformAction(state, "player", "defend", 160)).toBe(false);
+    expect(canPerformAction(state, "player", "dodge", 160)).toBe(false);
+    expect(canPerformAction(state, "player", "special", 8_000)).toBe(false);
+
+    state = moveCombatant(state, "player", 1, 100, 260).state;
+    expect(state.player.x).toBeGreaterThan(xBefore);
+  });
+
+  it("lets a high jump evade a grounded hitbox without granting invulnerability", () => {
+    let state = atCloseRange(createCombatState("hartz", "korsair", 0));
+    state.opponent.y = 0.22;
+    state.opponent.isGrounded = false;
+    state.opponent.velocityY = 0;
+
+    const airborneHp = state.opponent.hp;
+    const missed = performCombatAction(state, "player", "attack", 100, fixedRng);
+    expect(missed.state.opponent.hp).toBe(airborneHp);
+    expect(missed.events.some((event) => event.type === "miss")).toBe(true);
+
+    let grounded = atCloseRange(createCombatState("hartz", "korsair", 0));
+    const groundedHp = grounded.opponent.hp;
+    grounded = performCombatAction(grounded, "player", "attack", 100, fixedRng).state;
+    expect(grounded.opponent.hp).toBeLessThan(groundedHp);
   });
 
   it("plays an attack but deals no damage outside hitbox range", () => {
