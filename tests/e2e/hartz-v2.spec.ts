@@ -65,7 +65,9 @@ for(const viewport of [{width:844,height:390},{width:667,height:375},{width:1280
  const idleHeight=await image.evaluate(n=>n.getBoundingClientRect().height);
  const defend=page.getByRole('button',{name:/DÉFENSE/});await holdDefense(page,defend);await expect(image).toHaveAttribute('src','/fighters/hartz-v2/defend.png');await releaseDefense(page,defend);
  await page.getByRole('button',{name:/ESQUIVE/}).click();await expect(image).toHaveAttribute('src','/fighters/hartz-v2/dodge.png');
- expect(await image.evaluate(n=>n.getBoundingClientRect().height)).toBeCloseTo(idleHeight,0);
+ // The aligned React fallback now mirrors Phaser's intentional dodge
+ // presentation multiplier instead of keeping the legacy full-frame height.
+ expect(await image.evaluate(n=>n.getBoundingClientRect().height)).toBeCloseTo(idleHeight*.96,0);
  await page.screenshot({path:`test-results/visual-hartz-react-${viewport.width}.png`,fullPage:true});
  });
 }
