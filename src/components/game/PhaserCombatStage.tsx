@@ -315,26 +315,77 @@ export function PhaserCombatStage({
           const canvasTop = canvasRect.top - arenaRect.top;
 
           for (const side of ["player", "opponent"] as const) {
+            const id = side === "player" ? playerId : opponentId;
+            const state = fighterStateRef.current[side];
             const position = fighterPositionRef.current[side];
             const anchor = arena.querySelector<HTMLElement>(
               side === "player" ? ".arena-left" : ".arena-right",
             );
             if (!anchor) continue;
 
+            const direction = position.facing;
+            let x = position.x * STAGE_WIDTH;
+            let y =
+              FIGHTER_BASE_Y -
+              position.y * GAMEPLAY_VERTICAL_SCALE;
+            let targetVisibleHeight = FIGHTER_VISIBLE_HEIGHT;
+
+            if (state.startsWith("attack")) x += 18 * direction;
+            if (state === "defend") x -= 10 * direction;
+            if (state === "dodge") {
+              x -= 36 * direction;
+              targetVisibleHeight *= 0.96;
+            }
+            if (state === "hit") x -= 14 * direction;
+            if (state === "special") {
+              targetVisibleHeight *= 1.05;
+              y -= 4;
+            }
+
+            const requestedTextureKey = fighterTextureKey(id, state);
+            const textureKey = this.textures.exists(requestedTextureKey)
+              ? requestedTextureKey
+              : fighterTextureKey(id, "idle");
+            if (!this.textures.exists(textureKey)) continue;
+
+            const bounds = this.measureVisibleBounds(textureKey);
+            const presentation = fighterCombatPresentation[id];
+            const referenceHeight =
+              id === "hartz"
+                ? fighterSourceBounds.hartz.visibleHeight
+                : bounds.height;
+            const scale =
+              (targetVisibleHeight / referenceHeight) * presentation.scale;
+
+            x += presentation.offsetX * direction;
+            y += bounds.bottomPadding * scale + presentation.offsetY;
+
+            const texture = this.textures.get(textureKey);
+            const source = texture.getSourceImage() as CanvasImageSource & {
+              width?: number;
+              height?: number;
+            };
+            const sourceWidth = Math.max(1, Number(source.width) || 1);
+            const sourceHeight = Math.max(1, Number(source.height) || 1);
+
             const renderX =
-              canvasLeft + position.x * STAGE_WIDTH * displayScale;
-            const renderGroundY =
+              canvasLeft + x * displayScale;
+            const renderFrameBottomY =
               canvasTop +
-              (
-                FIGHTER_BASE_Y -
-                position.y * GAMEPLAY_VERTICAL_SCALE +
-                RENDER_VERTICAL_PADDING
-              ) *
-                displayScale;
-            const renderBottom = arenaRect.height - renderGroundY;
+              (y + RENDER_VERTICAL_PADDING) * displayScale;
+            const renderBottom = arenaRect.height - renderFrameBottomY;
 
             anchor.style.setProperty("--fighter-render-left", `${renderX}px`);
             anchor.style.setProperty("--fighter-render-bottom", `${renderBottom}px`);
+            anchor.style.setProperty(
+              "--fighter-render-frame-width",
+              `${sourceWidth * scale * displayScale}px`,
+            );
+            anchor.style.setProperty(
+              "--fighter-render-frame-height",
+              `${sourceHeight * scale * displayScale}px`,
+            );
+            anchor.classList.add("is-phaser-fallback-aligned");
           }
         }
 
