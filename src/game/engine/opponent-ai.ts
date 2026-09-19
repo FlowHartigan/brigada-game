@@ -1,7 +1,8 @@
 import { canPerformAction, type CombatRng, type CombatState } from "@/game/engine/combat";
 import type { CombatAction } from "@/game/engine/types";
+import { isWithinAttackRange } from "@/game/engine/spatial";
 
-export type OpponentIntent = CombatAction | "wait";
+export type OpponentIntent = CombatAction | "approach" | "wait";
 
 export type RecentPlayerAction = {
   action: CombatAction;
@@ -40,7 +41,30 @@ export function scoreOpponentActions(
       { action: "defend", score: 0 },
       { action: "dodge", score: 0 },
       { action: "special", score: 0 },
+      { action: "approach", score: 0 },
       { action: "wait", score: 100 },
+    ];
+  }
+
+  const inAttackRange = isWithinAttackRange({
+    attackerX: opponent.x,
+    defenderX: player.x,
+    action: "attack",
+  });
+  const inSpecialRange = isWithinAttackRange({
+    attackerX: opponent.x,
+    defenderX: player.x,
+    action: "special",
+  });
+
+  if (!inAttackRange && !inSpecialRange) {
+    return [
+      { action: "attack", score: 0 },
+      { action: "defend", score: 5 },
+      { action: "dodge", score: 0 },
+      { action: "special", score: 0 },
+      { action: "approach", score: 100 },
+      { action: "wait", score: 1 },
     ];
   }
 
@@ -111,7 +135,13 @@ export function scoreOpponentActions(
     { action: "attack", score: legalOrZero(state, "attack", now, Math.max(0, attackScore)) },
     { action: "defend", score: legalOrZero(state, "defend", now, Math.max(0, defendScore)) },
     { action: "dodge", score: legalOrZero(state, "dodge", now, Math.max(0, dodgeScore)) },
-    { action: "special", score: legalOrZero(state, "special", now, Math.max(0, specialScore)) },
+    {
+      action: "special",
+      score: inSpecialRange
+        ? legalOrZero(state, "special", now, Math.max(0, specialScore))
+        : 0,
+    },
+    { action: "approach", score: inAttackRange ? 0 : 24 },
     { action: "wait", score: Math.max(1, waitScore) },
   ];
 }
