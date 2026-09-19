@@ -9,6 +9,16 @@ import {
   calculateMaxHp,
 } from "@/game/engine/formulas";
 import type { CombatAction, FighterId } from "@/game/engine/types";
+import {
+  OPPONENT_START_X,
+  PLAYER_START_X,
+  attackOverlapsTarget,
+  attackProfileFor,
+  facingToward,
+  resolveMovement,
+  type Facing,
+  type HorizontalDirection,
+} from "@/game/engine/spatial";
 
 export type CombatSide = "player" | "opponent";
 export type CombatWinner = CombatSide | "draw";
@@ -59,6 +69,8 @@ export type FighterCombatState = {
   counterFallbackPending: boolean;
   comboStep: 0 | 1 | 2;
   comboExpiresAt: number;
+  x: number;
+  facing: Facing;
 };
 
 export type CombatState = {
@@ -111,7 +123,11 @@ function getRuntime(state: CombatState, side: CombatSide): FighterCombatState {
   return state[side];
 }
 
-function createRuntime(fighterId: FighterId, startedAt: number): FighterCombatState {
+function createRuntime(
+  fighterId: FighterId,
+  startedAt: number,
+  side: CombatSide,
+): FighterCombatState {
   const fighter = getFighter(fighterId);
   const maxHp = calculateMaxHp(fighter.stats.vitality);
   const maxGuard = calculateGuardCapacity(fighter.stats.defense);
@@ -133,6 +149,8 @@ function createRuntime(fighterId: FighterId, startedAt: number): FighterCombatSt
     counterFallbackPending: false,
     comboStep: 0,
     comboExpiresAt: 0,
+    x: side === "player" ? PLAYER_START_X : OPPONENT_START_X,
+    facing: side === "player" ? 1 : -1,
   };
 }
 
@@ -147,8 +165,8 @@ export function createCombatState(
   }
 
   return {
-    player: createRuntime(playerId, startedAt),
-    opponent: createRuntime(opponentId, startedAt),
+    player: createRuntime(playerId, startedAt, "player"),
+    opponent: createRuntime(opponentId, startedAt, "opponent"),
     startedAt,
     now: startedAt,
     lastUpdatedAt: startedAt,
@@ -399,6 +417,18 @@ function resolveCounterFallback(
     return;
   }
 
+  if (!attackIsInRange(state, side, "special")) {
+    pushEvent(state, events, {
+      at: fallbackAt,
+      type: "miss",
+      actor: side,
+      target: targetSide,
+      action: "special",
+      message: `${getFighter(runtime.fighterId).special.name} · hors portée`,
+    });
+    return;
+  }
+
   applyDamage(state, side, targetSide, 1.1, fallbackAt, () => 0.5, events, {
     special: true,
     fallback: true,
@@ -423,6 +453,8 @@ export function advanceCombat(state: CombatState, now: number): CombatTransition
   resolveCounterFallback(next, "player", now, events);
   resolveCounterFallback(next, "opponent", now, events);
 
+  next.player.facing = facingToward(next.player.x, next.opponent.x);
+  next.opponent.facing = facingToward(next.opponent.x, next.player.x);
   next.lastUpdatedAt = now;
 
   if (next.status === "active" && now - next.startedAt >= next.durationMs) {
@@ -479,6 +511,55 @@ export function setDefense(
   });
 
   return { state: next, events, accepted: true };
+}
+
+export function moveCombatant(
+  state: CombatState,
+  side: CombatSide,
+  direction: HorizontalDirection,
+  elapsedMs: number,
+  now: number,
+): CombatTransition {
+  const advanced = advanceCombat(state, now);
+  const next = advanced.state;
+  if (next.status !== "active") return advanced;
+
+  const actor = getRuntime(next, side);
+  const other = getRuntime(next, otherSide(side));
+  if (now < actor.stunnedUntil || now < actor.recoveryUntil) {
+    return { state: next, events: advanced.events, accepted: false };
+  }
+
+  actor.isDefending = false;
+  actor.x = resolveMovement({
+    selfX: actor.x,
+    otherX: other.x,
+    direction,
+    elapsedMs,
+  });
+  actor.facing = facingToward(actor.x, other.x);
+  other.facing = facingToward(other.x, actor.x);
+
+  return { state: next, events: advanced.events, accepted: true };
+}
+
+function attackIsInRange(
+  state: CombatState,
+  side: CombatSide,
+  action: "attack" | "special",
+  comboStep: 1 | 2 | 3 = 1,
+): boolean {
+  const actor = getRuntime(state, side);
+  const target = getRuntime(state, otherSide(side));
+  const profile = attackProfileFor(action, comboStep);
+  return profile
+    ? attackOverlapsTarget({
+        attackerX: actor.x,
+        defenderX: target.x,
+        facing: actor.facing,
+        profile,
+      })
+    : false;
 }
 
 export function performCombatAction(
@@ -558,16 +639,28 @@ export function performCombatAction(
       message: fighter.special.name,
     });
 
-    const result = applyDamage(
-      next,
-      side,
-      targetSide,
-      fighter.special.damageMultiplier,
-      now,
-      rng,
-      events,
-      { special: true },
-    );
+    const result = attackIsInRange(next, side, "special")
+      ? applyDamage(
+          next,
+          side,
+          targetSide,
+          fighter.special.damageMultiplier,
+          now,
+          rng,
+          events,
+          { special: true },
+        )
+      : (() => {
+          pushEvent(next, events, {
+            at: now,
+            type: "miss",
+            actor: side,
+            target: targetSide,
+            action: "special",
+            message: `${fighter.special.name} · hors portée`,
+          });
+          return { hit: false, blocked: false };
+        })();
 
     if (!result.hit && actor.fighterId === "kavaleur") {
       actor.recoveryUntil = Math.max(actor.recoveryUntil, now + 700);
@@ -591,7 +684,19 @@ export function performCombatAction(
     message: `${fighter.name} · HIT ${nextStep}`,
   });
 
-  const result = applyDamage(next, side, targetSide, moveMultiplier, now, rng, events);
+  const result = attackIsInRange(next, side, "attack", nextStep)
+    ? applyDamage(next, side, targetSide, moveMultiplier, now, rng, events)
+    : (() => {
+        pushEvent(next, events, {
+          at: now,
+          type: "miss",
+          actor: side,
+          target: targetSide,
+          action: "attack",
+          message: `${fighter.name} · HIT ${nextStep} hors portée`,
+        });
+        return { hit: false, blocked: false };
+      })();
 
   if (result.hit) {
     actor.comboStep = nextStep === 3 ? 0 : (nextStep as 1 | 2);

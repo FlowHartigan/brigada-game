@@ -6,9 +6,17 @@ import {
 } from "@/game/engine/combat";
 import { resolveFighterSpriteState } from "./fighterSpriteState";
 
+function closeRange<T extends ReturnType<typeof createCombatState>>(state: T): T {
+  state.player.x = 0.44;
+  state.opponent.x = 0.56;
+  state.player.facing = 1;
+  state.opponent.facing = -1;
+  return state;
+}
+
 describe("resolveFighterSpriteState", () => {
   it("tracks the three real combo hits without changing engine timing", () => {
-    let state = createCombatState("hartz", "petoux", 1_000);
+    let state = closeRange(createCombatState("hartz", "petoux", 1_000));
 
     let transition = performCombatAction(state, "player", "attack", 1_010, () => 0.5);
     state = transition.state;
@@ -29,15 +37,15 @@ describe("resolveFighterSpriteState", () => {
   it("projects defend, dodge, special, hit and stunned for either side", () => {
     const start = 10_000;
 
-    let state = createCombatState("nexmos", "kavaleur", start);
+    let state = closeRange(createCombatState("nexmos", "kavaleur", start));
     state = setDefense(state, "opponent", true, start + 5).state;
     expect(resolveFighterSpriteState(state, "opponent")).toBe("defend");
 
-    state = createCombatState("nexmos", "kavaleur", start);
+    state = closeRange(createCombatState("nexmos", "kavaleur", start));
     state = performCombatAction(state, "opponent", "dodge", start + 5, () => 0.5).state;
     expect(resolveFighterSpriteState(state, "opponent")).toBe("dodge");
 
-    state = createCombatState("nexmos", "kavaleur", start);
+    state = closeRange(createCombatState("nexmos", "kavaleur", start));
     state = {
       ...state,
       opponent: { ...state.opponent, specialReadyAt: start },
@@ -46,7 +54,7 @@ describe("resolveFighterSpriteState", () => {
     expect(resolveFighterSpriteState(state, "opponent")).toBe("special");
     expect(resolveFighterSpriteState(state, "player")).toBe("hit");
 
-    state = createCombatState("nexmos", "kavaleur", start);
+    state = closeRange(createCombatState("nexmos", "kavaleur", start));
     state = {
       ...state,
       now: start + 20,

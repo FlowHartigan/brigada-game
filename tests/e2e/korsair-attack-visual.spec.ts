@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectPhaserCombatReady } from "./visual-helpers";
+import { expectPhaserCombatReady, movePlayerIntoRange } from "./visual-helpers";
 
 const IDLE_SRC = "/fighters/korsair-v2/idle.png";
 const ATTACK_SRC = "/fighters/korsair-v2/attack.png";
@@ -65,6 +65,8 @@ test("KORSAIR visibly swaps from idle to attack1/2/3 in Phaser", async ({ page }
   await expect(stage).toHaveAttribute("data-player-state", "idle");
   await expect(stage).toHaveAttribute("data-player-texture", "brigada-fighter-korsair-idle");
   await expect(fallback).toHaveAttribute("src", IDLE_SRC);
+
+  await movePlayerIntoRange(page);
 
   const idleFingerprint = await pixelFingerprint(page, IDLE_SRC);
   const attackFingerprint = await pixelFingerprint(page, ATTACK_SRC);

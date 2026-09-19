@@ -4,11 +4,20 @@ import {
   canPerformAction,
   createCombatState,
   getHealthPercent,
+  moveCombatant,
   performCombatAction,
   setDefense,
 } from "@/game/engine/combat";
 
 const fixedRng = () => 0.5;
+
+function atCloseRange<T extends ReturnType<typeof createCombatState>>(state: T): T {
+  state.player.x = 0.44;
+  state.opponent.x = 0.56;
+  state.player.facing = 1;
+  state.opponent.facing = -1;
+  return state;
+}
 
 describe("combat state machine", () => {
   it("creates two distinct fighters at full health and guard", () => {
@@ -24,8 +33,31 @@ describe("combat state machine", () => {
     expect(() => createCombatState("hartz", "hartz")).toThrow();
   });
 
+  it("plays an attack but deals no damage outside hitbox range", () => {
+    const state = createCombatState("hartz", "korsair", 0);
+    const hpBefore = state.opponent.hp;
+    const transition = performCombatAction(state, "player", "attack", 100, fixedRng);
+
+    expect(transition.accepted).toBe(true);
+    expect(transition.state.opponent.hp).toBe(hpBefore);
+    expect(transition.events.some((event) => event.type === "attack")).toBe(true);
+    expect(transition.events.some((event) => event.type === "miss")).toBe(true);
+  });
+
+  it("moves horizontally while respecting the opponent collision boundary", () => {
+    let state = createCombatState("hartz", "korsair", 0);
+    const start = state.player.x;
+    state = moveCombatant(state, "player", 1, 400, 400).state;
+    expect(state.player.x).toBeGreaterThan(start);
+
+    for (let now = 500; now <= 2_500; now += 100) {
+      state = moveCombatant(state, "player", 1, 100, now).state;
+    }
+    expect(state.player.x).toBeLessThan(state.opponent.x);
+  });
+
   it("applies deterministic damage and attack recovery", () => {
-    const state = createCombatState("nexmos", "korsair", 0);
+    const state = atCloseRange(createCombatState("nexmos", "korsair", 0));
     const transition = performCombatAction(state, "player", "attack", 100, fixedRng);
 
     expect(transition.accepted).toBe(true);
@@ -35,7 +67,7 @@ describe("combat state machine", () => {
   });
 
   it("blocks most HP damage while consuming guard", () => {
-    const initial = createCombatState("nexmos", "petoux", 0);
+    const initial = atCloseRange(createCombatState("nexmos", "petoux", 0));
     const defended = setDefense(initial, "opponent", true, 100).state;
     const transition = performCombatAction(defended, "player", "attack", 100, fixedRng);
 
@@ -45,7 +77,7 @@ describe("combat state machine", () => {
   });
 
   it("breaks guard and stuns a defender after enough blocked pressure", () => {
-    let state = createCombatState("nexmos", "kavaleur", 0);
+    let state = atCloseRange(createCombatState("nexmos", "kavaleur", 0));
     state = setDefense(state, "opponent", true, 0).state;
 
     let now = 100;
@@ -60,7 +92,7 @@ describe("combat state machine", () => {
   });
 
   it("makes a dodge negate an attack during its invulnerability window", () => {
-    let state = createCombatState("hartz", "kavaleur", 0);
+    let state = atCloseRange(createCombatState("hartz", "kavaleur", 0));
     state = performCombatAction(state, "opponent", "dodge", 100, fixedRng).state;
     const hpBefore = state.opponent.hp;
     const transition = performCombatAction(state, "player", "attack", 150, fixedRng);
@@ -78,12 +110,12 @@ describe("combat state machine", () => {
   });
 
   it("gives HARTZ extra guard pressure on a blocked special", () => {
-    let normalState = createCombatState("hartz", "petoux", 0);
+    let normalState = atCloseRange(createCombatState("hartz", "petoux", 0));
     normalState = setDefense(normalState, "opponent", true, 8_000).state;
     const normal = performCombatAction(normalState, "player", "attack", 8_000, fixedRng);
     const normalGuardLoss = normalState.opponent.guard - normal.state.opponent.guard;
 
-    let specialState = createCombatState("hartz", "petoux", 0);
+    let specialState = atCloseRange(createCombatState("hartz", "petoux", 0));
     specialState = setDefense(specialState, "opponent", true, 8_000).state;
     const special = performCombatAction(specialState, "player", "special", 8_000, fixedRng);
     const specialGuardLoss = specialState.opponent.guard - special.state.opponent.guard;
@@ -92,7 +124,7 @@ describe("combat state machine", () => {
   });
 
   it("lets KORSAIR counter an incoming strike during Contretemps", () => {
-    let state = createCombatState("nexmos", "korsair", 0);
+    let state = atCloseRange(createCombatState("nexmos", "korsair", 0));
     state = performCombatAction(state, "opponent", "special", 8_000, fixedRng).state;
     const playerHpBefore = state.player.hp;
     const opponentHpBefore = state.opponent.hp;
@@ -104,7 +136,7 @@ describe("combat state machine", () => {
   });
 
   it("gives KORSAIR a weaker fallback when the counter window expires", () => {
-    let state = createCombatState("hartz", "korsair", 0);
+    let state = atCloseRange(createCombatState("hartz", "korsair", 0));
     state = performCombatAction(state, "opponent", "special", 8_000, fixedRng).state;
     const playerHpBefore = state.player.hp;
     const transition = advanceCombat(state, 8_600);
@@ -114,13 +146,13 @@ describe("combat state machine", () => {
   });
 
   it("reduces damage received while PETOUX special armor is active", () => {
-    let armored = createCombatState("hartz", "petoux", 0);
+    let armored = atCloseRange(createCombatState("hartz", "petoux", 0));
     armored = performCombatAction(armored, "opponent", "special", 8_000, fixedRng).state;
     const armoredBefore = armored.opponent.hp;
     const armoredHit = performCombatAction(armored, "player", "attack", 8_100, fixedRng);
     const armoredLoss = armoredBefore - armoredHit.state.opponent.hp;
 
-    let plain = createCombatState("hartz", "petoux", 0);
+    let plain = atCloseRange(createCombatState("hartz", "petoux", 0));
     const plainBefore = plain.opponent.hp;
     const plainHit = performCombatAction(plain, "player", "attack", 8_100, fixedRng);
     const plainLoss = plainBefore - plainHit.state.opponent.hp;
@@ -129,7 +161,7 @@ describe("combat state machine", () => {
   });
 
   it("resolves a timeout by remaining health percentage", () => {
-    let state = createCombatState("hartz", "petoux", 0, 1_000);
+    let state = atCloseRange(createCombatState("hartz", "petoux", 0, 1_000));
     state = performCombatAction(state, "player", "attack", 100, fixedRng).state;
     const transition = advanceCombat(state, 1_000);
 

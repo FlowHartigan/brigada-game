@@ -6,6 +6,14 @@ import {
   type RecentPlayerAction,
 } from "@/game/engine/opponent-ai";
 
+function closeRange<T extends ReturnType<typeof createCombatState>>(state: T): T {
+  state.player.x = 0.44;
+  state.opponent.x = 0.56;
+  state.player.facing = 1;
+  state.opponent.facing = -1;
+  return state;
+}
+
 function scoreOf(
   scores: ReturnType<typeof scoreOpponentActions>,
   action: (typeof scores)[number]["action"],
@@ -14,8 +22,18 @@ function scoreOf(
 }
 
 describe("opponent utility AI", () => {
-  it("leans more defensive/evasive after repeated player attacks", () => {
+  it("approaches instead of attacking when the player is out of range", () => {
     const state = createCombatState("hartz", "nexmos", 0);
+    const scores = scoreOpponentActions(state, [], 2_000);
+
+    expect(scoreOf(scores, "attack")).toBe(0);
+    expect(scoreOf(scores, "special")).toBe(0);
+    expect(scoreOf(scores, "approach")).toBeGreaterThan(0);
+    expect(chooseOpponentAction(state, [], 2_000, () => 0.5)).toBe("approach");
+  });
+
+  it("leans more defensive/evasive after repeated player attacks", () => {
+    const state = closeRange(createCombatState("hartz", "nexmos", 0));
     const calm = scoreOpponentActions(state, [], 2_000);
     const pressure: RecentPlayerAction[] = [
       { action: "attack", at: 1_200 },
@@ -30,7 +48,7 @@ describe("opponent utility AI", () => {
   });
 
   it("increases pressure after repeated player defense", () => {
-    const state = createCombatState("hartz", "petoux", 0);
+    const state = closeRange(createCombatState("hartz", "petoux", 0));
     const calm = scoreOpponentActions(state, [], 2_000);
     const passive: RecentPlayerAction[] = [
       { action: "defend", at: 1_200 },
@@ -43,7 +61,7 @@ describe("opponent utility AI", () => {
   });
 
   it("does not choose a special before its cooldown is ready when forced to the high end", () => {
-    const state = createCombatState("hartz", "nexmos", 0);
+    const state = closeRange(createCombatState("hartz", "nexmos", 0));
     const scores = scoreOpponentActions(state, [], 1_000);
 
     expect(scoreOf(scores, "special")).toBe(0);
@@ -51,7 +69,7 @@ describe("opponent utility AI", () => {
   });
 
   it("waits while the opponent is recovering", () => {
-    const state = createCombatState("hartz", "nexmos", 0);
+    const state = closeRange(createCombatState("hartz", "nexmos", 0));
     state.opponent.recoveryUntil = 5_000;
 
     expect(chooseOpponentAction(state, [], 2_000, () => 0)).toBe("wait");

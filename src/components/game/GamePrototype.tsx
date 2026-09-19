@@ -9,6 +9,7 @@ import {
   getGuardPercent,
   getHealthPercent,
   getRemainingTimeMs,
+  moveCombatant,
   performCombatAction,
   setDefense,
   type CombatState,
@@ -102,6 +103,8 @@ export function GamePrototype() {
   const [combatState, setCombatState] = useState<CombatState | null>(null);
   const [phaserFightersReady, setPhaserFightersReady] = useState(false);
   const playerHistoryRef = useRef<RecentPlayerAction[]>([]);
+  const movementKeysRef = useRef({ left: false, right: false });
+  const movementTickRef = useRef(Date.now());
 
   const selected = useMemo(
     () => (selectedId ? getFighter(selectedId) : null),
@@ -179,6 +182,46 @@ export function GamePrototype() {
   useEffect(() => {
     if (scene !== "fight") return;
 
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      if (event.key === "ArrowLeft") movementKeysRef.current.left = true;
+      if (event.key === "ArrowRight") movementKeysRef.current.right = true;
+    }
+
+    function onKeyUp(event: KeyboardEvent) {
+      if (event.key === "ArrowLeft") movementKeysRef.current.left = false;
+      if (event.key === "ArrowRight") movementKeysRef.current.right = false;
+    }
+
+    movementTickRef.current = Date.now();
+    window.addEventListener("keydown", onKeyDown, { passive: false });
+    window.addEventListener("keyup", onKeyUp);
+
+    const movementTick = window.setInterval(() => {
+      const now = Date.now();
+      const elapsedMs = Math.min(64, Math.max(0, now - movementTickRef.current));
+      movementTickRef.current = now;
+      const { left, right } = movementKeysRef.current;
+      if (left === right) return;
+
+      setCombatState((current) => {
+        if (!current || current.status !== "active") return current;
+        return moveCombatant(current, "player", left ? -1 : 1, elapsedMs, now).state;
+      });
+    }, 32);
+
+    return () => {
+      movementKeysRef.current = { left: false, right: false };
+      window.clearInterval(movementTick);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [scene]);
+
+  useEffect(() => {
+    if (scene !== "fight") return;
+
     const tick = window.setInterval(() => {
       setCombatState((current) => {
         if (!current || current.status !== "active") return current;
@@ -205,6 +248,10 @@ export function GamePrototype() {
         );
 
         if (intent === "wait") return working;
+        if (intent === "approach") {
+          const direction = working.opponent.x > working.player.x ? -1 : 1;
+          return moveCombatant(working, "opponent", direction, 120, now).state;
+        }
         if (intent === "defend") {
           return setDefense(working, "opponent", true, now).state;
         }
@@ -218,7 +265,7 @@ export function GamePrototype() {
         ).state;
         return working;
       });
-    }, 560);
+    }, 120);
 
     return () => window.clearInterval(think);
   }, [scene]);
@@ -478,11 +525,14 @@ export function GamePrototype() {
           opponentId={opponent.id}
           playerState={playerSpriteState}
           opponentState={opponentSpriteState}
+          playerX={player.x}
+          opponentX={enemy.x}
           onFightersReady={setPhaserFightersReady}
         />
         <div
           className={`arena-fighter arena-left fighter-${selected.id} ${fighterVisualState("player")}`}
           data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
+          style={{ "--fighter-x": `${player.x * 100}%` } as React.CSSProperties}
         >
           <FighterSprite
             id={selected.id}
@@ -496,6 +546,7 @@ export function GamePrototype() {
         <div
           className={`arena-fighter arena-right fighter-${opponent.id} ${fighterVisualState("opponent")}`}
           data-renderer={phaserFightersReady ? "react-fallback-hidden" : "react-fallback"}
+          style={{ "--fighter-x": `${enemy.x * 100}%` } as React.CSSProperties}
         >
           <FighterSprite
             id={opponent.id}

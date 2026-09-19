@@ -5,6 +5,7 @@ import {
   fighterArtSrc,
   fighterSrc,
   korsairActionSrc,
+  movePlayerIntoRange,
   saveVisual,
 } from "./visual-helpers";
 
@@ -34,6 +35,8 @@ test("KORSAIR keeps the refreshed identity from Select through Result", async ({
   const playerImage = page.locator(".arena-left img.fighter-sprite-direct");
   await expect(playerImage).toHaveAttribute("src", fighterSrc("korsair"));
   await saveVisual(page, "korsair-refresh-combat-idle");
+
+  await movePlayerIntoRange(page);
 
   const attack = page.getByRole("button", { name: /ATTAQUE/ });
   await expect(attack).toBeEnabled({ timeout: 4_000 });

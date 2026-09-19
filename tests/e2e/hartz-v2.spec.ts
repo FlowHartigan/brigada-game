@@ -1,6 +1,6 @@
 import {expect,test,type Page} from '@playwright/test';
 import {fighters} from '../../src/game/data/fighters';
-import {expectPhaserCombatReady,holdDefense,releaseDefense} from './visual-helpers';
+import {expectPhaserCombatReady,holdDefense,movePlayerIntoRange,releaseDefense} from './visual-helpers';
 import pack from '../../docs/qa/hartz-v2/asset-mapping.json';
 const states=['idle','attack1','attack2','attack3','defend','dodge','hit','stunned','special','win'] as const;
 async function open(page:Page,player:string,opponent:string){
@@ -71,6 +71,7 @@ for(const viewport of [{width:844,height:390},{width:667,height:375},{width:1280
 
 test('HARTZ win pose reaches the real result screen',async({page})=>{
  test.setTimeout(90000);await open(page,'hartz','korsair');await expectPhaserCombatReady(page);
+ await movePlayerIntoRange(page);
  const attack=page.getByRole('button',{name:/ATTAQUE/});
  for(let i=0;i<80;i++){
   await expect(page.locator('.attack-button:not([disabled]), .result-screen').first()).toBeVisible({timeout:4000});

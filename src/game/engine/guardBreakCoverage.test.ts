@@ -14,6 +14,10 @@ describe("guard break coverage", () => {
     for (const defender of fighters) {
       const attackerId: FighterId = defender.id === "nexmos" ? "hartz" : "nexmos";
       let state = createCombatState(attackerId, defender.id, 0);
+      state.player.x = 0.44;
+      state.opponent.x = 0.56;
+      state.player.facing = 1;
+      state.opponent.facing = -1;
       state = setDefense(state, "opponent", true, 0).state;
 
       let now = 100;

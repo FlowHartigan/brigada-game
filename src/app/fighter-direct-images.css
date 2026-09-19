@@ -127,16 +127,11 @@
   scale: none !important;
 }
 
-.arena-shell .arena-left {
-  left: 18% !important;
-  right: auto !important;
-  transform: none !important;
-}
-
+.arena-shell .arena-left,
 .arena-shell .arena-right {
-  left: auto !important;
-  right: 18% !important;
-  transform: none !important;
+  left: var(--fighter-x, 50%) !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
 }
 
 .arena-shell .arena-right > .fighter-sprite-direct {
@@ -212,13 +207,6 @@
     aspect-ratio: 1 / 1 !important;
   }
 
-  .arena-shell .arena-left {
-    left: 16% !important;
-  }
-
-  .arena-shell .arena-right {
-    right: 16% !important;
-  }
 }
 
 /* Standalone VS images are authoritative for every fighter. Match the higher

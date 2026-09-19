@@ -286,3 +286,30 @@ export async function saveVisual(page: Page, name: string) {
     animations: "disabled",
   });
 }
+
+
+export async function movePlayerIntoRange(
+  page: Page,
+  maximumGap = 0.16,
+) {
+  const stage = page.getByTestId("phaser-combat-stage");
+  await expect(stage).toHaveAttribute("data-fighters-ready", "true", { timeout: 5_000 });
+
+  const gap = async () => {
+    const playerX = Number(await stage.getAttribute("data-player-x"));
+    const opponentX = Number(await stage.getAttribute("data-opponent-x"));
+    return Math.abs(opponentX - playerX);
+  };
+
+  if ((await gap()) <= maximumGap) return;
+
+  await page.keyboard.down("ArrowRight");
+  try {
+    await expect.poll(gap, {
+      timeout: 5_000,
+      intervals: [32, 50, 80, 100],
+    }).toBeLessThanOrEqual(maximumGap);
+  } finally {
+    await page.keyboard.up("ArrowRight");
+  }
+}
