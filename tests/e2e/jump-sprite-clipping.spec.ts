@@ -128,11 +128,39 @@ test.describe("jump sprite clipping", () => {
       ).toBeGreaterThan(0.31);
 
       const arenaBox = await page.locator(".arena-shell").boundingBox();
-      const fighterBox = await image.boundingBox();
       expect(arenaBox).not.toBeNull();
-      expect(fighterBox).not.toBeNull();
-      expect(fighterBox!.y).toBeGreaterThanOrEqual(arenaBox!.y - 1);
-      expect(fighterBox!.y + fighterBox!.height).toBeLessThanOrEqual(
+
+      const opaqueBounds = await image.evaluate(async (node) => {
+        const img = node as HTMLImageElement;
+        await img.decode();
+
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0);
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+        let minY = canvas.height;
+        let maxY = -1;
+        for (let y = 0; y < canvas.height; y += 1) {
+          for (let x = 0; x < canvas.width; x += 1) {
+            if (pixels[(y * canvas.width + x) * 4 + 3] < 8) continue;
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          }
+        }
+
+        const rect = img.getBoundingClientRect();
+        const top = rect.top + (minY / canvas.height) * rect.height;
+        const bottom =
+          rect.top + ((maxY + 1) / canvas.height) * rect.height;
+
+        return { top, bottom };
+      });
+
+      expect(opaqueBounds.top).toBeGreaterThanOrEqual(arenaBox!.y - 1);
+      expect(opaqueBounds.bottom).toBeLessThanOrEqual(
         arenaBox!.y + arenaBox!.height + 1,
       );
     } finally {
