@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   ARENA_MAX_X,
   ARENA_MIN_X,
+  GROUND_Y,
+  JUMP_VELOCITY,
   MIN_FIGHTER_DISTANCE,
+  advanceJump,
   attackOverlapsTarget,
   facingToward,
   resolveMovement,
@@ -20,6 +23,71 @@ describe("spatial combat", () => {
   it("prevents fighters from crossing", () => {
     const next = resolveMovement({ selfX: 0.4, otherX: 0.5, direction: 1, elapsedMs: 1_000 });
     expect(next).toBeCloseTo(0.5 - MIN_FIGHTER_DISTANCE);
+  });
+
+  it("follows a gravity-driven jump arc and lands exactly on ground", () => {
+    let y = GROUND_Y;
+    let velocityY = JUMP_VELOCITY;
+    let peak = y;
+    let grounded = false;
+
+    for (let step = 0; step < 80; step += 1) {
+      const next = advanceJump(y, velocityY, 16);
+      y = next.y;
+      velocityY = next.velocityY;
+      peak = Math.max(peak, y);
+      if (next.isGrounded) {
+        grounded = true;
+        break;
+      }
+    }
+
+    expect(peak).toBeGreaterThan(0.2);
+    expect(grounded).toBe(true);
+    expect(y).toBe(GROUND_Y);
+    expect(velocityY).toBe(0);
+  });
+
+  it("allows horizontal crossing only when fighters no longer overlap vertically", () => {
+    const blocked = resolveMovement({
+      selfX: 0.4,
+      otherX: 0.5,
+      selfY: 0,
+      otherY: 0,
+      direction: 1,
+      elapsedMs: 1_000,
+    });
+    const airborne = resolveMovement({
+      selfX: 0.4,
+      otherX: 0.5,
+      selfY: 0.24,
+      otherY: 0,
+      direction: 1,
+      elapsedMs: 1_000,
+    });
+
+    expect(blocked).toBeCloseTo(0.5 - MIN_FIGHTER_DISTANCE);
+    expect(airborne).toBeGreaterThan(0.5);
+  });
+
+  it("uses vertical hitbox overlap instead of jump invulnerability", () => {
+    expect(attackOverlapsTarget({
+      attackerX: 0.4,
+      attackerY: 0,
+      defenderX: 0.55,
+      defenderY: 0,
+      facing: 1,
+      profile: "attack1",
+    })).toBe(true);
+
+    expect(attackOverlapsTarget({
+      attackerX: 0.4,
+      attackerY: 0,
+      defenderX: 0.55,
+      defenderY: 0.22,
+      facing: 1,
+      profile: "attack1",
+    })).toBe(false);
   });
 
   it("mirrors attack hitboxes with facing", () => {
