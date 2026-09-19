@@ -136,7 +136,7 @@ describe("combat state machine", () => {
   });
 
   it("gives KORSAIR a weaker fallback when the counter window expires", () => {
-    let state = createCombatState("hartz", "korsair", 0);
+    let state = atCloseRange(createCombatState("hartz", "korsair", 0));
     state = performCombatAction(state, "opponent", "special", 8_000, fixedRng).state;
     const playerHpBefore = state.player.hp;
     const transition = advanceCombat(state, 8_600);
