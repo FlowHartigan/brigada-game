@@ -129,9 +129,12 @@
 
 .arena-shell .arena-left,
 .arena-shell .arena-right {
-  left: var(--fighter-x, 50%) !important;
+  left: var(--fighter-render-left, var(--fighter-x, 50%)) !important;
   right: auto !important;
-  bottom: calc(14% + var(--fighter-y-percent, 0%)) !important;
+  bottom: var(
+    --fighter-render-bottom,
+    calc(14% + var(--fighter-y-percent, 0%))
+  ) !important;
   transform: translateX(-50%) !important;
 }
 
