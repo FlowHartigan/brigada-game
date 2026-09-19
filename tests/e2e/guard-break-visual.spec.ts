@@ -4,6 +4,7 @@ import {
   expectPhaserCombatReady,
   expectPhaserFighterState,
   holdDefense,
+  movePlayerIntoRange,
   saveVisual,
 } from "./visual-helpers";
 
@@ -39,6 +40,7 @@ test("every fighter visibly enters stunned after a fresh guard break", async ({ 
     const defend = page.getByRole("button", { name: /DÉFENSE/ });
     const guardLabel = page.locator(".guard-label").first();
 
+    await movePlayerIntoRange(page);
     await holdDefense(page, defend);
     const guardBefore = await guardLabel.textContent();
     expect(guardBefore).toMatch(/GARDE\s+\d+/);
