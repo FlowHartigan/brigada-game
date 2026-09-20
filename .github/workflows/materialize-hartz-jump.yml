@@ -1,0 +1,41 @@
+name: Materialize HARTZ jump asset
+
+on:
+  push:
+    branches:
+      - feat/hartz-jump-sprite
+    paths:
+      - ".tmp/hartz-jump/READY"
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/hartz-jump-sprite
+          fetch-depth: 0
+
+      - name: Decode approved sprite
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/fighters/hartz-v2
+          cat .tmp/hartz-jump/part-*.b64 | tr -d '\n\r' | base64 --decode > public/fighters/hartz-v2/jump.png
+          echo "3962601c4927a42b3945fe63cedf2438895a3a76f78e729bb09d87ded6de0055  public/fighters/hartz-v2/jump.png" | sha256sum -c -
+          file public/fighters/hartz-v2/jump.png | grep -F "PNG image data, 448 x 416, 8-bit/color RGBA"
+
+      - name: Commit production asset and remove staging files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/fighters/hartz-v2/jump.png
+          git rm -r .tmp/hartz-jump
+          git rm .github/workflows/materialize-hartz-jump.yml
+          git commit -m "feat(hartz): add approved jump sprite asset"
+          git push origin HEAD:feat/hartz-jump-sprite
