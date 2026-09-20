@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { fighters } from "@/game/data/fighters";
 import {
   fighterActionImage,
+  fighterJumpImage,
   type FighterActionVisualState,
 } from "./fighterAnimationAssets";
 
@@ -33,6 +34,14 @@ function refreshedPngExpected(id: "kavaleur" | "korsair") {
 }
 
 describe("fighter animation assets", () => {
+  it("uses HARTZ's approved jump frame without changing the other fighters' current art", () => {
+    expect(fighterJumpImage("hartz")).toBe("/fighters/hartz-v2/jump.png");
+
+    for (const fighter of fighters.filter((candidate) => candidate.id !== "hartz")) {
+      expect(fighterJumpImage(fighter.id)).toBe(`/fighters/${fighter.id}-v2/idle.png`);
+    }
+  });
+
   it("provides the approved combat visual source for every action of every fighter", () => {
     for (const fighter of fighters) {
       const frames = actionStates.map((state) =>
