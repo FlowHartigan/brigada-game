@@ -3,6 +3,7 @@ import {
   createCombatState,
   performCombatAction,
   setDefense,
+  startJump,
 } from "@/game/engine/combat";
 import { resolveFighterSpriteState } from "./fighterSpriteState";
 
@@ -60,6 +61,39 @@ describe("resolveFighterSpriteState", () => {
       now: start + 20,
       player: { ...state.player, stunnedUntil: start + 500 },
     };
+    expect(resolveFighterSpriteState(state, "player")).toBe("stunned");
+  });
+
+  it("projects engine-owned airborne state as jump and returns idle after landing state", () => {
+    const start = 20_000;
+    let state = createCombatState("hartz", "korsair", start);
+    state = startJump(state, "player", start + 1).state;
+
+    expect(resolveFighterSpriteState(state, "player")).toBe("jump");
+
+    state = {
+      ...state,
+      now: start + 900,
+      player: {
+        ...state.player,
+        y: 0,
+        velocityY: 0,
+        isGrounded: true,
+      },
+    };
+    expect(resolveFighterSpriteState(state, "player")).toBe("idle");
+  });
+
+  it("keeps explicit hit/stun priorities above jump", () => {
+    const start = 30_000;
+    let state = createCombatState("hartz", "korsair", start);
+    state = startJump(state, "player", start + 1).state;
+    state = {
+      ...state,
+      now: start + 20,
+      player: { ...state.player, stunnedUntil: start + 500 },
+    };
+
     expect(resolveFighterSpriteState(state, "player")).toBe("stunned");
   });
 
