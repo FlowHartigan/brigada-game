@@ -5,7 +5,11 @@ import type { CombatEvent, CombatSide } from "@/game/engine/combat";
 import type { Facing } from "@/game/engine/spatial";
 import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
-import { fighterActionImage, type FighterSpriteState } from "./fighterAnimationAssets";
+import {
+  fighterActionImage,
+  fighterJumpImage,
+  type FighterSpriteState,
+} from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
 import {
   COMBAT_FIGHTER_SCALE_MULTIPLIER,
@@ -35,6 +39,7 @@ const IMPACT_Y = 220;
 
 const FIGHTER_STATES: FighterSpriteState[] = [
   "idle",
+  "jump",
   "attack1",
   "attack2",
   "attack3",
@@ -82,7 +87,9 @@ function fighterTextureKey(id: FighterId, state: FighterSpriteState): string {
 }
 
 function fighterTextureSource(id: FighterId, state: FighterSpriteState): string {
-  return state === "idle" ? fighterImage(id) : fighterActionImage(id, state);
+  if (state === "idle") return fighterImage(id);
+  if (state === "jump") return fighterJumpImage(id);
+  return fighterActionImage(id, state);
 }
 
 export function PhaserCombatStage({
