@@ -32,9 +32,7 @@ export const FIGHTER_SPRITE_STATES: readonly FighterSpriteState[] = [
   ...FIGHTER_ACTION_STATES,
 ];
 
-const FIGHTER_SPRITE_STATES_WITHOUT_JUMP = FIGHTER_SPRITE_STATES.filter(
-  (state) => state !== "jump",
-);
+const fighterPreloadStatesCache = new Map<FighterId, readonly FighterSpriteState[]>();
 
 export function fighterActionImage(
   id: FighterId,
@@ -63,14 +61,37 @@ export function fighterSpriteImage(
 }
 
 /**
- * Avoid creating a second Phaser texture for the idle PNG when a fighter has
- * no dedicated jump artwork. The state resolver already keeps those fighters
- * on idle while airborne.
+ * Phaser only needs one decoded texture per unique source image. Some approved
+ * fighter packs intentionally reuse one PNG for multiple presentation states
+ * (for example one attack pose across the three combo steps).
  */
 export function fighterPreloadStates(
   id: FighterId,
 ): readonly FighterSpriteState[] {
-  return fighterJumpImage(id) === fighterAssetManifest[id].idle
-    ? FIGHTER_SPRITE_STATES_WITHOUT_JUMP
-    : FIGHTER_SPRITE_STATES;
+  const cached = fighterPreloadStatesCache.get(id);
+  if (cached) return cached;
+
+  const seenSources = new Set<string>();
+  const states = FIGHTER_SPRITE_STATES.filter((state) => {
+    const source = fighterSpriteImage(id, state);
+    if (seenSources.has(source)) return false;
+    seenSources.add(source);
+    return true;
+  });
+
+  fighterPreloadStatesCache.set(id, states);
+  return states;
+}
+
+/** Return the first state that owns the same decoded source texture. */
+export function fighterCanonicalSpriteState(
+  id: FighterId,
+  state: FighterSpriteState,
+): FighterSpriteState {
+  const source = fighterSpriteImage(id, state);
+  return (
+    fighterPreloadStates(id).find(
+      (candidate) => fighterSpriteImage(id, candidate) === source,
+    ) ?? state
+  );
 }
