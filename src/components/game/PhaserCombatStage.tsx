@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { CombatEvent, CombatSide } from "@/game/engine/combat";
 import type { Facing } from "@/game/engine/spatial";
 import type { FighterId } from "@/game/engine/types";
@@ -77,7 +77,7 @@ function fighterTextureLabel(id: FighterId, state: FighterSpriteState): string {
   return `brigada-fighter-${id}-${state}`;
 }
 
-export function PhaserCombatStage({
+function PhaserCombatStageComponent({
   lastEvent,
   playerId,
   opponentId,
