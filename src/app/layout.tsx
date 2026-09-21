@@ -7,7 +7,6 @@ import "./sprite-fighters.css";
 import "./pixel-rave.css";
 import "./vs-screen.css";
 import "./vs-portrait-layout.css";
-import "./fighter-sprite-images.css";
 import "./fighter-direct-images.css";
 
 export const metadata: Metadata = {
