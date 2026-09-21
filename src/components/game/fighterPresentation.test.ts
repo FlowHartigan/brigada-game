@@ -5,6 +5,7 @@ import {
   FIGHTER_COMBAT_SCALE,
   fighterCombatFallbackStyle,
   fighterCombatPresentation,
+  fighterPresentationStyle,
   fighterSourceBounds,
 } from "@/components/game/fighterPresentation";
 
@@ -28,6 +29,15 @@ describe("combat fighter presentation scale", () => {
 
       expect(enlargedScale / previousScale).toBeCloseTo(1.3, 8);
     }
+  });
+
+  it("reuses immutable style objects across frequent renders", () => {
+    expect(fighterCombatFallbackStyle("hartz")).toBe(
+      fighterCombatFallbackStyle("hartz"),
+    );
+    expect(fighterPresentationStyle("hartz", "vs")).toBe(
+      fighterPresentationStyle("hartz", "vs"),
+    );
   });
 
   it("does not introduce per-fighter enlargement overrides", () => {
