@@ -104,9 +104,6 @@
   border: 0;
   border-radius: 0;
   background-color: transparent;
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: contain;
   image-rendering: pixelated;
   font-size: 0;
   filter: drop-shadow(0 18px 10px rgba(0,0,0,.52));
@@ -116,12 +113,6 @@
 
 .versus-screen .versus-portrait::before,
 .versus-screen .versus-portrait::after { display: none !important; }
-
-.versus-screen .versus-portrait.fighter-hartz { background-image: var(--sprite-hartz-idle) !important; }
-.versus-screen .versus-portrait.fighter-petoux { background-image: var(--sprite-petoux-idle) !important; }
-.versus-screen .versus-portrait.fighter-nexmos { background-image: var(--sprite-nexmos-idle) !important; }
-.versus-screen .versus-portrait.fighter-kavaleur { background-image: var(--sprite-kavaleur-idle) !important; }
-.versus-screen .versus-portrait.fighter-korsair { background-image: var(--sprite-korsair-idle) !important; }
 
 .versus-fighter p,
 .versus-fighter h2 {

@@ -68,6 +68,8 @@ export const FIGHTER_COMBAT_SCALE = 1.3;
 /** Presentation-only V2 enlargement relative to the current combat size. */
 export const COMBAT_FIGHTER_SCALE_MULTIPLIER = 1.3;
 const FALLBACK_VISIBLE_HEIGHT_RATIO = 0.72;
+const combatFallbackStyleCache = new Map<FighterId, CSSProperties>();
+const presentationStyleCache = new Map<string, CSSProperties>();
 
 /**
  * VS-only global geometry. Every opaque silhouette occupies the same fraction
@@ -91,6 +93,9 @@ export const fighterCombatPresentation: Record<FighterId, FighterCombatPresentat
 };
 
 export function fighterCombatFallbackStyle(id: FighterId): CSSProperties {
+  const cached = combatFallbackStyleCache.get(id);
+  if (cached) return cached;
+
   const presentation = fighterCombatPresentation[id];
   const bounds = fighterSourceBounds[id];
   const scale =
@@ -98,12 +103,15 @@ export function fighterCombatFallbackStyle(id: FighterId): CSSProperties {
     presentation.scale * FIGHTER_COMBAT_SCALE * COMBAT_FIGHTER_SCALE_MULTIPLIER;
   const groundOffset = (bounds.bottomPadding / bounds.frameHeight) * scale * 100;
 
-  return {
+  const style = {
     "--fighter-combat-scale": scale,
     "--fighter-combat-ground-offset": `${groundOffset}%`,
     "--fighter-combat-offset-x": `${presentation.offsetX}px`,
     "--fighter-combat-offset-y": `${presentation.offsetY}px`,
   } as CSSProperties;
+
+  combatFallbackStyleCache.set(id, style);
+  return style;
 }
 
 /**
@@ -236,11 +244,18 @@ export function fighterPresentationStyle(
   id: FighterId,
   context: FighterArtContext,
 ): CSSProperties {
-  if (context === "vs") return fighterVsPresentationStyle(id);
+  const cacheKey = `${id}:${context}`;
+  const cached = presentationStyleCache.get(cacheKey);
+  if (cached) return cached;
 
-  const adjustment = fighterPresentation[id][context];
-  return {
-    "--fighter-art-scale": adjustment.scale,
-    "--fighter-art-y": `${adjustment.y}%`,
-  } as CSSProperties;
+  const style =
+    context === "vs"
+      ? fighterVsPresentationStyle(id)
+      : ({
+          "--fighter-art-scale": fighterPresentation[id][context].scale,
+          "--fighter-art-y": `${fighterPresentation[id][context].y}%`,
+        } as CSSProperties);
+
+  presentationStyleCache.set(cacheKey, style);
+  return style;
 }

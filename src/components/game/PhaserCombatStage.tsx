@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { CombatEvent, CombatSide } from "@/game/engine/combat";
 import type { Facing } from "@/game/engine/spatial";
 import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import {
-  fighterActionImage,
-  fighterJumpImage,
+  fighterCanonicalSpriteState,
+  fighterPreloadStates,
+  fighterSpriteImage,
   type FighterSpriteState,
 } from "./fighterAnimationAssets";
-import { fighterImage } from "./fighterImages";
 import {
   COMBAT_FIGHTER_SCALE_MULTIPLIER,
   fighterCombatPresentation,
@@ -36,20 +36,6 @@ const BASE_FIGHTER_VISIBLE_HEIGHT = 154 * FIGHTER_COMBAT_SCALE;
 const FIGHTER_VISIBLE_HEIGHT =
   BASE_FIGHTER_VISIBLE_HEIGHT * COMBAT_FIGHTER_SCALE_MULTIPLIER;
 const IMPACT_Y = 220;
-
-const FIGHTER_STATES: FighterSpriteState[] = [
-  "idle",
-  "jump",
-  "attack1",
-  "attack2",
-  "attack3",
-  "defend",
-  "dodge",
-  "special",
-  "hit",
-  "stunned",
-  "win",
-];
 
 type PhaserCombatStageProps = {
   lastEvent?: CombatEvent;
@@ -83,16 +69,15 @@ function sideX(side?: CombatSide): number {
 }
 
 function fighterTextureKey(id: FighterId, state: FighterSpriteState): string {
+  const textureState = fighterCanonicalSpriteState(id, state);
+  return `brigada-fighter-${id}-${textureState}`;
+}
+
+function fighterTextureLabel(id: FighterId, state: FighterSpriteState): string {
   return `brigada-fighter-${id}-${state}`;
 }
 
-function fighterTextureSource(id: FighterId, state: FighterSpriteState): string {
-  if (state === "idle") return fighterImage(id);
-  if (state === "jump") return fighterJumpImage(id);
-  return fighterActionImage(id, state);
-}
-
-export function PhaserCombatStage({
+function PhaserCombatStageComponent({
   lastEvent,
   playerId,
   opponentId,
@@ -114,6 +99,7 @@ export function PhaserCombatStage({
     opponent: opponentState,
   });
   const readyCallbackRef = useRef(onFightersReady);
+  const fighterSyncVersionRef = useRef(0);
   const fighterPositionRef = useRef({
     player: { x: playerX, y: playerY, facing: playerFacing },
     opponent: { x: opponentX, y: opponentY, facing: opponentFacing },
@@ -128,6 +114,7 @@ export function PhaserCombatStage({
       player: playerState,
       opponent: opponentState,
     };
+    fighterSyncVersionRef.current += 1;
   }, [playerState, opponentState]);
 
   useEffect(() => {
@@ -139,6 +126,7 @@ export function PhaserCombatStage({
       player: { x: playerX, y: playerY, facing: playerFacing },
       opponent: { x: opponentX, y: opponentY, facing: opponentFacing },
     };
+    fighterSyncVersionRef.current += 1;
   }, [playerX, opponentX, playerY, opponentY, playerFacing, opponentFacing]);
 
   useEffect(() => {
@@ -154,7 +142,7 @@ export function PhaserCombatStage({
 
       const fighterIds = [playerId, opponentId] as const;
       const requiredTextureKeys = fighterIds.flatMap((id) =>
-        FIGHTER_STATES.map((state) => fighterTextureKey(id, state)),
+        fighterPreloadStates(id).map((state) => fighterTextureKey(id, state)),
       );
 
       class CombatBackdropScene extends Phaser.Scene {
@@ -162,6 +150,7 @@ export function PhaserCombatStage({
         private opponentSprite?: import("phaser").GameObjects.Image;
         private fightersReady = false;
         private fighterFreezeUntil = 0;
+        private lastFighterSyncVersion = -1;
         private readonly visibleBounds = new Map<string, VisibleTextureBounds>();
 
         constructor() {
@@ -170,10 +159,10 @@ export function PhaserCombatStage({
 
         preload() {
           for (const id of fighterIds) {
-            for (const state of FIGHTER_STATES) {
+            for (const state of fighterPreloadStates(id)) {
               this.load.image(
                 fighterTextureKey(id, state),
-                fighterTextureSource(id, state),
+                fighterSpriteImage(id, state),
               );
             }
           }
@@ -215,7 +204,7 @@ export function PhaserCombatStage({
             stageHost.dataset.playerFighter = playerId;
             stageHost.dataset.opponentFighter = opponentId;
             readyCallbackRef.current?.(true);
-            this.syncFighters();
+            this.syncFighters(true);
           } else {
             stageHost.dataset.fightersReady = "false";
             readyCallbackRef.current?.(false);
@@ -398,12 +387,18 @@ export function PhaserCombatStage({
           }
         }
 
-        private syncFighters() {
+        private syncFighters(force = false) {
           if (!this.playerSprite || !this.opponentSprite) return;
-          if (this.time.now < this.fighterFreezeUntil) return;
 
           const playerVisual = fighterStateRef.current.player;
           const opponentVisual = fighterStateRef.current.opponent;
+          const syncVersion = fighterSyncVersionRef.current;
+          const metadataChanged = syncVersion !== this.lastFighterSyncVersion;
+          const hasContinuousAnimation =
+            playerVisual === "stunned" || opponentVisual === "stunned";
+
+          if (!force && !metadataChanged && !hasContinuousAnimation) return;
+          if (this.time.now < this.fighterFreezeUntil) return;
 
           const playerMetrics = this.syncFighterSprite(
             this.playerSprite,
@@ -418,18 +413,22 @@ export function PhaserCombatStage({
             opponentVisual,
           );
 
-          stageHost.dataset.playerState = playerVisual;
-          stageHost.dataset.opponentState = opponentVisual;
-          stageHost.dataset.playerTexture = fighterTextureKey(playerId, playerVisual);
-          stageHost.dataset.opponentTexture = fighterTextureKey(opponentId, opponentVisual);
-          stageHost.dataset.playerVisibleHeight = String(playerMetrics.visibleHeight);
-          stageHost.dataset.opponentVisibleHeight = String(opponentMetrics.visibleHeight);
-          stageHost.dataset.playerGroundY = String(playerMetrics.groundY);
-          stageHost.dataset.opponentGroundY = String(opponentMetrics.groundY);
-          stageHost.dataset.playerVisibleTop = String(playerMetrics.visibleTop);
-          stageHost.dataset.playerVisibleBottom = String(playerMetrics.visibleBottom);
-          stageHost.dataset.opponentVisibleTop = String(opponentMetrics.visibleTop);
-          stageHost.dataset.opponentVisibleBottom = String(opponentMetrics.visibleBottom);
+          if (force || metadataChanged) {
+            stageHost.dataset.playerState = playerVisual;
+            stageHost.dataset.opponentState = opponentVisual;
+            stageHost.dataset.playerTexture = fighterTextureLabel(playerId, playerVisual);
+            stageHost.dataset.opponentTexture = fighterTextureLabel(opponentId, opponentVisual);
+            stageHost.dataset.playerVisibleHeight = String(playerMetrics.visibleHeight);
+            stageHost.dataset.opponentVisibleHeight = String(opponentMetrics.visibleHeight);
+            stageHost.dataset.playerGroundY = String(playerMetrics.groundY);
+            stageHost.dataset.opponentGroundY = String(opponentMetrics.groundY);
+            stageHost.dataset.playerVisibleTop = String(playerMetrics.visibleTop);
+            stageHost.dataset.playerVisibleBottom = String(playerMetrics.visibleBottom);
+            stageHost.dataset.opponentVisibleTop = String(opponentMetrics.visibleTop);
+            stageHost.dataset.opponentVisibleBottom = String(opponentMetrics.visibleBottom);
+          }
+
+          this.lastFighterSyncVersion = syncVersion;
         }
 
         private syncFighterSprite(
@@ -713,3 +712,5 @@ export function PhaserCombatStage({
     />
   );
 }
+
+export const PhaserCombatStage = memo(PhaserCombatStageComponent);

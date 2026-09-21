@@ -19,7 +19,7 @@ export function FighterArt({ id, portrait = false }: { id: FighterId; portrait?:
         alt=""
         draggable={false}
         loading="eager"
-        decoding="sync"
+        decoding="async"
         data-fighter={id}
       />
     </div>
