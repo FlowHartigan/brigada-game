@@ -6,6 +6,7 @@ import type { Facing } from "@/game/engine/spatial";
 import type { FighterId } from "@/game/engine/types";
 import { impactFreezeDurationMs } from "./combatPresentationTiming";
 import {
+  fighterCanonicalSpriteState,
   fighterPreloadStates,
   fighterSpriteImage,
   type FighterSpriteState,
@@ -68,6 +69,11 @@ function sideX(side?: CombatSide): number {
 }
 
 function fighterTextureKey(id: FighterId, state: FighterSpriteState): string {
+  const textureState = fighterCanonicalSpriteState(id, state);
+  return `brigada-fighter-${id}-${textureState}`;
+}
+
+function fighterTextureLabel(id: FighterId, state: FighterSpriteState): string {
   return `brigada-fighter-${id}-${state}`;
 }
 
@@ -410,8 +416,8 @@ export function PhaserCombatStage({
           if (force || metadataChanged) {
             stageHost.dataset.playerState = playerVisual;
             stageHost.dataset.opponentState = opponentVisual;
-            stageHost.dataset.playerTexture = fighterTextureKey(playerId, playerVisual);
-            stageHost.dataset.opponentTexture = fighterTextureKey(opponentId, opponentVisual);
+            stageHost.dataset.playerTexture = fighterTextureLabel(playerId, playerVisual);
+            stageHost.dataset.opponentTexture = fighterTextureLabel(opponentId, opponentVisual);
             stageHost.dataset.playerVisibleHeight = String(playerMetrics.visibleHeight);
             stageHost.dataset.opponentVisibleHeight = String(opponentMetrics.visibleHeight);
             stageHost.dataset.playerGroundY = String(playerMetrics.groundY);
