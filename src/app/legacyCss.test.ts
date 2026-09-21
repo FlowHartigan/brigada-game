@@ -18,6 +18,12 @@ describe("legacy fighter CSS cleanup", () => {
     expect(declarations).not.toMatch(/background-(?:image|position|size)/);
     expect(existsSync(appFile("vs-atlas.css"))).toBe(false);
     expect(existsSync(appFile("fighter-sprite-images.css"))).toBe(false);
+    expect(
+      existsSync(new URL("../../public/sprites/brigada-fighters-atlas-v1.png", import.meta.url)),
+    ).toBe(false);
+    expect(
+      existsSync(new URL("../../public/backgrounds/brigada-combat-arena.png", import.meta.url)),
+    ).toBe(false);
   });
 
   it("imports the layout-only VS stylesheet", () => {
