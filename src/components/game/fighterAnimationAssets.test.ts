@@ -1,22 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { fighters } from "@/game/data/fighters";
 import {
+  FIGHTER_ACTION_STATES,
   fighterActionImage,
   fighterJumpImage,
-  type FighterActionVisualState,
+  fighterPreloadStates,
+  fighterSpriteImage,
 } from "./fighterAnimationAssets";
-
-const actionStates: readonly FighterActionVisualState[] = [
-  "attack1",
-  "attack2",
-  "attack3",
-  "defend",
-  "dodge",
-  "special",
-  "hit",
-  "stunned",
-  "win",
-];
 
 function refreshedPngExpected(id: "kavaleur" | "korsair") {
   const root = `/fighters/${id}-v2`;
@@ -42,9 +32,20 @@ describe("fighter animation assets", () => {
     }
   });
 
+  it("avoids a duplicate idle texture when no dedicated jump frame exists", () => {
+    expect(fighterPreloadStates("hartz")).toContain("jump");
+
+    for (const fighter of fighters.filter((candidate) => candidate.id !== "hartz")) {
+      expect(fighterPreloadStates(fighter.id)).not.toContain("jump");
+      expect(fighterSpriteImage(fighter.id, "jump")).toBe(
+        `/fighters/${fighter.id}-v2/idle.png`,
+      );
+    }
+  });
+
   it("provides the approved combat visual source for every action of every fighter", () => {
     for (const fighter of fighters) {
-      const frames = actionStates.map((state) =>
+      const frames = FIGHTER_ACTION_STATES.map((state) =>
         fighterActionImage(fighter.id, state),
       );
 
@@ -54,14 +55,14 @@ describe("fighter animation assets", () => {
         fighter.id === "nexmos"
       ) {
         expect(frames).toEqual(
-          actionStates.map((state) => `/fighters/${fighter.id}-v2/${state}.png`),
+          FIGHTER_ACTION_STATES.map((state) => `/fighters/${fighter.id}-v2/${state}.png`),
         );
         for (const frame of frames) {
           expect(frame).toMatch(
             new RegExp(`^/fighters/${fighter.id}-v2/.+\\.png$`),
           );
         }
-        expect(new Set(frames).size).toBe(actionStates.length);
+        expect(new Set(frames).size).toBe(FIGHTER_ACTION_STATES.length);
         continue;
       }
 
