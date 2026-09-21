@@ -97,6 +97,20 @@ describe("resolveFighterSpriteState", () => {
     expect(resolveFighterSpriteState(state, "player")).toBe("stunned");
   });
 
+  it("uses the jump frame for HARTZ on the opponent side", () => {
+    const state = startJump(createCombatState("korsair", "hartz", 0), "opponent", 1).state;
+    expect(resolveFighterSpriteState(state, "opponent")).toBe("jump");
+  });
+
+  it.each(["petoux", "nexmos", "kavaleur", "korsair"] as const)(
+    "preserves %s's existing airborne presentation",
+    (id) => {
+      const state = startJump(createCombatState(id, "hartz", 0), "player", 1).state;
+      expect(state.player.isGrounded).toBe(false);
+      expect(resolveFighterSpriteState(state, "player")).toBe("idle");
+    },
+  );
+
   it("returns idle when no transient visual state is active", () => {
     const state = createCombatState("korsair", "petoux", 0);
     expect(resolveFighterSpriteState(state, "player")).toBe("idle");

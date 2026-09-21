@@ -2,7 +2,6 @@ import type { FighterId } from "@/game/engine/types";
 import {
   fighterActionImage,
   fighterJumpImage,
-  type FighterActionVisualState,
   type FighterSpriteState,
 } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";

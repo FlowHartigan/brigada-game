@@ -20,8 +20,6 @@ export function fighterActionImage(
 ): string {
   return fighterAssetManifest[id].actions[state];
 }
-
-
 /**
  * Airborne visual source. HARTZ has a dedicated approved frame; fighters that
  * do not have one yet intentionally retain their existing idle artwork.

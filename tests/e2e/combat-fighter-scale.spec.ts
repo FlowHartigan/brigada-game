@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { fighters } from "../../src/game/data/fighters";
+import hartzPack from "../../docs/qa/hartz-v2/asset-mapping.json";
 
 async function enterFight(page: Page, fighterName: string, fighterTitle: string) {
   await page.goto("/");
@@ -72,7 +73,11 @@ for (const viewport of [
         ).toBeGreaterThan(0.05);
 
         const airborneHeight = Number(await stage.getAttribute("data-player-visible-height"));
-        expect(airborneHeight).toBeCloseTo(idleHeight, 3);
+        // Bent knees shorten the approved pose without changing anatomical scale.
+        await expect(stage).toHaveAttribute("data-player-state", "jump");
+        expect(airborneHeight / hartzPack.frames.jump.bounds[3]).toBeCloseTo(
+          idleHeight / hartzPack.frames.idle.bounds[3], 3,
+        );
 
         await expect.poll(
           async () => Number(await stage.getAttribute("data-player-y")),

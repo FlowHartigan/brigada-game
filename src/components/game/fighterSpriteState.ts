@@ -77,7 +77,7 @@ export function resolveFighterSpriteState(
 
   // Airborne is presentation-only and intentionally sits below hit/stun/action
   // priorities so those explicit states can still win while a fighter is aloft.
-  if (!runtime.isGrounded) return "jump";
+  if (runtime.fighterId === "hartz" && !runtime.isGrounded) return "jump";
 
   return "idle";
 }
