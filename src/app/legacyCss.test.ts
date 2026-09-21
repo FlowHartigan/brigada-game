@@ -17,6 +17,7 @@ describe("legacy fighter CSS cleanup", () => {
     expect(declarations).not.toContain("brigada-fighters-atlas-v1");
     expect(declarations).not.toMatch(/background-(?:image|position|size)/);
     expect(existsSync(appFile("vs-atlas.css"))).toBe(false);
+    expect(existsSync(appFile("fighter-sprite-images.css"))).toBe(false);
   });
 
   it("imports the layout-only VS stylesheet", () => {
@@ -24,5 +25,6 @@ describe("legacy fighter CSS cleanup", () => {
 
     expect(layout).toContain('import "./vs-portrait-layout.css";');
     expect(layout).not.toContain('import "./vs-atlas.css";');
+    expect(layout).not.toContain('import "./fighter-sprite-images.css";');
   });
 });
