@@ -3,6 +3,7 @@ import { fighters } from "@/game/data/fighters";
 import {
   FIGHTER_ACTION_STATES,
   fighterActionImage,
+  fighterCanonicalSpriteState,
   fighterJumpImage,
   fighterPreloadStates,
   fighterSpriteImage,
@@ -41,6 +42,27 @@ describe("fighter animation assets", () => {
         `/fighters/${fighter.id}-v2/idle.png`,
       );
     }
+  });
+
+  it("shares Phaser textures when approved states reuse the same PNG", () => {
+    for (const id of ["kavaleur", "korsair"] as const) {
+      expect(fighterCanonicalSpriteState(id, "attack2")).toBe("attack1");
+      expect(fighterCanonicalSpriteState(id, "attack3")).toBe("attack1");
+      expect(fighterCanonicalSpriteState(id, "stunned")).toBe("hit");
+      expect(fighterPreloadStates(id)).toEqual([
+        "idle",
+        "attack1",
+        "defend",
+        "dodge",
+        "special",
+        "hit",
+        "win",
+      ]);
+    }
+
+    expect(fighterPreloadStates("hartz")).toHaveLength(11);
+    expect(fighterPreloadStates("petoux")).toHaveLength(10);
+    expect(fighterPreloadStates("nexmos")).toHaveLength(10);
   });
 
   it("provides the approved combat visual source for every action of every fighter", () => {
