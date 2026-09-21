@@ -133,38 +133,7 @@
   transform: translateY(-2px);
 }
 
-/* VS and result still use the approved roster artwork as a temporary atlas.
-   Combat no longer does: Phaser and the React fallback render the approved
-   standalone transparent fighter assets directly. */
-.versus-portrait,
-.result-portrait {
-  background-image: url("/art/brigada-pixel-rave-roster-v1.webp") !important;
-  background-repeat: no-repeat !important;
-  image-rendering: pixelated;
-  color: transparent !important;
-  text-shadow: none !important;
-}
-
-.versus-portrait,
-.result-portrait {
-  background-size: 615% auto !important;
-  background-position-y: 33% !important;
-  border-radius: 0 !important;
-  border: 3px solid rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 8px 8px 0 #000, 0 0 0 2px var(--brigada-red);
-}
-
-.versus-portrait.fighter-hartz,
-.result-portrait.fighter-hartz { background-position-x: 3% !important; }
-.versus-portrait.fighter-petoux,
-.result-portrait.fighter-petoux { background-position-x: 26% !important; }
-.versus-portrait.fighter-nexmos,
-.result-portrait.fighter-nexmos { background-position-x: 49% !important; }
-.versus-portrait.fighter-kavaleur,
-.result-portrait.fighter-kavaleur { background-position-x: 73% !important; }
-.versus-portrait.fighter-korsair,
-.result-portrait.fighter-korsair { background-position-x: 96% !important; }
-
+/* VS and result use standalone fighter images. Keep only the shared scene backdrop here. */
 .versus-screen,
 .result-screen {
   background:
