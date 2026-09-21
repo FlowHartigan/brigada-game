@@ -712,3 +712,5 @@ function PhaserCombatStageComponent({
     />
   );
 }
+
+export const PhaserCombatStage = memo(PhaserCombatStageComponent);
