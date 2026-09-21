@@ -1,12 +1,13 @@
 import type { FighterId } from "@/game/engine/types";
 import {
   fighterActionImage,
-  type FighterActionVisualState,
+  fighterJumpImage,
+  type FighterSpriteState,
 } from "./fighterAnimationAssets";
 import { fighterImage } from "./fighterImages";
 import { fighterCombatFallbackStyle } from "./fighterPresentation";
 
-export type FighterSpriteState = "idle" | FighterActionVisualState;
+export type { FighterSpriteState } from "./fighterAnimationAssets";
 
 /**
  * Runtime fighter visual. Idle uses the production standalone PNG; combat
@@ -29,7 +30,12 @@ export function FighterSprite({
   presentation?: "combat";
 }) {
   const idleSrc = fighterImage(id);
-  const src = state === "idle" ? idleSrc : fighterActionImage(id, state);
+  const src =
+    state === "idle"
+      ? idleSrc
+      : state === "jump"
+        ? fighterJumpImage(id)
+        : fighterActionImage(id, state);
 
   return (
     <img

@@ -10,6 +10,8 @@ type FighterAssetEntry = {
   idle: string;
   portrait?: string;
   card?: string;
+  /** Optional airborne pose. Fighters without one keep their current idle art. */
+  jump?: string;
   actions: Record<keyof typeof hartzActionFrames, string>;
 };
 
@@ -30,6 +32,7 @@ export const fighterAssetManifest = {
     selection: "/fighters/hartz-v2/front.png",
     portrait: "/fighters/hartz-v2/front.png",
     idle: "/fighters/hartz-v2/idle.png",
+    jump: "/fighters/hartz-v2/jump.png",
     actions: hartzActionFrames,
   },
   petoux: {

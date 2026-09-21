@@ -35,6 +35,63 @@ test('HARTZ: all twelve exact pack PNGs decode with transparent borders',async({
  expect([r.width,r.height]).toEqual([448,416]);expect(r.border).toBe(0);expect(r.visible).toBeGreaterThan(15000);expect(r.visible).toBeLessThan(80000);expect(r.bottom).toBe(20);if(state==='idle')expect(r.visibleHeight).toBe(340);if(state==='dodge')expect(r.visibleHeight).toBe(250);
  }
 });
+
+test('HARTZ jump uses the approved PNG in Phaser and React fallback',async({page})=>{
+ test.setTimeout(90000);
+ await page.setViewportSize({width:844,height:390});
+
+ await page.goto('/');
+ const asset=await page.evaluate(async()=>{
+  const bytes=await (await fetch('/fighters/hartz-v2/jump.png')).arrayBuffer();
+  const sha=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
+  const im=new Image();im.src='/fighters/hartz-v2/jump.png';await im.decode();
+  const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;
+  const ctx=c.getContext('2d')!;ctx.drawImage(im,0,0);const d=ctx.getImageData(0,0,c.width,c.height).data;
+  let border=0,minY=c.height,maxY=-1;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
+   const a=d[(y*c.width+x)*4+3];
+   if(a){minY=Math.min(minY,y);maxY=Math.max(maxY,y)}
+   if(x===0||y===0||x===c.width-1||y===c.height-1)border=Math.max(border,a);
+  }
+  return {sha,width:c.width,height:c.height,border,visibleHeight:maxY-minY+1,bottom:c.height-maxY-1};
+ });
+ expect(asset.sha).toBe(pack.frames.jump.sha256);
+ expect([asset.width,asset.height]).toEqual([448,416]);
+ expect(asset.border).toBe(0);
+ expect(asset.visibleHeight).toBe(301);
+ expect(asset.bottom).toBe(20);
+
+ await open(page,'hartz','korsair');
+ await expectPhaserCombatReady(page);
+ const stage=page.getByTestId('phaser-combat-stage');
+ await page.keyboard.down('ArrowUp');
+ try{
+  await expect.poll(async()=>Number(await stage.getAttribute('data-player-y')),{timeout:1500}).toBeGreaterThan(.05);
+  await expect(stage).toHaveAttribute('data-player-state','jump');
+  await expect(stage).toHaveAttribute('data-player-texture','brigada-fighter-hartz-jump');
+  await page.screenshot({path:'test-results/visual-hartz-jump-844.png',fullPage:true});
+ }finally{
+  await page.keyboard.up('ArrowUp');
+ }
+ await expect.poll(async()=>Number(await stage.getAttribute('data-player-y')),{timeout:2500}).toBe(0);
+ await expect(stage).toHaveAttribute('data-player-state','idle');
+ await expect(stage).toHaveAttribute('data-player-texture','brigada-fighter-hartz-idle');
+
+ // Force the existing React fallback path and prove it resolves the same jump asset.
+ await page.route('**/fighters/korsair-v2/special.png',route=>route.abort());
+ await open(page,'hartz','korsair');
+ await expect(page.getByTestId('phaser-combat-stage')).toHaveAttribute('data-fighters-ready','false',{timeout:8000});
+ const image=page.locator('.arena-left img.fighter-sprite-direct');
+ await page.keyboard.down('ArrowUp');
+ try{
+  await expect.poll(async()=>Number(await page.getByTestId('phaser-combat-stage').getAttribute('data-player-y')),{timeout:1500}).toBeGreaterThan(.05);
+  await expect(image).toHaveAttribute('data-state','jump');
+  await expect(image).toHaveAttribute('src','/fighters/hartz-v2/jump.png');
+ }finally{
+  await page.keyboard.up('ArrowUp');
+ }
+});
+
 for(const viewport of [{width:844,height:390},{width:667,height:375},{width:1280,height:720}]){
  test(`HARTZ both sides against every opponent at ${viewport.width}`,async({page})=>{
  test.setTimeout(120000);await page.setViewportSize(viewport);

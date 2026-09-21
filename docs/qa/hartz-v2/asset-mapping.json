@@ -262,6 +262,30 @@
         0.9519230769230769
       ],
       "sha256": "9bce88387cabeb3a6516ca6a329fa6296c3db1128944e972ee72934646dae677"
+    },
+    "jump": {
+      "file": "jump.png",
+      "bounds": [
+        113,
+        95,
+        222,
+        301
+      ],
+      "groundY": 396,
+      "origin": [
+        0.5,
+        0.9519230769230769
+      ],
+      "sha256": "d96a82cd1fdbb86153644ad0508a1c844b7e2dc706d29ad6a8dff98565371860",
+      "sourceFile": "Sprite de combat en plein saut.png",
+      "sourceSha256": "baf2bc4df19dcb469b2f8f79e45ef69d1f93bd153364dece99c52bc65683cbd8",
+      "sourceRect": [
+        313,
+        96,
+        1050,
+        1094
+      ],
+      "preparation": "Remove alpha <= 8 background noise; crop transparent margins; proportional nearest-neighbor resize; center on 448x416 transparent canvas with opaque bottom at 396. No redrawing."
     }
   }
 }
