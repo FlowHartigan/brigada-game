@@ -155,9 +155,9 @@ export function GamePrototype() {
   }
 
   function playerAction(action: Exclude<CombatAction, "defend">) {
-    const now = Date.now();
     setCombatState((current) => {
       if (!current) return current;
+      const now = Math.max(current.now, Date.now());
       const transition = performCombatAction(
         current,
         "player",
@@ -171,9 +171,9 @@ export function GamePrototype() {
   }
 
   function playerDefense(active: boolean) {
-    const now = Date.now();
     setCombatState((current) => {
       if (!current) return current;
+      const now = Math.max(current.now, Date.now());
       const transition = setDefense(current, "player", active, now);
       if (active && transition.accepted) recordPlayerAction("defend", now);
       return transition.state;
@@ -196,9 +196,9 @@ export function GamePrototype() {
 
       if (event.key === "ArrowUp") {
         if (event.repeat) return;
-        const now = Date.now();
         setCombatState((current) => {
           if (!current || current.status !== "active") return current;
+          const now = Math.max(current.now, Date.now());
           return startJump(current, "player", now).state;
         });
         return;
@@ -213,9 +213,23 @@ export function GamePrototype() {
       if (event.key === "ArrowRight") movementKeysRef.current.right = false;
     }
 
+    function releaseInputs() {
+      movementKeysRef.current = { left: false, right: false };
+      setCombatState((current) => {
+        if (!current || !current.player.isDefending) return current;
+        return setDefense(current, "player", false, Math.max(current.now, Date.now())).state;
+      });
+    }
+
+    function onVisibilityChange() {
+      if (document.hidden) releaseInputs();
+    }
+
     movementTickRef.current = Date.now();
     window.addEventListener("keydown", onKeyDown, { passive: false });
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", releaseInputs);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     const movementTick = window.setInterval(() => {
       const now = Date.now();
@@ -226,7 +240,8 @@ export function GamePrototype() {
 
       setCombatState((current) => {
         if (!current || current.status !== "active") return current;
-        return moveCombatant(current, "player", left ? -1 : 1, elapsedMs, now).state;
+        // React may replay a queued movement after a newer combat update.
+        return moveCombatant(current, "player", left ? -1 : 1, elapsedMs, Math.max(current.now, now)).state;
       });
     }, 32);
 
@@ -235,6 +250,8 @@ export function GamePrototype() {
       window.clearInterval(movementTick);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", releaseInputs);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [scene]);
 
@@ -244,7 +261,7 @@ export function GamePrototype() {
     const tick = window.setInterval(() => {
       setCombatState((current) => {
         if (!current || current.status !== "active") return current;
-        return advanceCombat(current, Date.now()).state;
+        return advanceCombat(current, Math.max(current.now, Date.now())).state;
       });
     }, 80);
 
@@ -257,7 +274,7 @@ export function GamePrototype() {
     const think = window.setInterval(() => {
       setCombatState((current) => {
         if (!current || current.status !== "active") return current;
-        const now = Date.now();
+        const now = Math.max(current.now, Date.now());
         let working = setDefense(current, "opponent", false, now).state;
         const intent = chooseOpponentAction(
           working,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { CombatEvent, CombatSide } from "@/game/engine/combat";
 import type { Facing } from "@/game/engine/spatial";
 import type { FighterId } from "@/game/engine/types";
@@ -92,7 +92,7 @@ function fighterTextureSource(id: FighterId, state: FighterSpriteState): string 
   return fighterActionImage(id, state);
 }
 
-export function PhaserCombatStage({
+export const PhaserCombatStage = memo(function PhaserCombatStage({
   lastEvent,
   playerId,
   opponentId,
@@ -162,6 +162,8 @@ export function PhaserCombatStage({
         private opponentSprite?: import("phaser").GameObjects.Image;
         private fightersReady = false;
         private fighterFreezeUntil = 0;
+        private lastPresentation?: FighterPresentation;
+        private lastPositions?: typeof fighterPositionRef.current;
         private readonly visibleBounds = new Map<string, VisibleTextureBounds>();
 
         constructor() {
@@ -402,6 +404,19 @@ export function PhaserCombatStage({
           if (!this.playerSprite || !this.opponentSprite) return;
           if (this.time.now < this.fighterFreezeUntil) return;
 
+          // React replaces these snapshots only when visual inputs change.
+          // Stun rotation is time-driven and must still animate every frame.
+          const presentation = fighterStateRef.current;
+          const positions = fighterPositionRef.current;
+          if (
+            presentation === this.lastPresentation &&
+            positions === this.lastPositions &&
+            presentation.player !== "stunned" &&
+            presentation.opponent !== "stunned"
+          ) return;
+          this.lastPresentation = presentation;
+          this.lastPositions = positions;
+
           const playerVisual = fighterStateRef.current.player;
           const opponentVisual = fighterStateRef.current.opponent;
 
@@ -519,6 +534,9 @@ export function PhaserCombatStage({
           const width = Math.max(1, Number(source.width) || 1);
           const height = Math.max(1, Number(source.height) || 1);
           const fallback = { height, bottomPadding: 0 };
+          // Cache failure paths too: retrying a denied pixel read every frame
+          // cannot recover this immutable texture and stalls the combat loop.
+          this.visibleBounds.set(textureKey, fallback);
 
           try {
             const canvas = document.createElement("canvas");
@@ -535,6 +553,7 @@ export function PhaserCombatStage({
                 if (alpha[(yIndex * width + xIndex) * 4 + 3] < 8) continue;
                 minY = Math.min(minY, yIndex);
                 maxY = Math.max(maxY, yIndex);
+                break; // Only the first opaque pixel in each row is needed.
               }
             }
             const measured = maxY >= minY
@@ -676,7 +695,11 @@ export function PhaserCombatStage({
       });
     }
 
-    void mountPhaser();
+    void mountPhaser().catch(() => {
+      if (cancelled) return;
+      hostRef.current?.setAttribute("data-fighters-ready", "false");
+      readyCallbackRef.current?.(false);
+    });
 
     return () => {
       cancelled = true;
@@ -712,4 +735,4 @@ export function PhaserCombatStage({
       aria-hidden="true"
     />
   );
-}
+});

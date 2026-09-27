@@ -118,6 +118,7 @@ for(const viewport of [{width:844,height:390},{width:667,height:375},{width:1280
  await page.route('**/fighters/korsair-v2/special.png',route=>route.abort());
  await open(page,'hartz','korsair');
  const image=page.locator('.arena-left img');await expect(image).toHaveCSS('opacity','1');
+ await expect(page.locator('.arena-left')).toHaveClass(/is-phaser-fallback-aligned/);
  await image.evaluate(async n=>{await (n as HTMLImageElement).decode()});
  const idleHeight=await image.evaluate(n=>n.getBoundingClientRect().height);
  const defend=page.getByRole('button',{name:/DÉFENSE/});await holdDefense(page,defend);await expect(image).toHaveAttribute('src','/fighters/hartz-v2/defend.png');await releaseDefense(page,defend);

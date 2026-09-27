@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { FighterId } from "@/game/engine/types";
 import {
   fighterActionImage,
@@ -16,7 +17,7 @@ export type { FighterSpriteState } from "./fighterAnimationAssets";
  * sprite falls back to the proven idle PNG while preserving the requested
  * presentation state so state-driven combat feedback remains active.
  */
-export function FighterSprite({
+export const FighterSprite = memo(function FighterSprite({
   id,
   state = "idle",
   label,
@@ -61,4 +62,4 @@ export function FighterSprite({
       }}
     />
   );
-}
+});

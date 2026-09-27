@@ -75,7 +75,11 @@ test("KORSAIR visibly swaps from idle to attack1/2/3 in Phaser", async ({ page }
   expect(attackFingerprint.hash).not.toBe(idleFingerprint.hash);
 
   for (const state of ["attack1", "attack2", "attack3"] as const) {
-    await expect(attackButton).toBeEnabled({ timeout: 4_000 });
+    // Poll below the 900ms combo window; the default backoff can consume it.
+    await expect.poll(() => attackButton.isEnabled(), {
+      timeout: 4_000,
+      intervals: [32, 50],
+    }).toBe(true);
     await attackButton.click();
 
     await expect(stage).toHaveAttribute("data-player-state", state, { timeout: 650 });
