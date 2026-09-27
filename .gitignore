@@ -3,6 +3,9 @@ node_modules/
 out/
 dist/
 coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
 *.log
 .env
 .env.*

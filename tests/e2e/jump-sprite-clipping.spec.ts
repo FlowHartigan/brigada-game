@@ -77,7 +77,8 @@ async function expectJumpHeadroom(page: Page, fighterId: string) {
     { timeout: 2_500, intervals: [32, 50, 80] },
   ).toBe(0);
 
-  expect(Number(await stage.getAttribute("data-player-ground-y"))).toBeCloseTo(326, 1);
+  // Engine state reaches React before the next Phaser presentation frame.
+  await expect.poll(async () => Number(await stage.getAttribute("data-player-ground-y"))).toBeCloseTo(326, 1);
 }
 
 test.describe("jump sprite clipping", () => {
